@@ -5,7 +5,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 
 const transition = {
-    type: 'spring',
+    type: 'spring' as const,
     mass: 0.5,
     damping: 11.5,
     stiffness: 100,
@@ -66,7 +66,7 @@ export const Menu = ({
     return (
         <nav
             onMouseLeave={() => setActive(null)} // resets the state
-            className='shadow-input relative flex items-center justify-between rounded-full border border-transparent bg-white px-4 py-3 dark:border-white/[0.2] dark:bg-black md:px-8 md:py-4'>
+            className='shadow-input relative flex items-center justify-between rounded-full border border-transparent bg-white px-4 py-3 md:px-8 md:py-4 dark:border-white/[0.2] dark:bg-black'>
             {children}
         </nav>
     );
@@ -85,12 +85,12 @@ export const ProductItem = ({
 }) => {
     return (
         <a href={href} className='flex space-x-2'>
-            <img 
-                src={src} 
-                width={140} 
-                height={70} 
-                alt={title} 
-                className='shrink-0 rounded-md object-contain shadow-2xl' 
+            <img
+                src={src}
+                width={140}
+                height={70}
+                alt={title}
+                className='shrink-0 rounded-md object-contain shadow-2xl'
                 style={{ mixBlendMode: 'multiply' }}
             />
             <div>
