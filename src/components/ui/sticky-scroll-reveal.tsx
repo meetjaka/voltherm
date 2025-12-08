@@ -4,8 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
-import { useMotionValueEvent, useScroll } from 'motion/react';
-import { motion } from 'motion/react';
+import { motion, useMotionValueEvent, useScroll } from 'motion/react';
 
 export const StickyScroll = ({
     content,
@@ -35,6 +34,7 @@ export const StickyScroll = ({
             if (distance < Math.abs(latest - cardsBreakpoints[acc])) {
                 return index;
             }
+
             return acc;
         }, 0);
         setActiveCard(closestBreakpointIndex);

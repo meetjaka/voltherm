@@ -40,6 +40,7 @@ export function AnimatedTestimonialsDemo() {
       src: "https://images.unsplash.com/photo-1624561172888-ac93c696e10c?q=80&w=2592&auto=format&fit=crop",
     },
   ];
+
   return <AnimatedTestimonials testimonials={testimonials} autoplay={true} />;
 }
 

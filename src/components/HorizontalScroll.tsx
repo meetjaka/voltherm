@@ -56,6 +56,7 @@ export function HorizontalScroll() {
         };
 
         container.addEventListener('wheel', handleWheel, { passive: false });
+
         return () => container.removeEventListener('wheel', handleWheel);
     }, []);
 
