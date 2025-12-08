@@ -19,6 +19,7 @@ export function NavbarDemo() {
 function Navbar({ className }: { className?: string }) {
     const [active, setActive] = useState<string | null>(null);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -30,19 +31,33 @@ function Navbar({ className }: { className?: string }) {
     }, []);
 
     return (
-        <div className={cn('fixed inset-x-0 top-8 z-50 mx-auto max-w-5xl', className)}>
+        <div className={cn('fixed inset-x-0 top-4 z-50 mx-auto max-w-5xl px-4 md:top-8', className)}>
             <Menu setActive={setActive}>
-                <Link href='/' className='flex items-center gap-3'>
-                    <Image
-                        src='/images/logo.png'
-                        alt='Voltherm Logo'
-                        width={40}
-                        height={40}
-                        className='object-contain'
-                    />
-                    <span className='text-lg font-bold'>Voltherm Technologies</span>
-                </Link>
-                <div className='flex items-center space-x-8'>
+                <div className='flex w-full items-center justify-between'>
+                    <Link href='/' className='flex items-center gap-2 md:gap-3'>
+                        <Image
+                            src='/images/logo.png'
+                            alt='Voltherm Logo'
+                            width={32}
+                            height={32}
+                            className='object-contain md:h-10 md:w-10'
+                        />
+                        <span className='text-sm font-bold md:text-lg'>Voltherm Technologies</span>
+                    </Link>
+                    
+                    {/* Mobile Menu Button */}
+                    <button
+                        className='flex flex-col gap-1.5 p-2 md:hidden'
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        aria-label='Toggle menu'
+                    >
+                        <span className={cn('h-0.5 w-6 bg-black dark:bg-white transition-all', isMobileMenuOpen && 'rotate-45 translate-y-2')}/>
+                        <span className={cn('h-0.5 w-6 bg-black dark:bg-white transition-all', isMobileMenuOpen && 'opacity-0')}/>
+                        <span className={cn('h-0.5 w-6 bg-black dark:bg-white transition-all', isMobileMenuOpen && '-rotate-45 -translate-y-2')}/>
+                    </button>
+
+                    {/* Desktop Menu */}
+                    <div className='hidden items-center space-x-8 md:flex'>
                     <HoveredLink href='/'>Home</HoveredLink>
                     <HoveredLink href='/about'>About Us</HoveredLink>
                     <MenuItem setActive={setActive} active={active} item='Products'>
@@ -69,7 +84,40 @@ function Navbar({ className }: { className?: string }) {
                     </MenuItem>
                     <HoveredLink href='/contact'>Contact</HoveredLink>
                     <HoveredLink href='/blog'>Blog</HoveredLink>
+                    </div>
                 </div>
+
+                {/* Mobile Menu */}
+                {isMobileMenuOpen && (
+                    <div className='absolute left-0 right-0 top-full mt-4 flex flex-col space-y-4 rounded-2xl border border-black/[0.2] bg-white p-6 shadow-xl dark:border-white/[0.2] dark:bg-black md:hidden'>
+                        <Link href='/' className='text-neutral-700 hover:text-black dark:text-neutral-200' onClick={() => setIsMobileMenuOpen(false)}>
+                            Home
+                        </Link>
+                        <Link href='/about' className='text-neutral-700 hover:text-black dark:text-neutral-200' onClick={() => setIsMobileMenuOpen(false)}>
+                            About Us
+                        </Link>
+                        <div className='flex flex-col space-y-2'>
+                            <p className='font-semibold text-black dark:text-white'>Products</p>
+                            <div className='flex flex-col space-y-2 pl-4'>
+                                <Link href='/products/ev-batteries' className='text-sm text-neutral-700 hover:text-black dark:text-neutral-200' onClick={() => setIsMobileMenuOpen(false)}>
+                                    Electric Vehicles Batteries
+                                </Link>
+                                <Link href='/products/solar-batteries' className='text-sm text-neutral-700 hover:text-black dark:text-neutral-200' onClick={() => setIsMobileMenuOpen(false)}>
+                                    Solar Batteries
+                                </Link>
+                                <Link href='/products/drone-batteries' className='text-sm text-neutral-700 hover:text-black dark:text-neutral-200' onClick={() => setIsMobileMenuOpen(false)}>
+                                    Drone Batteries
+                                </Link>
+                            </div>
+                        </div>
+                        <Link href='/contact' className='text-neutral-700 hover:text-black dark:text-neutral-200' onClick={() => setIsMobileMenuOpen(false)}>
+                            Contact
+                        </Link>
+                        <Link href='/blog' className='text-neutral-700 hover:text-black dark:text-neutral-200' onClick={() => setIsMobileMenuOpen(false)}>
+                            Blog
+                        </Link>
+                    </div>
+                )}
             </Menu>
         </div>
     );
