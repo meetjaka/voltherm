@@ -85,7 +85,14 @@ export const ProductItem = ({
 }) => {
     return (
         <a href={href} className='flex space-x-2'>
-            <img src={src} width={140} height={70} alt={title} className='shrink-0 rounded-md shadow-2xl' />
+            <img 
+                src={src} 
+                width={140} 
+                height={70} 
+                alt={title} 
+                className='shrink-0 rounded-md object-contain shadow-2xl' 
+                style={{ mixBlendMode: 'multiply' }}
+            />
             <div>
                 <h4 className='mb-1 text-xl font-bold text-black dark:text-white'>{title}</h4>
                 <p className='max-w-[10rem] text-sm text-neutral-700 dark:text-neutral-300'>{description}</p>
