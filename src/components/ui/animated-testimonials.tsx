@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
 import { IconArrowLeft, IconArrowRight } from '@tabler/icons-react';
-
 import { AnimatePresence, motion } from 'motion/react';
 
 type Testimonial = {
@@ -12,6 +10,7 @@ type Testimonial = {
     designation: string;
     src: string;
 };
+
 export const AnimatedTestimonials = ({
     testimonials,
     autoplay = false
@@ -37,7 +36,9 @@ export const AnimatedTestimonials = ({
         if (autoplay) {
             const interval = setInterval(handleNext, 5000);
 
-            return () => clearInterval(interval);
+            return () => {
+                clearInterval(interval);
+            };
         }
     }, [autoplay]);
 
