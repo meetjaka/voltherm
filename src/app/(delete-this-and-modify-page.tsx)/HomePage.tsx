@@ -3,6 +3,7 @@ import Image from 'next/image';
 import AnimatedTestimonialsDemo from '@/components/demos/AnimatedTestimonialsDemo';
 import BentoGridDemo from '@/components/demos/BentoGridDemo';
 import NavbarDemo from '@/components/demos/NavbarDemo';
+import ProductCarouselDemo from '@/components/demos/ProductCarouselDemo';
 import StickyScrollRevealDemo from '@/components/demos/StickyScrollRevealDemo';
 
 const HomePage: React.FC = () => {
@@ -99,6 +100,11 @@ const HomePage: React.FC = () => {
                     <p className='text-lg text-slate-600'>See what our partners say about working with Voltara</p>
                 </div>
                 <AnimatedTestimonialsDemo />
+            </section>
+
+            {/* Product Carousel Section */}
+            <section id='carousel' className='w-full bg-white'>
+                <ProductCarouselDemo />
             </section>
 
             {/* Footer */}
