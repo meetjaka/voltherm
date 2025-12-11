@@ -1,5 +1,6 @@
 import Image from 'next/image';
 
+import MissionVision from '@/components/MissionVision';
 import AnimatedTestimonialsDemo from '@/components/demos/AnimatedTestimonialsDemo';
 import BentoGridDemo from '@/components/demos/BentoGridDemo';
 import NavbarDemo from '@/components/demos/NavbarDemo';
@@ -75,6 +76,9 @@ const HomePage: React.FC = () => {
                 </div>
             </section>
 
+            {/* Mission & Vision Section */}
+            {/* <MissionVision /> */}
+
             {/* Bento Grid Section */}
             <section id='products' className='bg-white py-24'>
                 <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
@@ -103,12 +107,12 @@ const HomePage: React.FC = () => {
             </section>
 
             {/* Product Carousel Section */}
-            <section id='carousel' className='w-full bg-white'>
+            {/* <section id='carousel' className='w-full bg-white'>
                 <ProductCarouselDemo />
-            </section>
+            </section> */}
 
             {/* Footer */}
-            <footer className='border-t border-slate-200 bg-slate-50 pt-20 pb-10'>
+            {/* <footer className='border-t border-slate-200 bg-slate-50 pt-20 pb-10'>
                 <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
                     <div className='mb-16 grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4'>
                         <div>
@@ -194,7 +198,7 @@ const HomePage: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            </footer>
+            </footer> */}
         </main>
     );
 };
