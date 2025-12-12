@@ -3,9 +3,6 @@
     "devCommand": "next dev --turbopack",
     "installCommand": "npm install",
     "framework": "nextjs",
-    "regions": [
-        "auto"
-    ],
     "headers": [
         {
             "source": "/(.*)",
