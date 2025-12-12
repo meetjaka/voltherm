@@ -82,7 +82,7 @@ function Navbar({ className }: { className?: string }) {
                                 <ProductItem
                                     title='Electric Vehicles Batteries'
                                     href='/products/ev-batteries'
-                                    src='https://lh3.googleusercontent.com/sitesv/AAzXCkciXfJDOe8H422kucQO97PvUbBFNCVm7LZkD1IiBJyyweS2iK4K8O33uK4t3J4BgYjlIvslpMSeMSkW8S_YnOAvvcyCWl5eX-ruByYLsW7nxNQlax4MxLrhxUoSxNp_a47iY3aTdEirnismB8vTMxjgbFR7Hja84wCKchZIHmPZumXaY0UBFmEfVIEhMmQHObxgULn15pAG5t-hmKAfNeMzjLRXGuYKqCtU=w1280'
+                                    src='https://5.imimg.com/data5/SELLER/Default/2022/9/TL/WW/PA/100678072/60v-20ah-lithium-electric-vehicle-battery-pack.png'
                                     description='High-performance battery solutions for electric vehicles.'
                                 />
                                 <ProductItem
@@ -100,7 +100,7 @@ function Navbar({ className }: { className?: string }) {
                             </div>
                         </MenuItem>
                         <HoveredLink href='/contact'>Contact</HoveredLink>
-                        <HoveredLink href='/blog'>Blog</HoveredLink>
+                        <HoveredLink href='/store'>Store</HoveredLink>
                     </div>
                 </div>
 

@@ -9,7 +9,7 @@ const products = [
         id: 1,
         title: 'Lithium ion Battery Pack (2 Wheeler)',
         description: 'High-performance lithium-ion battery solution specifically designed for two-wheeler electric vehicles with superior energy density.',
-        image: 'https://lh3.googleusercontent.com/sitesv/AAzXCkeLWIs40H2JV9lKhbxXjn0bGXhFcNpvQt8u_vqL8akCqMj5hXbufwiPxd0akqkkCxLxD-xke7cpTU1Hx32s0dAPvj336aJaG58oND-M55Nh3W8B8ViPCbkV9UwAVzOQcS1KvFhhMnkg7kEoLp5D4nibxrBfDPM10JsV31xDUW1POqobKIDysXDp=w16383',
+        image: 'https://5.imimg.com/data5/SELLER/Default/2022/9/TL/WW/PA/100678072/60v-20ah-lithium-electric-vehicle-battery-pack.png',
         specs: ['2 Wheeler', 'Lithium Ion', 'Premium'],
         color: 'from-teal-500 to-cyan-400'
     },
