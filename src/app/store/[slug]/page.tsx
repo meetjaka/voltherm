@@ -101,7 +101,7 @@ export default async function ProductDetailPage({ params }: Params) {
         <p className='mt-4 text-lg text-slate-600 text-center max-w-3xl mx-auto'>{product.description}</p>
 
         {/* Hero visual */}
-        <div className='mt-8 rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-6 shadow-xl'>
+        <div className='mt-8 rounded-3xl border border-slate-200 bg-linear-to-br from-slate-50 to-white p-6 shadow-xl'>
           <div className='relative h-[420px] overflow-hidden rounded-2xl'>
             <Image src={product.image} alt={product.title} fill className='object-cover' />
           </div>

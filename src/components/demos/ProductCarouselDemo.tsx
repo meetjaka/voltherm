@@ -86,11 +86,11 @@ export default function ProductCarouselDemo() {
     const product = products[current];
 
     return (
-        <div className='relative w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-50 py-24 px-4'>
-            {/* Background Effects */}
+        <div className='relative w-full min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 via-white to-slate-50 py-24 px-4'>
+            {/* Background decorations */}
             <div className='absolute inset-0 overflow-hidden'>
-                <div className='absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-br from-teal-200/20 to-cyan-200/20 blur-3xl'></div>
-                <div className='absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-tr from-purple-200/20 to-pink-200/20 blur-3xl'></div>
+                <div className='absolute -top-40 -right-40 h-80 w-80 rounded-full bg-linear-to-br from-teal-200/20 to-cyan-200/20 blur-3xl'></div>
+                <div className='absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-linear-to-tr from-purple-200/20 to-pink-200/20 blur-3xl'></div>
             </div>
 
             <div className='relative z-10 w-full max-w-6xl'>
@@ -171,7 +171,7 @@ export default function ProductCarouselDemo() {
                             {product.specs.map((spec, idx) => (
                                 <div
                                     key={idx}
-                                    className='rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 p-4 text-center border border-slate-200'
+                                    className='rounded-2xl bg-linear-to-br from-slate-100 to-slate-50 p-4 text-center border border-slate-200'
                                 >
                                     <p className='font-semibold text-slate-900'>{spec}</p>
                                 </div>

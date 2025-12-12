@@ -9,14 +9,14 @@ import StickyScrollRevealDemo from '@/components/demos/StickyScrollRevealDemo';
 
 const HomePage: React.FC = () => {
     return (
-        <main className='min-h-screen w-full font-[family-name:var(--font-geist-sans)]'>
+        <main className='min-h-screen w-full font-(family-name:--font-geist-sans)'>
             {/* Navigation */}
             <NavbarDemo />
 
             {/* Hero Section */}
             <section className='relative flex min-h-screen items-center overflow-hidden bg-slate-50 pt-20'>
                 <div className='absolute inset-0 z-0'>
-                    <div className='absolute top-0 right-0 h-full w-2/3 bg-gradient-to-bl from-slate-100 to-transparent opacity-50'></div>
+                    <div className='absolute top-0 right-0 h-full w-2/3 bg-linear-to-bl from-slate-100 to-transparent opacity-50'></div>
                 </div>
 
                 <div className='relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8'>
@@ -28,7 +28,7 @@ const HomePage: React.FC = () => {
                             </div>
                             <h1 className='text-5xl leading-tight font-bold tracking-tight text-slate-900 md:text-7xl'>
                                 Powering the <br />
-                                <span className='bg-gradient-to-r from-teal-500 to-cyan-400 bg-clip-text text-transparent'>
+                                <span className='bg-linear-to-r from-teal-500 to-cyan-400 bg-clip-text text-transparent'>
                                     Future of Motion
                                 </span>
                             </h1>

@@ -9,7 +9,9 @@ const withBundleAnalyzer = initializeBundleAnalyzer({
 
 // https://nextjs.org/docs/pages/api-reference/next-config-js
 const nextConfig: NextConfig = {
-    output: 'standalone',
+    // Note: 'standalone' output is for Docker. Vercel uses default output.
+    // Uncomment below line only for Docker deployments:
+    // output: 'standalone',
     images: {
         remotePatterns: [
             {

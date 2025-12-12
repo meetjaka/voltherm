@@ -106,7 +106,7 @@ function Navbar({ className }: { className?: string }) {
 
                 {/* Mobile Menu */}
                 {isMobileMenuOpen && (
-                    <div className='absolute top-full right-0 left-0 mt-4 flex flex-col space-y-4 rounded-2xl border border-black/[0.2] bg-white p-6 shadow-xl md:hidden dark:border-white/[0.2] dark:bg-black'>
+                    <div className='absolute top-full right-0 left-0 mt-4 flex flex-col space-y-4 rounded-2xl border border-black/20 bg-white p-6 shadow-xl md:hidden dark:border-white/20 dark:bg-black'>
                         <Link
                             href='/'
                             className='text-neutral-700 hover:text-black dark:text-neutral-200'

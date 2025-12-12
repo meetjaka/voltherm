@@ -93,7 +93,7 @@ export default function StorePage() {
               {/* Header */}
               <div className='relative h-44'>
                 <Image src={cat.image} alt={cat.title} fill className='object-cover' />
-                <div className='absolute inset-0 bg-gradient-to-t from-white/70 to-transparent'></div>
+                <div className='absolute inset-0 bg-linear-to-t from-white/70 to-transparent'></div>
                 <div className='absolute bottom-4 left-6 right-6 flex items-center justify-between'>
                   <div>
                     <h3 className='text-2xl font-bold text-slate-900'>{cat.title}</h3>

@@ -66,7 +66,7 @@ export const Menu = ({
     return (
         <nav
             onMouseLeave={() => setActive(null)} // resets the state
-            className='shadow-input relative flex items-center justify-between rounded-full border border-transparent bg-white px-4 py-3 md:px-8 md:py-4 dark:border-white/[0.2] dark:bg-black'>
+            className='shadow-input relative flex items-center justify-between rounded-full border border-transparent bg-white px-4 py-3 md:px-8 md:py-4 dark:border-white/20 dark:bg-black'>
             {children}
         </nav>
     );
@@ -95,7 +95,7 @@ export const ProductItem = ({
             />
             <div>
                 <h4 className='mb-1 text-xl font-bold text-black dark:text-white'>{title}</h4>
-                <p className='max-w-[10rem] text-sm text-neutral-700 dark:text-neutral-300'>{description}</p>
+                <p className='max-w-40 text-sm text-neutral-700 dark:text-neutral-300'>{description}</p>
             </div>
         </a>
     );
