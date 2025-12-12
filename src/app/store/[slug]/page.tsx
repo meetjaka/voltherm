@@ -46,7 +46,7 @@ const productMap: Record<string, {
     title: 'Drone Battery Pack',
     description:
       'Lightweight, high power battery pack for UAV applications with fast charging capability.',
-    image: 'https://images.unsplash.com/photo-1580255443550-2173dba999ef?q=80&w=1200&auto=format&fit=crop',
+    image: 'https://5.imimg.com/data5/ANDROID/Default/2025/9/546735543/OQ/MC/GY/100678072/product-jpeg.jpg',
     specs: [
       { label: 'Chemistry', value: 'LiPo' },
       { label: 'Capacity', value: '25000mAh' },

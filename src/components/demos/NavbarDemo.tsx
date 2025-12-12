@@ -94,7 +94,7 @@ function Navbar({ className }: { className?: string }) {
                                 <ProductItem
                                     title='Drone Batteries'
                                     href='/products/drone-batteries'
-                                    src='https://lh3.googleusercontent.com/sitesv/AAzXCkd_en2oY4YeKahM-nYiWzTfgOpkivvaeQuM-gECdVGANVvrzEYX3tYKgFG15R_2mchV9RfWwz0QX6tJXl0uWDczARswGso2I7YFd985rWawtCxlCxRg_QVSReZT1-oCwgtoSRIuhkf74iiBgr_N84uEnmRxe6ybu3Z25p-YsXeti9nlsrMCt_VTjW2Gsn8AC0ynY3zG0vveUfU2dd-zt6dDgWCIAUue8APgk64=w1280'
+                                    src='https://5.imimg.com/data5/ANDROID/Default/2025/9/546735543/OQ/MC/GY/100678072/product-jpeg.jpg'
                                     description='Lightweight, powerful batteries for aerial applications.'
                                 />
                             </div>

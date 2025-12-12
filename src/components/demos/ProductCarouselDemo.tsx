@@ -49,7 +49,7 @@ const products = [
         id: 6,
         title: 'Drone Battery Pack',
         description: 'Specialized battery pack designed for drone applications with optimized weight-to-power ratio and fast charging capability.',
-        image: 'https://images.unsplash.com/photo-1580255443550-2173dba999ef?q=80&w=800&auto=format&fit=crop',
+        image: 'https://5.imimg.com/data5/ANDROID/Default/2025/9/546735543/OQ/MC/GY/100678072/product-jpeg.jpg',
         specs: ['Drone Ready', 'Fast Charge', 'Lightweight'],
         color: 'from-red-500 to-pink-400'
     }

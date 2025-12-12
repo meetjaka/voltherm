@@ -1,6 +1,6 @@
 import Image from 'next/image';
+import { Facebook, Instagram, Linkedin, Twitter, Globe } from 'lucide-react';
 
-import MissionVision from '@/components/MissionVision';
 import AnimatedTestimonialsDemo from '@/components/demos/AnimatedTestimonialsDemo';
 import BentoGridDemo from '@/components/demos/BentoGridDemo';
 import NavbarDemo from '@/components/demos/NavbarDemo';
@@ -76,9 +76,6 @@ const HomePage: React.FC = () => {
                 </div>
             </section>
 
-            {/* Mission & Vision Section */}
-            {/* <MissionVision /> */}
-
             {/* Bento Grid Section */}
             <section id='products' className='bg-white py-24'>
                 <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
@@ -107,12 +104,12 @@ const HomePage: React.FC = () => {
             </section>
 
             {/* Product Carousel Section */}
-            {/* <section id='carousel' className='w-full bg-white'>
+            <section id='carousel' className='w-full bg-white'>
                 <ProductCarouselDemo />
-            </section> */}
+            </section>
 
             {/* Footer */}
-            {/* <footer className='border-t border-slate-200 bg-slate-50 pt-20 pb-10'>
+            <footer className='border-t border-slate-200 bg-slate-50 pt-20 pb-10'>
                 <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
                     <div className='mb-16 grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4'>
                         <div>
@@ -187,18 +184,43 @@ const HomePage: React.FC = () => {
                     </div>
 
                     <div className='flex flex-col items-center justify-between border-t border-slate-200 pt-8 text-sm text-slate-400 md:flex-row'>
-                        <p>&copy; 2025 Voltara Energy Systems. All rights reserved.</p>
-                        <div className='mt-4 flex space-x-6 md:mt-0'>
-                            <a href='#' className='hover:text-slate-900'>
-                                Privacy Policy
-                            </a>
-                            <a href='#' className='hover:text-slate-900'>
-                                Terms of Service
-                            </a>
+                        <p>&copy; 2025 Voltherm Technologies. All rights reserved.</p>
+                        <div className='mt-6 flex flex-col items-center gap-6 md:mt-0 md:flex-row md:gap-8'>
+                            <div className='flex gap-4 items-center'>
+                                <a href='https://www.facebook.com/Voltherm/' target='_blank' rel='noopener noreferrer' className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
+                                    <Facebook size={18} className='text-slate-600 transition-colors group-hover:text-white' />
+                                </a>
+                                <a href='https://www.instagram.com/volthermtech/' target='_blank' rel='noopener noreferrer' className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
+                                    <Instagram size={18} className='text-slate-600 transition-colors group-hover:text-white' />
+                                </a>
+                                <a href='https://x.com/voltherm' target='_blank' rel='noopener noreferrer' className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
+                                    <Twitter size={18} className='text-slate-600 transition-colors group-hover:text-white' />
+                                </a>
+                                <a href='https://www.linkedin.com/company/volthermtechnologies/' target='_blank' rel='noopener noreferrer' className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
+                                    <Linkedin size={18} className='text-slate-600 transition-colors group-hover:text-white' />
+                                </a>
+                                <a href='https://www.indiamart.com/voltherm-technologies/' target='_blank' rel='noopener noreferrer' className='transition-opacity hover:opacity-80'>
+                                    <Image 
+                                        src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuoD3M7txqb9TdLTe_prXdviUPp6m4tEvmeA&s' 
+                                        alt='IndiaMART' 
+                                        width={80} 
+                                        height={30}
+                                        className='object-contain'
+                                    />
+                                </a>
+                            </div>
+                            <div className='flex space-x-6'>
+                                <a href='#' className='hover:text-slate-900'>
+                                    Privacy Policy
+                                </a>
+                                <a href='#' className='hover:text-slate-900'>
+                                    Terms of Service
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </footer> */}
+            </footer>
         </main>
     );
 };
