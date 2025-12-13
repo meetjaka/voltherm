@@ -9,7 +9,7 @@ import StickyScrollRevealDemo from '@/components/demos/StickyScrollRevealDemo';
 
 const HomePage: React.FC = () => {
     return (
-        <main className='min-h-screen w-full font-(family-name:--font-geist-sans)'>
+        <main className='min-h-screen w-full font-sans'>
             {/* Navigation */}
             <NavbarDemo />
 

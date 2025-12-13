@@ -39,7 +39,7 @@ Fixed modern Tailwind CSS v4 syntax in all components:
 - ✅ `border-black/[0.2]` → `border-black/20` (opacity syntax)
 - ✅ `top-[calc(100%_+_1.2rem)]` → `top-[calc(100%+1.2rem)]`
 - ✅ `max-w-[10rem]` → `max-w-40`
-- ✅ `font-[family-name:var(...)]` → `font-(family-name:...)`
+- ✅ Custom font class simplified to `font-sans`
 
 **Note:** These are linter suggestions for newer syntax. Both versions work, but the new syntax is preferred in Tailwind CSS v4.
 

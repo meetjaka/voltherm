@@ -149,10 +149,10 @@ function Navbar({ className }: { className?: string }) {
                             Contact
                         </Link>
                         <Link
-                            href='/blog'
+                            href='/store'
                             className='text-neutral-700 hover:text-black dark:text-neutral-200'
                             onClick={() => setIsMobileMenuOpen(false)}>
-                            Blog
+                            Store
                         </Link>
                     </div>
                 )}
