@@ -30,66 +30,80 @@ export default function ContactPage() {
     <main className='min-h-screen w-full bg-gradient-to-b from-white to-slate-50'>
       <NavbarDemo />
 
-      {/* Hero Section */}
-      <section className='bg-gradient-to-b from-slate-900 to-slate-800 px-4 sm:px-6 pt-24 sm:pt-32 pb-12 sm:pb-20 text-white'>
-        <div className='mx-auto max-w-7xl text-center'>
-          <h1 className='mb-3 sm:mb-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold'>Get in Touch</h1>
-          <p className='max-w-2xl mx-auto text-base sm:text-lg md:text-xl text-slate-300'>
-            We're here to help with all your energy storage needs
-          </p>
-        </div>
-      </section>
-
-      {/* Contact Info Cards */}
-      <section className='px-4 sm:px-6 py-8 sm:py-12'>
+      {/* Hero Section with Contact Cards */}
+      <section className='relative bg-slate-900 px-4 sm:px-6 pt-24 sm:pt-32 pb-48 sm:pb-56 text-white'>
         <div className='mx-auto max-w-7xl'>
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6'>
-            {/* Sales Inquiry */}
-            <div className='bg-white rounded-2xl border border-slate-200 p-6 shadow-lg hover:shadow-xl transition-shadow'>
-              <div className='flex items-center justify-center w-12 h-12 rounded-full bg-teal-500/10 mb-4'>
-                <Mail className='w-6 h-6 text-teal-600' />
-              </div>
-              <h3 className='text-lg font-semibold text-slate-900 mb-2'>Sales Inquiry</h3>
-              <a
-                href='mailto:Sales@VolthermTechnologies.com'
-                className='text-teal-600 hover:text-teal-700 break-all text-sm sm:text-base'
-              >
-                Sales@VolthermTechnologies.com
-              </a>
-            </div>
+          {/* Hero Text */}
+          <div className='text-center mb-12 sm:mb-16'>
+            <h1 className='mb-4 sm:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold'>
+              Connect With Voltherm
+            </h1>
+            <p className='max-w-3xl mx-auto text-base sm:text-lg md:text-xl text-slate-300 leading-relaxed'>
+              We're ready to discuss your next energy storage solution, from initial inquiry to deployment.
+            </p>
+          </div>
 
-            {/* Business Inquiry */}
-            <div className='bg-white rounded-2xl border border-slate-200 p-6 shadow-lg hover:shadow-xl transition-shadow'>
-              <div className='flex items-center justify-center w-12 h-12 rounded-full bg-cyan-500/10 mb-4'>
-                <Mail className='w-6 h-6 text-cyan-600' />
-              </div>
-              <h3 className='text-lg font-semibold text-slate-900 mb-2'>Business Inquiry</h3>
-              <a
-                href='mailto:Info@VolthermTechnologies.com'
-                className='text-cyan-600 hover:text-cyan-700 break-all text-sm sm:text-base'
-              >
-                Info@VolthermTechnologies.com
-              </a>
-            </div>
+          {/* Contact Cards - Overlapping the section */}
+          <div className='absolute left-0 right-0 bottom-0 transform translate-y-1/2 px-4 sm:px-6'>
+            <div className='mx-auto max-w-7xl'>
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8'>
+                {/* Sales & Products */}
+                <div className='bg-white rounded-3xl p-6 sm:p-8 shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] hover:-translate-y-2 transition-all duration-300'>
+                  <div className='flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-teal-500/10 mb-5 sm:mb-6'>
+                    <Mail className='w-7 h-7 sm:w-8 sm:h-8 text-teal-600' />
+                  </div>
+                  <h3 className='text-xl sm:text-2xl font-bold text-slate-900 mb-3 sm:mb-4'>Sales & Products</h3>
+                  <a
+                    href='mailto:Sales@VolthermTechnologies.com'
+                    className='text-teal-600 hover:text-teal-700 font-medium break-all text-sm sm:text-base transition-colors'
+                  >
+                    Sales@VolthermTechnologies.com
+                  </a>
+                </div>
 
-            {/* WhatsApp / Call */}
-            <div className='bg-white rounded-2xl border border-slate-200 p-6 shadow-lg hover:shadow-xl transition-shadow'>
-              <div className='flex items-center justify-center w-12 h-12 rounded-full bg-green-500/10 mb-4'>
-                <Phone className='w-6 h-6 text-green-600' />
-              </div>
-              <h3 className='text-lg font-semibold text-slate-900 mb-2'>WhatsApp / Call us</h3>
-              <div className='space-y-1'>
-                <a href='tel:+917485918169' className='block text-slate-700 hover:text-teal-600 text-sm sm:text-base'>
-                  +91-7485918169
-                </a>
-                <a href='tel:+919998974127' className='block text-slate-700 hover:text-teal-600 text-sm sm:text-base'>
-                  +91-9998974127
-                </a>
+                {/* Business & Partners */}
+                <div className='bg-white rounded-3xl p-6 sm:p-8 shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] hover:-translate-y-2 transition-all duration-300'>
+                  <div className='flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-cyan-500/10 mb-5 sm:mb-6'>
+                    <Mail className='w-7 h-7 sm:w-8 sm:h-8 text-cyan-600' />
+                  </div>
+                  <h3 className='text-xl sm:text-2xl font-bold text-slate-900 mb-3 sm:mb-4'>Business & Partners</h3>
+                  <a
+                    href='mailto:Info@VolthermTechnologies.com'
+                    className='text-cyan-600 hover:text-cyan-700 font-medium break-all text-sm sm:text-base transition-colors'
+                  >
+                    Info@VolthermTechnologies.com
+                  </a>
+                </div>
+
+                {/* Direct Contact */}
+                <div className='bg-white rounded-3xl p-6 sm:p-8 shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] hover:-translate-y-2 transition-all duration-300'>
+                  <div className='flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-green-500/10 mb-5 sm:mb-6'>
+                    <Phone className='w-7 h-7 sm:w-8 sm:h-8 text-green-600' />
+                  </div>
+                  <h3 className='text-xl sm:text-2xl font-bold text-slate-900 mb-3 sm:mb-4'>Direct Contact</h3>
+                  <div className='space-y-2'>
+                    <a
+                      href='tel:+917485918169'
+                      className='block text-slate-700 hover:text-teal-600 font-medium text-sm sm:text-base transition-colors'
+                    >
+                      +91-7485918169 (Sales)
+                    </a>
+                    <a
+                      href='tel:+919998974127'
+                      className='block text-slate-700 hover:text-teal-600 font-medium text-sm sm:text-base transition-colors'
+                    >
+                      +91-9998974127 (Support)
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Spacer for overlapping cards */}
+      <div className='h-48 sm:h-56'></div>
 
       {/* Office Locations & Contact Form */}
       <section className='px-4 sm:px-6 py-8 sm:py-12'>
