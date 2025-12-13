@@ -117,8 +117,8 @@ const ProductCard = ({ product }: { product: Product }) => {
     return (
         <>
             <CardContainer className='inter-var w-full'>
-                <CardBody className='group/card relative h-auto w-full rounded-xl border border-slate-200 bg-white p-6 transition-all hover:shadow-2xl dark:border-white/[0.2] dark:bg-black'>
-                    <CardItem translateZ='50' className='text-2xl font-bold text-slate-900 dark:text-white'>
+                <CardBody className='group/card relative h-auto w-full rounded-xl border border-slate-200 bg-white p-6 transition-all hover:shadow-2xl dark:border-white/20 dark:bg-black'>
+                    <CardItem translateZ='50' className='text-xl font-bold text-slate-900 dark:text-white'>
                         {product.name}
                     </CardItem>
                     <CardItem
@@ -172,7 +172,7 @@ const ProductCard = ({ product }: { product: Product }) => {
                         <CardItem
                             translateZ={20}
                             as='button'
-                            className='rounded-lg bg-gradient-to-r from-teal-500 to-cyan-500 px-6 py-2.5 text-sm font-semibold text-white transition-all hover:shadow-lg'>
+                            className='rounded-lg bg-linear-to-r from-teal-500 to-cyan-500 px-6 py-2.5 text-sm font-semibold text-white transition-all hover:shadow-lg'>
                             Get Quote
                         </CardItem>
                     </div>
@@ -204,36 +204,36 @@ const ProductCard = ({ product }: { product: Product }) => {
                         {/* Content */}
                         <div className='grid gap-0 md:grid-cols-2'>
                             {/* Image Section */}
-                            <div className='relative h-[400px] overflow-hidden bg-slate-900 md:h-auto'>
+                            <div className='relative h-100 overflow-hidden bg-slate-900 md:h-auto'>
                                 <Image
                                     src={product.image}
                                     fill
                                     className='object-cover transition-transform duration-700 hover:scale-110'
                                     alt={product.name}
                                 />
-                                <div className='absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent'></div>
+                                <div className='absolute inset-0 bg-linear-to-t from-slate-900/80 to-transparent'></div>
                                 <div className='absolute right-6 bottom-6 left-6'>
-                                    <h2 className='text-3xl font-bold text-white'>{product.name}</h2>
-                                    <p className='mt-2 text-slate-200'>{product.tagline}</p>
+                                    <h2 className='text-2xl font-bold text-white'>{product.name}</h2>
+                                    <p className='mt-2 text-sm text-slate-200'>{product.tagline}</p>
                                 </div>
                             </div>
 
                             {/* Details Section */}
                             <div className='p-8'>
                                 <div className='mb-6'>
-                                    <div className='mb-2 text-sm font-semibold tracking-wider text-slate-500 uppercase'>
+                                    <div className='mb-2 text-xs font-semibold tracking-wider text-slate-500 uppercase'>
                                         Description
                                     </div>
-                                    <p className='leading-relaxed text-slate-700'>{product.description}</p>
+                                    <p className='text-sm leading-relaxed text-slate-700'>{product.description}</p>
                                 </div>
 
                                 <div className='mb-6'>
-                                    <div className='mb-3 text-sm font-semibold tracking-wider text-slate-500 uppercase'>
+                                    <div className='mb-3 text-xs font-semibold tracking-wider text-slate-500 uppercase'>
                                         Key Features
                                     </div>
                                     <ul className='space-y-2'>
                                         {product.features.map((feature, index) => (
-                                            <li key={index} className='flex items-start gap-2 text-slate-700'>
+                                            <li key={index} className='flex items-start gap-2 text-sm text-slate-700'>
                                                 <svg
                                                     className='mt-0.5 size-5 shrink-0 text-teal-500'
                                                     fill='currentColor'
@@ -251,10 +251,10 @@ const ProductCard = ({ product }: { product: Product }) => {
                                 </div>
 
                                 <div className='mb-6'>
-                                    <div className='mb-3 text-sm font-semibold tracking-wider text-slate-500 uppercase'>
+                                    <div className='mb-3 text-xs font-semibold tracking-wider text-slate-500 uppercase'>
                                         Technical Specifications
                                     </div>
-                                    <div className='space-y-3'>
+                                    <div className='space-y-2'>
                                         {product.specs.map((spec, index) => (
                                             <div
                                                 key={index}
@@ -272,7 +272,7 @@ const ProductCard = ({ product }: { product: Product }) => {
                                     <button className='flex-1 rounded-lg border-2 border-slate-900 px-6 py-3 font-semibold text-slate-900 transition-all hover:bg-slate-900 hover:text-white'>
                                         Download Datasheet
                                     </button>
-                                    <button className='flex-1 rounded-lg bg-gradient-to-r from-teal-500 to-cyan-500 px-6 py-3 font-semibold text-white transition-all hover:shadow-lg'>
+                                    <button className='flex-1 rounded-lg bg-linear-to-r from-teal-500 to-cyan-500 px-6 py-3 font-semibold text-white transition-all hover:shadow-lg'>
                                         Request Quote
                                     </button>
                                 </div>
@@ -291,10 +291,10 @@ export default function EVBatteriesPage() {
             <NavbarDemo />
 
             {/* Hero Section */}
-            <section className='bg-gradient-to-b from-slate-900 to-slate-800 px-6 pt-32 pb-20 text-white'>
+            <section className='bg-linear-to-b from-slate-900 to-slate-800 px-6 pt-32 pb-20 text-white'>
                 <div className='mx-auto max-w-7xl'>
-                    <h1 className='mb-4 text-5xl font-bold md:text-6xl'>Electric Vehicle Batteries</h1>
-                    <p className='max-w-2xl text-xl text-slate-300'>
+                    <h1 className='mb-4 text-4xl font-bold md:text-5xl'>Electric Vehicle Batteries</h1>
+                    <p className='max-w-2xl text-lg text-slate-300'>
                         Advanced energy storage solutions engineered for the future of electric mobility
                     </p>
                 </div>
