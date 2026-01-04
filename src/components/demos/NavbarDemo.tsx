@@ -80,22 +80,28 @@ function Navbar({ className }: { className?: string }) {
                         <MenuItem setActive={setActive} active={active} item='Products'>
                             <div className='grid grid-cols-2 gap-10 p-4 text-sm'>
                                 <ProductItem
-                                    title='Electric Vehicles Batteries'
-                                    href='/products/ev-batteries'
+                                    title='Automobile Application'
+                                    href='/products/automobile'
                                     src='https://5.imimg.com/data5/SELLER/Default/2022/9/TL/WW/PA/100678072/60v-20ah-lithium-electric-vehicle-battery-pack.png'
                                     description='High-performance battery solutions for electric vehicles.'
                                 />
                                 <ProductItem
-                                    title='Solar Batteries'
-                                    href='/products/solar-batteries'
-                                    src='https://lh3.googleusercontent.com/sitesv/AAzXCkcLg3HzkHWw1eEcAIIsekRSOQNgKInxrLsWtrYmjFObNpfsxycRlJv7kO7N52dHr3HehEUoO-m4Xm1_dvCCw-uQyNcHrCSROqnhQR7ztid22IyW_zmgJ6DpNN8S_HDbhCdnGMaYG3W6ZY1ZPaUAdGT7L_zo1ltdm1wiuUiuh_nsNkNu18CEAllAW0QT73BgxfbbmGAZyawmlddOAW84srRiP0MjnGRPbRsWIVc=w1280'
-                                    description='Efficient energy storage systems for solar installations.'
+                                    title='Aerospace Application'
+                                    href='/products/aerospace'
+                                    src='https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?q=80&w=2670&auto=format&fit=crop'
+                                    description='Lightweight, reliable batteries for aerospace systems.'
                                 />
                                 <ProductItem
-                                    title='Drone Batteries'
-                                    href='/products/drone-batteries'
-                                    src='https://5.imimg.com/data5/ANDROID/Default/2025/9/546735543/OQ/MC/GY/100678072/product-jpeg.jpg'
-                                    description='Lightweight, powerful batteries for aerial applications.'
+                                    title='BESS Application'
+                                    href='/products/bess'
+                                    src='https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?q=80&w=2670&auto=format&fit=crop'
+                                    description='Battery Energy Storage System solutions.'
+                                />
+                                <ProductItem
+                                    title='Telecom Application'
+                                    href='/products/telecom'
+                                    src='https://images.unsplash.com/photo-1526628653408-7c62979aab60?q=80&w=2670&auto=format&fit=crop'
+                                    description='Reliable backup power for telecom infrastructure.'
                                 />
                             </div>
                         </MenuItem>
@@ -123,22 +129,28 @@ function Navbar({ className }: { className?: string }) {
                             <p className='font-semibold text-black dark:text-white'>Products</p>
                             <div className='flex flex-col space-y-2 pl-4'>
                                 <Link
-                                    href='/products/ev-batteries'
+                                    href='/products/automobile'
                                     className='text-sm text-neutral-700 hover:text-black dark:text-neutral-200'
                                     onClick={() => setIsMobileMenuOpen(false)}>
-                                    Electric Vehicles Batteries
+                                    Automobile Application
                                 </Link>
                                 <Link
-                                    href='/products/solar-batteries'
+                                    href='/products/aerospace'
                                     className='text-sm text-neutral-700 hover:text-black dark:text-neutral-200'
                                     onClick={() => setIsMobileMenuOpen(false)}>
-                                    Solar Batteries
+                                    Aerospace Application
                                 </Link>
                                 <Link
-                                    href='/products/drone-batteries'
+                                    href='/products/bess'
                                     className='text-sm text-neutral-700 hover:text-black dark:text-neutral-200'
                                     onClick={() => setIsMobileMenuOpen(false)}>
-                                    Drone Batteries
+                                    BESS Application
+                                </Link>
+                                <Link
+                                    href='/products/telecom'
+                                    className='text-sm text-neutral-700 hover:text-black dark:text-neutral-200'
+                                    onClick={() => setIsMobileMenuOpen(false)}>
+                                    Telecom Application
                                 </Link>
                             </div>
                         </div>
