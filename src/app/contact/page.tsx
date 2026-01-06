@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
 import NavbarDemo from '@/components/demos/NavbarDemo';
+import { getContactInfo, type ContactInfo } from '@/lib/adminData';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -12,6 +13,11 @@ export default function ContactPage() {
     phone: '',
     requirements: ''
   });
+  const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
+
+  useEffect(() => {
+    setContactInfo(getContactInfo());
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +31,8 @@ export default function ContactPage() {
       [e.target.name]: e.target.value
     });
   };
+
+  if (!contactInfo) return null;
 
   return (
     <main className='min-h-screen w-full bg-gradient-to-b from-white to-slate-50'>
@@ -54,10 +62,10 @@ export default function ContactPage() {
                   </div>
                   <h3 className='text-xl sm:text-2xl font-bold text-slate-900 mb-3 sm:mb-4'>Sales & Products</h3>
                   <a
-                    href='mailto:Sales@VolthermTechnologies.com'
+                    href={`mailto:${contactInfo.sales.email}`}
                     className='text-teal-600 hover:text-teal-700 font-medium break-all text-sm sm:text-base transition-colors'
                   >
-                    Sales@VolthermTechnologies.com
+                    {contactInfo.sales.email}
                   </a>
                 </div>
 
@@ -68,10 +76,10 @@ export default function ContactPage() {
                   </div>
                   <h3 className='text-xl sm:text-2xl font-bold text-slate-900 mb-3 sm:mb-4'>Business & Partners</h3>
                   <a
-                    href='mailto:Info@VolthermTechnologies.com'
+                    href={`mailto:${contactInfo.business.email}`}
                     className='text-cyan-600 hover:text-cyan-700 font-medium break-all text-sm sm:text-base transition-colors'
                   >
-                    Info@VolthermTechnologies.com
+                    {contactInfo.business.email}
                   </a>
                 </div>
 
@@ -83,16 +91,16 @@ export default function ContactPage() {
                   <h3 className='text-xl sm:text-2xl font-bold text-slate-900 mb-3 sm:mb-4'>Direct Contact</h3>
                   <div className='space-y-2'>
                     <a
-                      href='tel:+917485918169'
+                      href={`tel:${contactInfo.sales.phone}`}
                       className='block text-slate-700 hover:text-teal-600 font-medium text-sm sm:text-base transition-colors'
                     >
-                      +91-7485918169 (Sales)
+                      {contactInfo.sales.phone} (Sales)
                     </a>
                     <a
-                      href='tel:+919998974127'
+                      href={`tel:${contactInfo.support.phone}`}
                       className='block text-slate-700 hover:text-teal-600 font-medium text-sm sm:text-base transition-colors'
                     >
-                      +91-9998974127 (Support)
+                      {contactInfo.support.phone} (Support)
                     </a>
                   </div>
                 </div>

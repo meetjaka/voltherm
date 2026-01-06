@@ -1,41 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import Image from 'next/image';
 
 import NavbarDemo from '@/components/demos/NavbarDemo';
-
-interface Certificate {
-    id: string;
-    src: string;
-    alt: string;
-    title: string;
-}
-
-const certificates: Certificate[] = [
-    {
-        id: 'cert1',
-        src: '/certificate/c1.png',
-        alt: 'ISO Certificate 1',
-        title: 'International Standard'
-    },
-    {
-        id: 'cert2',
-        src: '/certificate/c2.png',
-        alt: 'ISO Certificate 2',
-        title: 'Quality Management'
-    },
-    {
-        id: 'cert3',
-        src: '/certificate/c3.png',
-        alt: 'ISO Certificate 3',
-        title: 'Compliance'
-    }
-];
+import { getCertificates, type Certificate } from '@/lib/adminData';
 
 export default function AboutPage() {
+    const [certificates, setCertificates] = useState<Certificate[]>([]);
     const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
+
+    useEffect(() => {
+        setCertificates(getCertificates());
+    }, []);
 
     return (
         <main className='min-h-screen bg-white'>

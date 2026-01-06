@@ -34,3 +34,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Admin documentation (internal use only)
+ADMIN_*.md
+README_ADMIN.md
+FIXES_APPLIED.md

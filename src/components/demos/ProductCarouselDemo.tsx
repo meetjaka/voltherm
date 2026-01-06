@@ -3,65 +3,23 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-const products = [
-    {
-        id: 1,
-        title: 'Lithium ion Battery Pack (2 Wheeler)',
-        description: 'High-performance lithium-ion battery solution specifically designed for two-wheeler electric vehicles with superior energy density.',
-        image: 'https://5.imimg.com/data5/SELLER/Default/2022/9/TL/WW/PA/100678072/60v-20ah-lithium-electric-vehicle-battery-pack.png',
-        specs: ['2 Wheeler', 'Lithium Ion', 'Premium'],
-        color: 'from-teal-500 to-cyan-400'
-    },
-    {
-        id: 2,
-        title: 'Lithium Iron Phosphate (LiFePo4) Battery Pack',
-        description: 'Safe and reliable LiFePo4 battery pack offering excellent cycle life and thermal stability for various applications.',
-        image: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=800&auto=format&fit=crop',
-        specs: ['LiFePo4', 'Reliable', 'Long Life'],
-        color: 'from-blue-500 to-cyan-400'
-    },
-    {
-        id: 3,
-        title: 'Solar Smart Bench',
-        description: 'Innovative solar-powered intelligent bench combining energy storage with smart charging capabilities for public spaces.',
-        image: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=800&auto=format&fit=crop',
-        specs: ['Solar Powered', 'Smart Tech', 'Public'],
-        color: 'from-amber-500 to-orange-400'
-    },
-    {
-        id: 4,
-        title: 'LFP Battery Pack',
-        description: 'Lightweight and powerful LFP battery pack engineered for maximum performance and reliability in demanding applications.',
-        image: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?q=80&w=800&auto=format&fit=crop',
-        specs: ['LFP', 'Lightweight', 'High Power'],
-        color: 'from-purple-500 to-pink-400'
-    },
-    {
-        id: 5,
-        title: 'Stackable Battery Packs',
-        description: 'Modular and stackable battery pack system designed for scalable energy storage solutions with flexible configurations.',
-        image: 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?q=80&w=800&auto=format&fit=crop',
-        specs: ['Stackable', 'Modular', 'Scalable'],
-        color: 'from-slate-500 to-gray-600'
-    },
-    {
-        id: 6,
-        title: 'Drone Battery Pack',
-        description: 'Specialized battery pack designed for drone applications with optimized weight-to-power ratio and fast charging capability.',
-        image: 'https://5.imimg.com/data5/ANDROID/Default/2025/9/546735543/OQ/MC/GY/100678072/product-jpeg.jpg',
-        specs: ['Drone Ready', 'Fast Charge', 'Lightweight'],
-        color: 'from-red-500 to-pink-400'
-    }
-];
+import { getProducts, type Product } from '@/lib/adminData';
 
 export default function ProductCarouselDemo() {
+    const [products, setProducts] = useState<Product[]>([]);
     const [current, setCurrent] = useState(0);
     const [direction, setDirection] = useState(0);
     const [autoPlay, setAutoPlay] = useState(true);
 
     useEffect(() => {
-        if (!autoPlay) return;
+        // Load products from admin data and filter visible ones
+        const allProducts = getProducts();
+        const visibleProducts = allProducts.filter(p => p.visible !== false);
+        setProducts(visibleProducts);
+    }, []);
+
+    useEffect(() => {
+        if (!autoPlay || products.length === 0) return;
 
         const timer = setInterval(() => {
             setCurrent((prev) => (prev + 1) % products.length);
@@ -69,21 +27,33 @@ export default function ProductCarouselDemo() {
         }, 5000);
 
         return () => clearInterval(timer);
-    }, [autoPlay]);
+    }, [autoPlay, products.length]);
 
     const next = () => {
+        if (products.length === 0) return;
         setCurrent((prev) => (prev + 1) % products.length);
         setDirection(1);
         setAutoPlay(false);
     };
 
     const prev = () => {
+        if (products.length === 0) return;
         setCurrent((prev) => (prev - 1 + products.length) % products.length);
         setDirection(-1);
         setAutoPlay(false);
     };
 
+    // Don't render if no products available
+    if (products.length === 0) {
+        return null;
+    }
+
     const product = products[current];
+    
+    // Extra safety check
+    if (!product) {
+        return null;
+    }
 
     return (
         <div className='relative w-full min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 via-white to-slate-50 py-24 px-4'>
@@ -104,7 +74,7 @@ export default function ProductCarouselDemo() {
                 <div className='grid grid-cols-1 gap-12 lg:grid-cols-2 items-center'>
                     {/* Left Side - Image Carousel */}
                     <div className='relative'>
-                        <div className='relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl'>
+                        <div className='relative h-100 md:h-125 rounded-3xl overflow-hidden shadow-2xl'>
                             <Image
                                 src={product.image}
                                 alt={product.title}
@@ -113,7 +83,7 @@ export default function ProductCarouselDemo() {
                                 priority
                             />
                             {/* Overlay Gradient */}
-                            <div className={`absolute inset-0 bg-gradient-to-br ${product.color} opacity-20 mix-blend-multiply`}></div>
+                            <div className={`absolute inset-0 bg-linear-to-br ${product.color} opacity-20 mix-blend-multiply`}></div>
                         </div>
 
                         {/* Navigation Buttons */}
@@ -205,7 +175,7 @@ export default function ProductCarouselDemo() {
                         {/* Progress Bar */}
                         <div className='w-full h-1 bg-slate-200 rounded-full overflow-hidden mt-8'>
                             <div
-                                className={`h-full bg-gradient-to-r ${product.color} transition-all duration-500`}
+                                className={`h-full bg-linear-to-r ${product.color} transition-all duration-500`}
                                 style={{ width: `${((current + 1) / products.length) * 100}%` }}
                             ></div>
                         </div>

@@ -7,6 +7,7 @@ import { ThemeProvider } from 'next-themes';
 
 import '@/app/globals.css';
 import Footer from '@/components/footer';
+import AdminIndicator from '@/components/AdminIndicator';
 import { Toaster } from '@/registry/new-york-v4/ui/sonner';
 
 const geistSans = localFont({
@@ -37,6 +38,7 @@ const Layout = ({ children }: Readonly<{ children: ReactNode }>) => {
                 <ThemeProvider attribute='class'>
                     {children}
                     <Footer />
+                    <AdminIndicator />
                     <Toaster />
                 </ThemeProvider>
             </body>

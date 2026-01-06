@@ -62,7 +62,7 @@ const HomePage: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className='relative flex h-[500px] items-center justify-center lg:h-[600px]'>
+                        <div className='relative flex h-125 items-center justify-center lg:h-150'>
                             <Image
                                 src='https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=1000&auto=format&fit=crop'
                                 alt='Battery Module'
