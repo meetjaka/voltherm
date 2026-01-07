@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import Image from 'next/image';
 
 import NavbarDemo from '@/components/demos/NavbarDemo';
-import { getCertificates, type Certificate } from '@/lib/adminData';
+import { type Certificate, getCertificates } from '@/lib/adminData';
 
 export default function AboutPage() {
     const [certificates, setCertificates] = useState<Certificate[]>([]);
@@ -35,13 +35,15 @@ export default function AboutPage() {
                     <div className='grid gap-12 lg:grid-cols-2'>
                         {/* Text Content */}
                         <div className='flex flex-col justify-center'>
-                            <h2 className='mb-6 text-3xl font-bold text-slate-900'>Voltherm Technologies LLP</h2>
+                            <h2 className='mb-6 text-3xl font-bold text-slate-900'>
+                                Voltherm Innovation Private Limited
+                            </h2>
                             <p className='mb-6 text-lg leading-relaxed text-slate-700'>
-                                Voltherm Technologies LLP is an ISO 9001:2015 certified firm specialized in the
-                                development of Lithium Battery Packs and Solar Consumer Products. Our services at a
+                                Voltherm Innovation Private Limited is an ISO 9001:2015 certified firm specialized in
+                                the development of Lithium Battery Packs and Solar Consumer Products. Our services at a
                                 glance: Energy Storage, Solar Consumer Products, Electric Vehicle Charging Stations EPC,
-                                Solar and EV consultancy. At Voltherm Technologies, you are assured of the quality that
-                                is provided with the highest standard of technical support.
+                                Solar and EV consultancy. At Voltherm Innovation Private Limited, you are assured of the
+                                quality that is provided with the highest standard of technical support.
                             </p>
 
                             {/* Services List */}

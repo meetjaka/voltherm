@@ -12,7 +12,7 @@ const Footer = () => {
                             <div className='mr-2 flex h-8 w-8 items-center justify-center rounded bg-slate-900 font-bold text-white'>
                                 V
                             </div>
-                            <span className='text-xl font-bold text-slate-900'>VOLTARA</span>
+                            <span className='text-xl font-bold text-slate-900'>VOLTHERM</span>
                         </div>
                         <p className='mb-6 text-slate-500'>
                             Pioneering the future of energy storage with advanced thermal management and cell chemistry.
@@ -83,7 +83,7 @@ const Footer = () => {
                 </div>
 
                 <div className='flex flex-col items-center justify-between border-t border-slate-200 pt-8 text-sm text-slate-400 md:flex-row'>
-                    <p>&copy; 2025 Voltherm Technologies. All rights reserved.</p>
+                    <p>&copy; 2025 Voltherm Innovation Private Limited. All rights reserved.</p>
                     <div className='mt-6 flex flex-col items-center gap-6 md:mt-0 md:flex-row md:gap-8'>
                         <div className='flex items-center gap-4'>
                             <a
