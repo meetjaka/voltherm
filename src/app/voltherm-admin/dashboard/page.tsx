@@ -15,7 +15,8 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  Save
+  Save,
+  X
 } from 'lucide-react';
 import { checkAdminSession, clearAdminSession } from '@/lib/adminAuth';
 import { 
@@ -314,12 +315,12 @@ export default function AdminDashboard() {
             {activeTab === 'inquiries' && (
               <InquiriesTab
                 inquiries={inquiries}
-                onStatusChange={(id, status, notes) => {
+                onStatusChange={(id: string, status: 'new' | 'in-progress' | 'completed' | 'rejected', notes?: string) => {
                   updateInquiryStatus(id, status, notes);
                   setInquiries(getInquiries());
                   toast.success('Inquiry status updated');
                 }}
-                onDelete={(id) => {
+                onDelete={(id: string) => {
                   deleteInquiry(id);
                   setInquiries(getInquiries());
                   toast.success('Inquiry deleted');
@@ -342,7 +343,7 @@ export default function AdminDashboard() {
                 setIsAddingMainCategory={setIsAddingMainCategory}
                 setIsAddingSubCategory={setIsAddingSubCategory}
                 setSelectedMainCategory={setSelectedMainCategory}
-                onSaveMainCategory={(category) => {
+                onSaveMainCategory={(category: MainCategory) => {
                   if (editingMainCategory) {
                     updateMainCategory(category.id, category);
                     toast.success('Main category updated');
@@ -354,7 +355,7 @@ export default function AdminDashboard() {
                   setEditingMainCategory(null);
                   setIsAddingMainCategory(false);
                 }}
-                onSaveSubCategory={(category) => {
+                onSaveSubCategory={(category: SubCategory) => {
                   if (editingSubCategory) {
                     updateSubCategory(category.id, category);
                     toast.success('Sub-category updated');
@@ -366,7 +367,7 @@ export default function AdminDashboard() {
                   setEditingSubCategory(null);
                   setIsAddingSubCategory(false);
                 }}
-                onDeleteMainCategory={(id) => {
+                onDeleteMainCategory={(id: string) => {
                   if (confirm('Delete this main category? All sub-categories and products will be uncategorized.')) {
                     deleteMainCategory(id);
                     setMainCategories(getMainCategories());
@@ -375,7 +376,7 @@ export default function AdminDashboard() {
                     toast.success('Main category deleted');
                   }
                 }}
-                onDeleteSubCategory={(id) => {
+                onDeleteSubCategory={(id: string) => {
                   if (confirm('Delete this sub-category? Products in this category will be uncategorized.')) {
                     deleteSubCategory(id);
                     setSubCategories(getSubCategories());
@@ -383,7 +384,7 @@ export default function AdminDashboard() {
                     toast.success('Sub-category deleted');
                   }
                 }}
-                onToggleMainCategoryVisibility={(id) => {
+                onToggleMainCategoryVisibility={(id: string) => {
                   const cat = mainCategories.find(c => c.id === id);
                   if (cat) {
                     updateMainCategory(id, { visible: !cat.visible });
@@ -391,7 +392,7 @@ export default function AdminDashboard() {
                     toast.success('Main category visibility updated');
                   }
                 }}
-                onToggleSubCategoryVisibility={(id) => {
+                onToggleSubCategoryVisibility={(id: string) => {
                   const cat = subCategories.find(c => c.id === id);
                   if (cat) {
                     updateSubCategory(id, { visible: !cat.visible });
@@ -1213,244 +1214,6 @@ function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
               )}
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Categories Tab Component
-function CategoriesTab({ categories, products, editingCategory, isAddingCategory, setEditingCategory, setIsAddingCategory, onSave, onDelete, onToggleVisibility }: any) {
-  const [formData, setFormData] = useState<Category>({
-    id: '',
-    name: '',
-    slug: '',
-    description: '',
-    icon: '📦',
-    visible: true,
-    order: 0
-  });
-
-  useEffect(() => {
-    if (editingCategory) {
-      setFormData(editingCategory);
-    } else if (isAddingCategory) {
-      setFormData({
-        id: '',
-        name: '',
-        slug: '',
-        description: '',
-        icon: '📦',
-        visible: true,
-        order: 0
-      });
-    }
-  }, [editingCategory, isAddingCategory]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Auto-generate slug from name if not provided
-    if (!formData.slug) {
-      formData.slug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    }
-    
-    onSave(formData);
-  };
-
-  const getProductCountByCategory = (categoryId: string) => {
-    return products.filter((p: Product) => p.categoryId === categoryId).length;
-  };
-
-  if (editingCategory || isAddingCategory) {
-    return (
-      <div className='bg-white rounded-xl border border-slate-200 p-6'>
-        <div className='flex items-center justify-between mb-6'>
-          <h3 className='text-xl font-bold text-slate-900'>
-            {editingCategory ? 'Edit Category' : 'Add New Category'}
-          </h3>
-          <button
-            onClick={() => {
-              setEditingCategory(null);
-              setIsAddingCategory(false);
-            }}
-            className='text-slate-600 hover:text-slate-900'
-          >
-            Cancel
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className='space-y-4'>
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>Category Name *</label>
-            <input
-              type='text'
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-              placeholder='E-Bike Solutions'
-              required
-            />
-          </div>
-
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>
-              Slug (URL-friendly name)
-            </label>
-            <input
-              type='text'
-              value={formData.slug}
-              onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-              placeholder='e-bike-solutions (auto-generated if empty)'
-            />
-            <p className='text-xs text-slate-500 mt-1'>Leave empty to auto-generate from name</p>
-          </div>
-
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>Description *</label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={3}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-              placeholder='High-performance battery solutions for electric bikes'
-              required
-            />
-          </div>
-
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>Icon (Emoji) *</label>
-            <input
-              type='text'
-              value={formData.icon}
-              onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-              placeholder='🚴'
-              maxLength={4}
-              required
-            />
-            <p className='text-xs text-slate-500 mt-1'>
-              Use emoji: 🚴 🛺 🏍️ 🚗 ⚡ 🔋 🌞 etc.
-            </p>
-          </div>
-
-          <div className='flex items-center gap-2'>
-            <input
-              type='checkbox'
-              id='visible'
-              checked={formData.visible}
-              onChange={(e) => setFormData({ ...formData, visible: e.target.checked })}
-              className='w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500'
-            />
-            <label htmlFor='visible' className='text-sm font-medium text-slate-700'>
-              Visible on website
-            </label>
-          </div>
-
-          <button
-            type='submit'
-            className='w-full py-3 px-4 bg-linear-to-r from-teal-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all'
-          >
-            <Save className='w-4 h-4 inline mr-2' />
-            {editingCategory ? 'Update Category' : 'Add Category'}
-          </button>
-        </form>
-      </div>
-    );
-  }
-
-  return (
-    <div className='space-y-4'>
-      <div className='flex items-center justify-between'>
-        <div>
-          <h2 className='text-2xl font-bold text-slate-900'>Category Management</h2>
-          <p className='text-slate-600'>Manage product categories for the store</p>
-        </div>
-        <button
-          onClick={() => setIsAddingCategory(true)}
-          className='flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors'
-        >
-          <Plus className='w-4 h-4' />
-          Add Category
-        </button>
-      </div>
-
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-        {categories.length === 0 ? (
-          <div className='col-span-full bg-white rounded-xl border border-slate-200 p-12 text-center'>
-            <LayoutDashboard className='w-16 h-16 text-slate-300 mx-auto mb-4' />
-            <h3 className='text-xl font-bold text-slate-900 mb-2'>No categories yet</h3>
-            <p className='text-slate-600 mb-4'>Create your first category to organize products</p>
-            <button
-              onClick={() => setIsAddingCategory(true)}
-              className='inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors'
-            >
-              <Plus className='w-4 h-4' />
-              Add First Category
-            </button>
-          </div>
-        ) : (
-          categories
-            .sort((a: Category, b: Category) => a.order - b.order)
-            .map((category: Category) => (
-              <div key={category.id} className='bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow'>
-                <div className='flex items-start justify-between mb-4'>
-                  <div className='flex items-center gap-3'>
-                    <span className='text-4xl'>{category.icon}</span>
-                    <div>
-                      <h3 className='font-bold text-slate-900'>{category.name}</h3>
-                      <p className='text-xs text-slate-500'>/{category.slug}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => onToggleVisibility(category.id)}
-                    className={`p-2 rounded-lg transition-colors ${
-                      category.visible
-                        ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                        : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                    }`}
-                    title={category.visible ? 'Visible' : 'Hidden'}
-                  >
-                    {category.visible ? <Eye className='w-4 h-4' /> : <EyeOff className='w-4 h-4' />}
-                  </button>
-                </div>
-
-                <p className='text-sm text-slate-600 mb-4 line-clamp-2'>{category.description}</p>
-
-                <div className='flex items-center gap-2 mb-4'>
-                  <Package className='w-4 h-4 text-slate-400' />
-                  <span className='text-sm text-slate-600'>
-                    {getProductCountByCategory(category.id)} products
-                  </span>
-                </div>
-
-                <div className='flex gap-2'>
-                  <button
-                    onClick={() => setEditingCategory(category)}
-                    className='flex-1 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium'
-                  >
-                    <Edit className='w-4 h-4 inline mr-1' />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => onDelete(category.id)}
-                    className='flex-1 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium'
-                  >
-                    <Trash2 className='w-4 h-4 inline mr-1' />
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))
-        )}
-      </div>
-
-      {categories.length > 0 && (
-        <div className='bg-blue-50 border border-blue-200 rounded-xl p-4'>
-          <p className='text-sm text-blue-800'>
-            <strong>Tip:</strong> Categories are displayed in the store page filter buttons. Hidden categories won't appear but their products remain visible.
-          </p>
         </div>
       )}
     </div>
