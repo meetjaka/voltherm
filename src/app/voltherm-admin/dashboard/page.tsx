@@ -25,22 +25,46 @@ import {
   saveCertificates, 
   getContactInfo, 
   saveContactInfo,
+  getInquiries,
+  updateInquiryStatus,
+  deleteInquiry,
+  getMainCategories,
+  getSubCategories,
+  saveMainCategories,
+  saveSubCategories,
+  addMainCategory,
+  addSubCategory,
+  updateMainCategory,
+  updateSubCategory,
+  deleteMainCategory,
+  deleteSubCategory,
   type Product,
   type Certificate,
-  type ContactInfo
+  type ContactInfo,
+  type Inquiry,
+  type MainCategory,
+  type SubCategory
 } from '@/lib/adminData';
 import { toast } from 'sonner';
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'products' | 'contact' | 'certificates' | 'overview'>('overview');
+  const [activeTab, setActiveTab] = useState<'products' | 'contact' | 'certificates' | 'inquiries' | 'categories' | 'overview'>('overview');
   const [products, setProducts] = useState<Product[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [mainCategories, setMainCategories] = useState<MainCategory[]>([]);
+  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingCertificate, setEditingCertificate] = useState<Certificate | null>(null);
+  const [editingMainCategory, setEditingMainCategory] = useState<MainCategory | null>(null);
+  const [editingSubCategory, setEditingSubCategory] = useState<SubCategory | null>(null);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [isAddingCertificate, setIsAddingCertificate] = useState(false);
+  const [isAddingMainCategory, setIsAddingMainCategory] = useState(false);
+  const [isAddingSubCategory, setIsAddingSubCategory] = useState(false);
+  const [selectedMainCategory, setSelectedMainCategory] = useState<string>(''); // For sub-category management
 
   useEffect(() => {
     if (!checkAdminSession()) {
@@ -52,6 +76,9 @@ export default function AdminDashboard() {
     setProducts(getProducts());
     setCertificates(getCertificates());
     setContactInfo(getContactInfo());
+    setInquiries(getInquiries());
+    setMainCategories(getMainCategories());
+    setSubCategories(getSubCategories());
   }, [router]);
 
   const handleLogout = () => {
@@ -88,6 +115,15 @@ export default function AdminDashboard() {
     setProducts(updatedProducts);
     saveProducts(updatedProducts);
     toast.success('Product visibility updated');
+  };
+
+  const handleToggleProductAvailability = (id: number) => {
+    const updatedProducts = products.map(p => 
+      p.id === id ? { ...p, available: !p.available } : p
+    );
+    setProducts(updatedProducts);
+    saveProducts(updatedProducts);
+    toast.success('Product availability updated');
   };
 
   const handleSaveCertificate = (cert: Certificate) => {
@@ -129,7 +165,7 @@ export default function AdminDashboard() {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex items-center justify-between h-16'>
             <div className='flex items-center gap-3'>
-              <div className='w-10 h-10 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center'>
+              <div className='w-10 h-10 rounded-lg bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center'>
                 <Settings className='w-6 h-6 text-white' />
               </div>
               <div>
@@ -197,6 +233,33 @@ export default function AdminDashboard() {
                 <ImageIcon className='w-5 h-5' />
                 Certificates
               </button>
+              <button
+                onClick={() => setActiveTab('inquiries')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'inquiries'
+                    ? 'bg-teal-50 text-teal-600'
+                    : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <FileText className='w-5 h-5' />
+                Inquiries
+                {inquiries.filter(i => i.status === 'new').length > 0 && (
+                  <span className='ml-auto rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white'>
+                    {inquiries.filter(i => i.status === 'new').length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('categories')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'categories'
+                    ? 'bg-teal-50 text-teal-600'
+                    : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <LayoutDashboard className='w-5 h-5' />
+                Categories
+              </button>
             </nav>
           </div>
 
@@ -207,12 +270,16 @@ export default function AdminDashboard() {
                 productsCount={products.length}
                 certificatesCount={certificates.length}
                 visibleProductsCount={products.filter(p => p.visible).length}
+                inquiriesCount={inquiries.length}
+                newInquiriesCount={inquiries.filter(i => i.status === 'new').length}
               />
             )}
             
             {activeTab === 'products' && (
               <ProductsTab
                 products={products}
+                categories={subCategories}
+                mainCategories={mainCategories}
                 editingProduct={editingProduct}
                 isAddingProduct={isAddingProduct}
                 setEditingProduct={setEditingProduct}
@@ -220,6 +287,7 @@ export default function AdminDashboard() {
                 onSave={handleSaveProduct}
                 onDelete={handleDeleteProduct}
                 onToggleVisibility={handleToggleProductVisibility}
+                onToggleAvailability={handleToggleProductAvailability}
               />
             )}
             
@@ -242,6 +310,97 @@ export default function AdminDashboard() {
                 onDelete={handleDeleteCertificate}
               />
             )}
+
+            {activeTab === 'inquiries' && (
+              <InquiriesTab
+                inquiries={inquiries}
+                onStatusChange={(id, status, notes) => {
+                  updateInquiryStatus(id, status, notes);
+                  setInquiries(getInquiries());
+                  toast.success('Inquiry status updated');
+                }}
+                onDelete={(id) => {
+                  deleteInquiry(id);
+                  setInquiries(getInquiries());
+                  toast.success('Inquiry deleted');
+                }}
+              />
+            )}
+
+            {activeTab === 'categories' && (
+              <TwoLevelCategoriesTab
+                mainCategories={mainCategories}
+                subCategories={subCategories}
+                products={products}
+                editingMainCategory={editingMainCategory}
+                editingSubCategory={editingSubCategory}
+                isAddingMainCategory={isAddingMainCategory}
+                isAddingSubCategory={isAddingSubCategory}
+                selectedMainCategory={selectedMainCategory}
+                setEditingMainCategory={setEditingMainCategory}
+                setEditingSubCategory={setEditingSubCategory}
+                setIsAddingMainCategory={setIsAddingMainCategory}
+                setIsAddingSubCategory={setIsAddingSubCategory}
+                setSelectedMainCategory={setSelectedMainCategory}
+                onSaveMainCategory={(category) => {
+                  if (editingMainCategory) {
+                    updateMainCategory(category.id, category);
+                    toast.success('Main category updated');
+                  } else {
+                    addMainCategory(category);
+                    toast.success('Main category added');
+                  }
+                  setMainCategories(getMainCategories());
+                  setEditingMainCategory(null);
+                  setIsAddingMainCategory(false);
+                }}
+                onSaveSubCategory={(category) => {
+                  if (editingSubCategory) {
+                    updateSubCategory(category.id, category);
+                    toast.success('Sub-category updated');
+                  } else {
+                    addSubCategory(category);
+                    toast.success('Sub-category added');
+                  }
+                  setSubCategories(getSubCategories());
+                  setEditingSubCategory(null);
+                  setIsAddingSubCategory(false);
+                }}
+                onDeleteMainCategory={(id) => {
+                  if (confirm('Delete this main category? All sub-categories and products will be uncategorized.')) {
+                    deleteMainCategory(id);
+                    setMainCategories(getMainCategories());
+                    setSubCategories(getSubCategories());
+                    setProducts(getProducts());
+                    toast.success('Main category deleted');
+                  }
+                }}
+                onDeleteSubCategory={(id) => {
+                  if (confirm('Delete this sub-category? Products in this category will be uncategorized.')) {
+                    deleteSubCategory(id);
+                    setSubCategories(getSubCategories());
+                    setProducts(getProducts());
+                    toast.success('Sub-category deleted');
+                  }
+                }}
+                onToggleMainCategoryVisibility={(id) => {
+                  const cat = mainCategories.find(c => c.id === id);
+                  if (cat) {
+                    updateMainCategory(id, { visible: !cat.visible });
+                    setMainCategories(getMainCategories());
+                    toast.success('Main category visibility updated');
+                  }
+                }}
+                onToggleSubCategoryVisibility={(id) => {
+                  const cat = subCategories.find(c => c.id === id);
+                  if (cat) {
+                    updateSubCategory(id, { visible: !cat.visible });
+                    setSubCategories(getSubCategories());
+                    toast.success('Sub-category visibility updated');
+                  }
+                }}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -250,7 +409,7 @@ export default function AdminDashboard() {
 }
 
 // Overview Tab Component
-function OverviewTab({ productsCount, certificatesCount, visibleProductsCount }: any) {
+function OverviewTab({ productsCount, certificatesCount, visibleProductsCount, inquiriesCount, newInquiriesCount }: any) {
   return (
     <div className='space-y-6'>
       <div>
@@ -258,7 +417,7 @@ function OverviewTab({ productsCount, certificatesCount, visibleProductsCount }:
         <p className='text-slate-600'>Manage your website content and settings</p>
       </div>
 
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
         <div className='bg-white rounded-xl border border-slate-200 p-6'>
           <div className='flex items-center gap-4'>
             <div className='w-12 h-12 rounded-lg bg-teal-100 flex items-center justify-center'>
@@ -294,14 +453,33 @@ function OverviewTab({ productsCount, certificatesCount, visibleProductsCount }:
             </div>
           </div>
         </div>
+
+        <div className='bg-white rounded-xl border border-slate-200 p-6'>
+          <div className='flex items-center gap-4'>
+            <div className='w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center'>
+              <Mail className='w-6 h-6 text-amber-600' />
+            </div>
+            <div>
+              <p className='text-2xl font-bold text-slate-900'>
+                {inquiriesCount}
+                {newInquiriesCount > 0 && (
+                  <span className='ml-2 text-base text-red-500'>({newInquiriesCount} new)</span>
+                )}
+              </p>
+              <p className='text-sm text-slate-600'>Customer Inquiries</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className='bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl p-6 text-white'>
+      <div className='bg-linear-to-br from-teal-500 to-cyan-500 rounded-xl p-6 text-white'>
         <h3 className='text-xl font-bold mb-2'>Quick Actions</h3>
         <p className='text-teal-50 mb-4'>Use the sidebar to navigate to different sections and manage your content.</p>
         <div className='flex flex-wrap gap-3'>
           <span className='px-3 py-1 bg-white/20 rounded-full text-sm'>Add Products</span>
           <span className='px-3 py-1 bg-white/20 rounded-full text-sm'>Update Contact</span>
+          <span className='px-3 py-1 bg-white/20 rounded-full text-sm'>Manage Certificates</span>
+          <span className='px-3 py-1 bg-white/20 rounded-full text-sm'>View Inquiries</span>
           <span className='px-3 py-1 bg-white/20 rounded-full text-sm'>Manage Certificates</span>
         </div>
       </div>
@@ -310,7 +488,7 @@ function OverviewTab({ productsCount, certificatesCount, visibleProductsCount }:
 }
 
 // Products Tab Component
-function ProductsTab({ products, editingProduct, isAddingProduct, setEditingProduct, setIsAddingProduct, onSave, onDelete, onToggleVisibility }: any) {
+function ProductsTab({ products, categories, mainCategories, editingProduct, isAddingProduct, setEditingProduct, setIsAddingProduct, onSave, onDelete, onToggleVisibility, onToggleAvailability }: any) {
   const [formData, setFormData] = useState<Product>({
     id: 0,
     title: '',
@@ -318,7 +496,8 @@ function ProductsTab({ products, editingProduct, isAddingProduct, setEditingProd
     image: '',
     specs: [''],
     color: 'from-teal-500 to-cyan-400',
-    visible: true
+    visible: true,
+    available: true
   });
 
   useEffect(() => {
@@ -332,7 +511,8 @@ function ProductsTab({ products, editingProduct, isAddingProduct, setEditingProd
         image: '',
         specs: [''],
         color: 'from-teal-500 to-cyan-400',
-        visible: true
+        visible: true,
+        available: true
       });
     }
   }, [editingProduct, isAddingProduct]);
@@ -421,6 +601,31 @@ function ProductsTab({ products, editingProduct, isAddingProduct, setEditingProd
             </select>
           </div>
 
+          <div>
+            <label className='block text-sm font-medium text-slate-700 mb-2'>Sub-Category</label>
+            <select
+              value={formData.subCategoryId || formData.categoryId || ''}
+              onChange={(e) => setFormData({ ...formData, subCategoryId: e.target.value || undefined, categoryId: e.target.value || undefined })}
+              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+            >
+              <option value=''>No Sub-Category</option>
+              {mainCategories.sort((a: MainCategory, b: MainCategory) => a.order - b.order).map((mainCat: MainCategory) => {
+                const subCats = categories.filter((c: SubCategory) => c.mainCategoryId === mainCat.id).sort((a: SubCategory, b: SubCategory) => a.order - b.order);
+                if (subCats.length === 0) return null;
+                return (
+                  <optgroup key={mainCat.id} label={mainCat.name}>
+                    {subCats.map((subCat: SubCategory) => (
+                      <option key={subCat.id} value={subCat.id}>
+                        {subCat.icon} {subCat.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                );
+              })}
+            </select>
+            <p className='text-xs text-slate-500 mt-1'>Select a sub-category to organize this product</p>
+          </div>
+
           <div className='flex items-center gap-2'>
             <input
               type='checkbox'
@@ -436,7 +641,7 @@ function ProductsTab({ products, editingProduct, isAddingProduct, setEditingProd
 
           <button
             type='submit'
-            className='w-full py-3 px-4 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all'
+            className='w-full py-3 px-4 bg-linear-to-r from-teal-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all'
           >
             <Save className='w-4 h-4 inline mr-2' />
             Save Product
@@ -474,7 +679,24 @@ function ProductsTab({ products, editingProduct, isAddingProduct, setEditingProd
               <div className='flex-1'>
                 <div className='flex items-start justify-between'>
                   <div>
-                    <h3 className='font-bold text-slate-900'>{product.title}</h3>
+                    <div className='flex items-center gap-2 mb-1'>
+                      <h3 className='font-bold text-slate-900'>{product.title}</h3>
+                      {product.available === false && (
+                        <span className='px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-semibold'>
+                          Unavailable
+                        </span>
+                      )}
+                      {(product.subCategoryId || product.categoryId) && (() => {
+                        const subCat = categories.find((c: SubCategory) => c.id === (product.subCategoryId || product.categoryId));
+                        if (!subCat) return null;
+                        const mainCat = mainCategories.find((m: MainCategory) => m.id === subCat.mainCategoryId);
+                        return (
+                          <span className='px-2 py-0.5 bg-teal-100 text-teal-700 text-xs rounded-full font-semibold'>
+                            {subCat.icon} {subCat.name} {mainCat && `· ${mainCat.name}`}
+                          </span>
+                        );
+                      })()}
+                    </div>
                     <p className='text-sm text-slate-600 mt-1'>{product.description}</p>
                     <div className='flex flex-wrap gap-2 mt-2'>
                       {product.specs.map((spec, idx) => (
@@ -492,9 +714,20 @@ function ProductsTab({ products, editingProduct, isAddingProduct, setEditingProd
                           ? 'bg-green-100 text-green-600 hover:bg-green-200'
                           : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
                       }`}
-                      title={product.visible ? 'Visible' : 'Hidden'}
+                      title={product.visible ? 'Visible on website' : 'Hidden from website'}
                     >
                       {product.visible ? <Eye className='w-4 h-4' /> : <EyeOff className='w-4 h-4' />}
+                    </button>
+                    <button
+                      onClick={() => onToggleAvailability(product.id)}
+                      className={`p-2 rounded-lg transition-colors ${
+                        product.available !== false
+                          ? 'bg-teal-100 text-teal-600 hover:bg-teal-200'
+                          : 'bg-amber-100 text-amber-600 hover:bg-amber-200'
+                      }`}
+                      title={product.available !== false ? 'Available in store' : 'Unavailable in store'}
+                    >
+                      <Package className='w-4 h-4' />
                     </button>
                     <button
                       onClick={() => setEditingProduct(product)}
@@ -593,7 +826,7 @@ function ContactTab({ contactInfo, setContactInfo, onSave }: any) {
 
         <button
           onClick={onSave}
-          className='w-full py-3 px-4 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all'
+          className='w-full py-3 px-4 bg-linear-to-r from-teal-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all'
         >
           <Save className='w-4 h-4 inline mr-2' />
           Save Changes
@@ -686,7 +919,7 @@ function CertificatesTab({ certificates, editingCertificate, isAddingCertificate
 
           <button
             type='submit'
-            className='w-full py-3 px-4 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all'
+            className='w-full py-3 px-4 bg-linear-to-r from-teal-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all'
           >
             <Save className='w-4 h-4 inline mr-2' />
             Save Certificate
@@ -741,6 +974,957 @@ function CertificatesTab({ certificates, editingCertificate, isAddingCertificate
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// Inquiries Tab Component
+function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
+  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | Inquiry['status']>('all');
+
+  const filteredInquiries = statusFilter === 'all' 
+    ? inquiries 
+    : inquiries.filter((inq: Inquiry) => inq.status === statusFilter);
+
+  const getStatusColor = (status: Inquiry['status']) => {
+    switch (status) {
+      case 'new': return 'bg-red-100 text-red-700';
+      case 'in-progress': return 'bg-blue-100 text-blue-700';
+      case 'completed': return 'bg-green-100 text-green-700';
+      case 'rejected': return 'bg-slate-100 text-slate-700';
+      default: return 'bg-slate-100 text-slate-700';
+    }
+  };
+
+  return (
+    <div className='space-y-4'>
+      <div className='flex items-center justify-between'>
+        <div>
+          <h2 className='text-2xl font-bold text-slate-900'>Customer Inquiries</h2>
+          <p className='text-slate-600'>Manage customer product inquiries from the store</p>
+        </div>
+        
+        {/* Status Filter */}
+        <div className='flex gap-2'>
+          {['all', 'new', 'in-progress', 'completed', 'rejected'].map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status as any)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                statusFilter === status
+                  ? 'bg-teal-500 text-white'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
+              {status === 'all' && ` (${inquiries.length})`}
+              {status === 'new' && ` (${inquiries.filter((i: Inquiry) => i.status === 'new').length})`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filteredInquiries.length === 0 ? (
+        <div className='bg-white rounded-xl border border-slate-200 p-12 text-center'>
+          <Mail className='w-16 h-16 text-slate-300 mx-auto mb-4' />
+          <h3 className='text-xl font-bold text-slate-900 mb-2'>No inquiries found</h3>
+          <p className='text-slate-600'>
+            {statusFilter === 'all' 
+              ? 'No customer inquiries yet' 
+              : `No ${statusFilter} inquiries`}
+          </p>
+        </div>
+      ) : (
+        <div className='space-y-3'>
+          {filteredInquiries.map((inquiry: Inquiry) => (
+            <div
+              key={inquiry.id}
+              className='bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-all'
+            >
+              <div className='flex items-start justify-between mb-4'>
+                <div className='flex-1'>
+                  <div className='flex items-center gap-3 mb-2'>
+                    <h3 className='text-lg font-bold text-slate-900'>{inquiry.customerName}</h3>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(inquiry.status)}`}>
+                      {inquiry.status.replace('-', ' ').toUpperCase()}
+                    </span>
+                  </div>
+                  <div className='flex flex-wrap gap-4 text-sm text-slate-600'>
+                    <span className='flex items-center gap-1'>
+                      <Mail className='w-4 h-4' />
+                      {inquiry.customerEmail}
+                    </span>
+                    <span>{inquiry.customerPhone}</span>
+                    {inquiry.companyName && <span>Company: {inquiry.companyName}</span>}
+                  </div>
+                  <p className='text-xs text-slate-500 mt-2'>
+                    {new Date(inquiry.createdAt).toLocaleString()}
+                  </p>
+                </div>
+
+                <div className='flex gap-2'>
+                  <button
+                    onClick={() => setSelectedInquiry(inquiry)}
+                    className='px-3 py-1.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium'
+                  >
+                    View Details
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm('Are you sure you want to delete this inquiry?')) {
+                        onDelete(inquiry.id);
+                      }
+                    }}
+                    className='px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium'
+                  >
+                    <Trash2 className='w-4 h-4' />
+                  </button>
+                </div>
+              </div>
+
+              {/* Products Interested In */}
+              <div className='mb-3'>
+                <h4 className='text-sm font-semibold text-slate-700 mb-2'>Products ({inquiry.products.length}):</h4>
+                <div className='flex flex-wrap gap-2'>
+                  {inquiry.products.map((product) => (
+                    <span
+                      key={product.id}
+                      className='px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium'
+                    >
+                      {product.title}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Requirements */}
+              <div className='mb-4'>
+                <h4 className='text-sm font-semibold text-slate-700 mb-1'>Requirements:</h4>
+                <p className='text-sm text-slate-600 bg-slate-50 rounded-lg p-3'>
+                  {inquiry.requirements}
+                </p>
+              </div>
+
+              {/* Status Actions */}
+              <div className='flex gap-2 pt-3 border-t border-slate-100'>
+                {inquiry.status !== 'in-progress' && (
+                  <button
+                    onClick={() => onStatusChange(inquiry.id, 'in-progress')}
+                    className='px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium'
+                  >
+                    Mark In Progress
+                  </button>
+                )}
+                {inquiry.status !== 'completed' && (
+                  <button
+                    onClick={() => onStatusChange(inquiry.id, 'completed')}
+                    className='px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium'
+                  >
+                    Mark Completed
+                  </button>
+                )}
+                {inquiry.status !== 'rejected' && (
+                  <button
+                    onClick={() => onStatusChange(inquiry.id, 'rejected')}
+                    className='px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium'
+                  >
+                    Reject
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {selectedInquiry && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60'>
+          <div className='bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6'>
+            <div className='flex items-center justify-between mb-6'>
+              <h3 className='text-2xl font-bold text-slate-900'>Inquiry Details</h3>
+              <button
+                onClick={() => setSelectedInquiry(null)}
+                className='p-2 hover:bg-slate-100 rounded-lg transition-colors'
+              >
+                <X className='w-6 h-6' />
+              </button>
+            </div>
+
+            <div className='space-y-4'>
+              <div>
+                <label className='text-sm font-semibold text-slate-700'>Customer Name</label>
+                <p className='text-slate-900'>{selectedInquiry.customerName}</p>
+              </div>
+              
+              <div>
+                <label className='text-sm font-semibold text-slate-700'>Email</label>
+                <p className='text-slate-900'>{selectedInquiry.customerEmail}</p>
+              </div>
+              
+              <div>
+                <label className='text-sm font-semibold text-slate-700'>Phone</label>
+                <p className='text-slate-900'>{selectedInquiry.customerPhone}</p>
+              </div>
+
+              {selectedInquiry.companyName && (
+                <div>
+                  <label className='text-sm font-semibold text-slate-700'>Company</label>
+                  <p className='text-slate-900'>{selectedInquiry.companyName}</p>
+                </div>
+              )}
+
+              <div>
+                <label className='text-sm font-semibold text-slate-700'>Inquiry Date</label>
+                <p className='text-slate-900'>{new Date(selectedInquiry.createdAt).toLocaleString()}</p>
+              </div>
+
+              <div>
+                <label className='text-sm font-semibold text-slate-700'>Status</label>
+                <p className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(selectedInquiry.status)}`}>
+                  {selectedInquiry.status.replace('-', ' ').toUpperCase()}
+                </p>
+              </div>
+
+              <div>
+                <label className='text-sm font-semibold text-slate-700'>Products Interested In</label>
+                <ul className='list-disc list-inside text-slate-900'>
+                  {selectedInquiry.products.map((product) => (
+                    <li key={product.id}>{product.title}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <label className='text-sm font-semibold text-slate-700'>Requirements</label>
+                <p className='text-slate-900 bg-slate-50 rounded-lg p-4 whitespace-pre-wrap'>
+                  {selectedInquiry.requirements}
+                </p>
+              </div>
+
+              {selectedInquiry.notes && (
+                <div>
+                  <label className='text-sm font-semibold text-slate-700'>Admin Notes</label>
+                  <p className='text-slate-900 bg-slate-50 rounded-lg p-4'>
+                    {selectedInquiry.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Categories Tab Component
+function CategoriesTab({ categories, products, editingCategory, isAddingCategory, setEditingCategory, setIsAddingCategory, onSave, onDelete, onToggleVisibility }: any) {
+  const [formData, setFormData] = useState<Category>({
+    id: '',
+    name: '',
+    slug: '',
+    description: '',
+    icon: '📦',
+    visible: true,
+    order: 0
+  });
+
+  useEffect(() => {
+    if (editingCategory) {
+      setFormData(editingCategory);
+    } else if (isAddingCategory) {
+      setFormData({
+        id: '',
+        name: '',
+        slug: '',
+        description: '',
+        icon: '📦',
+        visible: true,
+        order: 0
+      });
+    }
+  }, [editingCategory, isAddingCategory]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Auto-generate slug from name if not provided
+    if (!formData.slug) {
+      formData.slug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    }
+    
+    onSave(formData);
+  };
+
+  const getProductCountByCategory = (categoryId: string) => {
+    return products.filter((p: Product) => p.categoryId === categoryId).length;
+  };
+
+  if (editingCategory || isAddingCategory) {
+    return (
+      <div className='bg-white rounded-xl border border-slate-200 p-6'>
+        <div className='flex items-center justify-between mb-6'>
+          <h3 className='text-xl font-bold text-slate-900'>
+            {editingCategory ? 'Edit Category' : 'Add New Category'}
+          </h3>
+          <button
+            onClick={() => {
+              setEditingCategory(null);
+              setIsAddingCategory(false);
+            }}
+            className='text-slate-600 hover:text-slate-900'
+          >
+            Cancel
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className='space-y-4'>
+          <div>
+            <label className='block text-sm font-medium text-slate-700 mb-2'>Category Name *</label>
+            <input
+              type='text'
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              placeholder='E-Bike Solutions'
+              required
+            />
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium text-slate-700 mb-2'>
+              Slug (URL-friendly name)
+            </label>
+            <input
+              type='text'
+              value={formData.slug}
+              onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
+              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              placeholder='e-bike-solutions (auto-generated if empty)'
+            />
+            <p className='text-xs text-slate-500 mt-1'>Leave empty to auto-generate from name</p>
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium text-slate-700 mb-2'>Description *</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              rows={3}
+              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              placeholder='High-performance battery solutions for electric bikes'
+              required
+            />
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium text-slate-700 mb-2'>Icon (Emoji) *</label>
+            <input
+              type='text'
+              value={formData.icon}
+              onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              placeholder='🚴'
+              maxLength={4}
+              required
+            />
+            <p className='text-xs text-slate-500 mt-1'>
+              Use emoji: 🚴 🛺 🏍️ 🚗 ⚡ 🔋 🌞 etc.
+            </p>
+          </div>
+
+          <div className='flex items-center gap-2'>
+            <input
+              type='checkbox'
+              id='visible'
+              checked={formData.visible}
+              onChange={(e) => setFormData({ ...formData, visible: e.target.checked })}
+              className='w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500'
+            />
+            <label htmlFor='visible' className='text-sm font-medium text-slate-700'>
+              Visible on website
+            </label>
+          </div>
+
+          <button
+            type='submit'
+            className='w-full py-3 px-4 bg-linear-to-r from-teal-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all'
+          >
+            <Save className='w-4 h-4 inline mr-2' />
+            {editingCategory ? 'Update Category' : 'Add Category'}
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className='space-y-4'>
+      <div className='flex items-center justify-between'>
+        <div>
+          <h2 className='text-2xl font-bold text-slate-900'>Category Management</h2>
+          <p className='text-slate-600'>Manage product categories for the store</p>
+        </div>
+        <button
+          onClick={() => setIsAddingCategory(true)}
+          className='flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors'
+        >
+          <Plus className='w-4 h-4' />
+          Add Category
+        </button>
+      </div>
+
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+        {categories.length === 0 ? (
+          <div className='col-span-full bg-white rounded-xl border border-slate-200 p-12 text-center'>
+            <LayoutDashboard className='w-16 h-16 text-slate-300 mx-auto mb-4' />
+            <h3 className='text-xl font-bold text-slate-900 mb-2'>No categories yet</h3>
+            <p className='text-slate-600 mb-4'>Create your first category to organize products</p>
+            <button
+              onClick={() => setIsAddingCategory(true)}
+              className='inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors'
+            >
+              <Plus className='w-4 h-4' />
+              Add First Category
+            </button>
+          </div>
+        ) : (
+          categories
+            .sort((a: Category, b: Category) => a.order - b.order)
+            .map((category: Category) => (
+              <div key={category.id} className='bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow'>
+                <div className='flex items-start justify-between mb-4'>
+                  <div className='flex items-center gap-3'>
+                    <span className='text-4xl'>{category.icon}</span>
+                    <div>
+                      <h3 className='font-bold text-slate-900'>{category.name}</h3>
+                      <p className='text-xs text-slate-500'>/{category.slug}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onToggleVisibility(category.id)}
+                    className={`p-2 rounded-lg transition-colors ${
+                      category.visible
+                        ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                        : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                    }`}
+                    title={category.visible ? 'Visible' : 'Hidden'}
+                  >
+                    {category.visible ? <Eye className='w-4 h-4' /> : <EyeOff className='w-4 h-4' />}
+                  </button>
+                </div>
+
+                <p className='text-sm text-slate-600 mb-4 line-clamp-2'>{category.description}</p>
+
+                <div className='flex items-center gap-2 mb-4'>
+                  <Package className='w-4 h-4 text-slate-400' />
+                  <span className='text-sm text-slate-600'>
+                    {getProductCountByCategory(category.id)} products
+                  </span>
+                </div>
+
+                <div className='flex gap-2'>
+                  <button
+                    onClick={() => setEditingCategory(category)}
+                    className='flex-1 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium'
+                  >
+                    <Edit className='w-4 h-4 inline mr-1' />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => onDelete(category.id)}
+                    className='flex-1 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium'
+                  >
+                    <Trash2 className='w-4 h-4 inline mr-1' />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+        )}
+      </div>
+
+      {categories.length > 0 && (
+        <div className='bg-blue-50 border border-blue-200 rounded-xl p-4'>
+          <p className='text-sm text-blue-800'>
+            <strong>Tip:</strong> Categories are displayed in the store page filter buttons. Hidden categories won't appear but their products remain visible.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Two-Level Categories Tab Component
+function TwoLevelCategoriesTab({ 
+  mainCategories, 
+  subCategories, 
+  products, 
+  editingMainCategory, 
+  editingSubCategory, 
+  isAddingMainCategory, 
+  isAddingSubCategory,
+  selectedMainCategory,
+  setEditingMainCategory, 
+  setEditingSubCategory, 
+  setIsAddingMainCategory, 
+  setIsAddingSubCategory,
+  setSelectedMainCategory,
+  onSaveMainCategory, 
+  onSaveSubCategory, 
+  onDeleteMainCategory, 
+  onDeleteSubCategory, 
+  onToggleMainCategoryVisibility,
+  onToggleSubCategoryVisibility
+}: any) {
+  const [view, setView] = useState<'main' | 'sub'>('main');
+  const [mainCategoryFormData, setMainCategoryFormData] = useState<MainCategory>({
+    id: '',
+    name: '',
+    slug: '',
+    description: '',
+    image: '',
+    visible: true,
+    order: 0
+  });
+  
+  const [subCategoryFormData, setSubCategoryFormData] = useState<SubCategory>({
+    id: '',
+    mainCategoryId: '',
+    name: '',
+    slug: '',
+    description: '',
+    icon: '📦',
+    visible: true,
+    order: 0
+  });
+
+  useEffect(() => {
+    if (editingMainCategory) {
+      setMainCategoryFormData(editingMainCategory);
+    } else if (isAddingMainCategory) {
+      setMainCategoryFormData({
+        id: '',
+        name: '',
+        slug: '',
+        description: '',
+        image: '',
+        visible: true,
+        order: 0
+      });
+    }
+  }, [editingMainCategory, isAddingMainCategory]);
+
+  useEffect(() => {
+    if (editingSubCategory) {
+      setSubCategoryFormData(editingSubCategory);
+    } else if (isAddingSubCategory) {
+      setSubCategoryFormData({
+        id: '',
+        mainCategoryId: selectedMainCategory || '',
+        name: '',
+        slug: '',
+        description: '',
+        icon: '📦',
+        visible: true,
+        order: 0
+      });
+    }
+  }, [editingSubCategory, isAddingSubCategory, selectedMainCategory]);
+
+  const handleSubmitMainCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mainCategoryFormData.slug) {
+      mainCategoryFormData.slug = mainCategoryFormData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    }
+    onSaveMainCategory(mainCategoryFormData);
+  };
+
+  const handleSubmitSubCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subCategoryFormData.slug) {
+      subCategoryFormData.slug = subCategoryFormData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    }
+    onSaveSubCategory(subCategoryFormData);
+  };
+
+  const getSubCategoriesByMainId = (mainId: string) => {
+    return subCategories.filter((s: SubCategory) => s.mainCategoryId === mainId);
+  };
+
+  const getProductCountBySubCategory = (subCatId: string) => {
+    return products.filter((p: Product) => p.subCategoryId === subCatId || p.categoryId === subCatId).length;
+  };
+
+  // Main Category Form
+  if (editingMainCategory || isAddingMainCategory) {
+    return (
+      <div className='bg-white rounded-xl border border-slate-200 p-6'>
+        <div className='flex items-center justify-between mb-6'>
+          <h3 className='text-xl font-bold text-slate-900'>
+            {editingMainCategory ? 'Edit Main Category' : 'Add New Main Category'}
+          </h3>
+          <button
+            onClick={() => {
+              setEditingMainCategory(null);
+              setIsAddingMainCategory(false);
+            }}
+            className='text-slate-600 hover:text-slate-900'
+          >
+            Cancel
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmitMainCategory} className='space-y-4'>
+          <div>
+            <label className='block text-sm font-medium text-slate-700 mb-2'>Category Name *</label>
+            <input
+              type='text'
+              value={mainCategoryFormData.name}
+              onChange={(e) => setMainCategoryFormData({ ...mainCategoryFormData, name: e.target.value })}
+              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              placeholder='Automobile Application'
+              required
+            />
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium text-slate-700 mb-2'>Slug (URL-friendly)</label>
+            <input
+              type='text'
+              value={mainCategoryFormData.slug}
+              onChange={(e) => setMainCategoryFormData({ ...mainCategoryFormData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
+              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              placeholder='automobile (auto-generated if empty)'
+            />
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium text-slate-700 mb-2'>Description *</label>
+            <textarea
+              value={mainCategoryFormData.description}
+              onChange={(e) => setMainCategoryFormData({ ...mainCategoryFormData, description: e.target.value })}
+              rows={3}
+              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              placeholder='High-performance battery solutions for electric vehicles.'
+              required
+            />
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium text-slate-700 mb-2'>Image URL *</label>
+            <input
+              type='url'
+              value={mainCategoryFormData.image}
+              onChange={(e) => setMainCategoryFormData({ ...mainCategoryFormData, image: e.target.value })}
+              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              placeholder='https://images.unsplash.com/...'
+              required
+            />
+          </div>
+
+          <div className='flex items-center gap-2'>
+            <input
+              type='checkbox'
+              id='mainVisible'
+              checked={mainCategoryFormData.visible}
+              onChange={(e) => setMainCategoryFormData({ ...mainCategoryFormData, visible: e.target.checked })}
+              className='w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500'
+            />
+            <label htmlFor='mainVisible' className='text-sm font-medium text-slate-700'>
+              Visible on website
+            </label>
+          </div>
+
+          <button
+            type='submit'
+            className='w-full py-3 px-4 bg-linear-to-r from-teal-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all'
+          >
+            <Save className='w-4 h-4 inline mr-2' />
+            {editingMainCategory ? 'Update Main Category' : 'Add Main Category'}
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  // Sub-Category Form
+  if (editingSubCategory || isAddingSubCategory) {
+    return (
+      <div className='bg-white rounded-xl border border-slate-200 p-6'>
+        <div className='flex items-center justify-between mb-6'>
+          <h3 className='text-xl font-bold text-slate-900'>
+            {editingSubCategory ? 'Edit Sub-Category' : 'Add New Sub-Category'}
+          </h3>
+          <button
+            onClick={() => {
+              setEditingSubCategory(null);
+              setIsAddingSubCategory(false);
+            }}
+            className='text-slate-600 hover:text-slate-900'
+          >
+            Cancel
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmitSubCategory} className='space-y-4'>
+          <div>
+            <label className='block text-sm font-medium text-slate-700 mb-2'>Main Category *</label>
+            <select
+              value={subCategoryFormData.mainCategoryId}
+              onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, mainCategoryId: e.target.value })}
+              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              required
+            >
+              <option value=''>Select Main Category</option>
+              {mainCategories.map((m: MainCategory) => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium text-slate-700 mb-2'>Sub-Category Name *</label>
+            <input
+              type='text'
+              value={subCategoryFormData.name}
+              onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, name: e.target.value })}
+              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              placeholder='E-Bike Solutions'
+              required
+            />
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium text-slate-700 mb-2'>Icon (Emoji) *</label>
+            <input
+              type='text'
+              value={subCategoryFormData.icon}
+              onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, icon: e.target.value })}
+              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              placeholder='🚴'
+              maxLength={4}
+              required
+            />
+            <p className='text-xs text-slate-500 mt-1'>Use emoji: 🚴 🛺 🏍️ 🚗 ⚡ 🔋</p>
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium text-slate-700 mb-2'>Description *</label>
+            <textarea
+              value={subCategoryFormData.description}
+              onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, description: e.target.value })}
+              rows={3}
+              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              placeholder='High-performance battery solutions for electric bikes'
+              required
+            />
+          </div>
+
+          <div className='flex items-center gap-2'>
+            <input
+              type='checkbox'
+              id='subVisible'
+              checked={subCategoryFormData.visible}
+              onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, visible: e.target.checked })}
+              className='w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500'
+            />
+            <label htmlFor='subVisible' className='text-sm font-medium text-slate-700'>
+              Visible on website
+            </label>
+          </div>
+
+          <button
+            type='submit'
+            className='w-full py-3 px-4 bg-linear-to-r from-teal-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all'
+          >
+            <Save className='w-4 h-4 inline mr-2' />
+            {editingSubCategory ? 'Update Sub-Category' : 'Add Sub-Category'}
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  // Main View
+  return (
+    <div className='space-y-4'>
+      <div className='flex items-center justify-between'>
+        <div>
+          <h2 className='text-2xl font-bold text-slate-900'>Category Management</h2>
+          <p className='text-slate-600'>Manage main categories and sub-categories</p>
+        </div>
+        <div className='flex gap-2'>
+          <button
+            onClick={() => setView('main')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              view === 'main'
+                ? 'bg-teal-600 text-white'
+                : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+            }`}
+          >
+            Main Categories
+          </button>
+          <button
+            onClick={() => setView('sub')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              view === 'sub'
+                ? 'bg-teal-600 text-white'
+                : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+            }`}
+          >
+            Sub-Categories
+          </button>
+        </div>
+      </div>
+
+      {view === 'main' ? (
+        // Main Categories View
+        <div className='space-y-4'>
+          <button
+            onClick={() => setIsAddingMainCategory(true)}
+            className='w-full sm:w-auto flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors'
+          >
+            <Plus className='w-4 h-4' />
+            Add Main Category
+          </button>
+
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            {mainCategories.length === 0 ? (
+              <div className='col-span-full bg-white rounded-xl border border-slate-200 p-12 text-center'>
+                <h3 className='text-xl font-bold text-slate-900 mb-2'>No main categories yet</h3>
+                <p className='text-slate-600 mb-4'>Add your first main category (e.g., Automobile Application)</p>
+              </div>
+            ) : (
+              mainCategories
+                .sort((a: MainCategory, b: MainCategory) => a.order - b.order)
+                .map((mainCat: MainCategory) => {
+                  const subCount = getSubCategoriesByMainId(mainCat.id).length;
+                  
+                  return (
+                    <div key={mainCat.id} className='bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow'>
+                      <div className='flex items-start justify-between mb-4'>
+                        <div>
+                          <h3 className='font-bold text-slate-900 text-lg'>{mainCat.name}</h3>
+                          <p className='text-xs text-slate-500'>/{mainCat.slug}</p>
+                          <p className='text-sm text-slate-600 mt-2'>{subCount} sub-categories</p>
+                        </div>
+                        <button
+                          onClick={() => onToggleMainCategoryVisibility(mainCat.id)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            mainCat.visible
+                              ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                              : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                          }`}
+                        >
+                          {mainCat.visible ? <Eye className='w-4 h-4' /> : <EyeOff className='w-4 h-4' />}
+                        </button>
+                      </div>
+
+                      <p className='text-sm text-slate-600 mb-4'>{mainCat.description}</p>
+
+                      <div className='flex gap-2'>
+                        <button
+                          onClick={() => setEditingMainCategory(mainCat)}
+                          className='flex-1 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium'
+                        >
+                          <Edit className='w-4 h-4 inline mr-1' />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => onDeleteMainCategory(mainCat.id)}
+                          className='flex-1 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium'
+                        >
+                          <Trash2 className='w-4 h-4 inline mr-1' />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+            )}
+          </div>
+        </div>
+      ) : (
+        // Sub-Categories View
+        <div className='space-y-4'>
+          <div className='flex items-center gap-4'>
+            <select
+              value={selectedMainCategory}
+              onChange={(e) => setSelectedMainCategory(e.target.value)}
+              className='flex-1 px-4 py-2 border border-slate-300 rounded-lg'
+            >
+              <option value=''>All Main Categories</option>
+              {mainCategories.map((m: MainCategory) => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => setIsAddingSubCategory(true)}
+              className='flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors'
+            >
+              <Plus className='w-4 h-4' />
+              Add Sub-Category
+            </button>
+          </div>
+
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+            {subCategories
+              .filter((s: SubCategory) => !selectedMainCategory || s.mainCategoryId === selectedMainCategory)
+              .sort((a: SubCategory, b: SubCategory) => a.order - b.order)
+              .map((subCat: SubCategory) => {
+                const mainCat = mainCategories.find((m: MainCategory) => m.id === subCat.mainCategoryId);
+                const productCount = getProductCountBySubCategory(subCat.id);
+                
+                return (
+                  <div key={subCat.id} className='bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow'>
+                    <div className='flex items-start justify-between mb-4'>
+                      <div className='flex items-center gap-2'>
+                        <span className='text-3xl'>{subCat.icon}</span>
+                        <div>
+                          <h3 className='font-bold text-slate-900'>{subCat.name}</h3>
+                          <p className='text-xs text-slate-500'>{mainCat?.name}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => onToggleSubCategoryVisibility(subCat.id)}
+                        className={`p-2 rounded-lg transition-colors ${
+                          subCat.visible
+                            ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                            : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                        }`}
+                      >
+                        {subCat.visible ? <Eye className='w-4 h-4' /> : <EyeOff className='w-4 h-4' />}
+                      </button>
+                    </div>
+
+                    <p className='text-sm text-slate-600 mb-3'>{subCat.description}</p>
+                    <p className='text-xs text-slate-500 mb-4'>{productCount} products</p>
+
+                    <div className='flex gap-2'>
+                      <button
+                        onClick={() => setEditingSubCategory(subCat)}
+                        className='flex-1 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium'
+                      >
+                        <Edit className='w-4 h-4 inline mr-1' />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => onDeleteSubCategory(subCat.id)}
+                        className='flex-1 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium'
+                      >
+                        <Trash2 className='w-4 h-4 inline mr-1' />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

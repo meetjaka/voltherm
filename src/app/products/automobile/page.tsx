@@ -333,7 +333,7 @@ export default function AutomobileApplicationPage() {
                             className={cn(
                                 'rounded-lg px-6 py-2.5 font-semibold transition-all',
                                 activeSection === 'all'
-                                    ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
+                                    ? 'bg-linear-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
                                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                             )}>
                             All Sections
@@ -345,7 +345,7 @@ export default function AutomobileApplicationPage() {
                                 className={cn(
                                     'rounded-lg px-6 py-2.5 font-semibold transition-all',
                                     activeSection === section.id
-                                        ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
+                                        ? 'bg-linear-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
                                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                 )}>
                                 {section.label}

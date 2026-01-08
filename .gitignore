@@ -39,3 +39,34 @@ next-env.d.ts
 ADMIN_*.md
 README_ADMIN.md
 FIXES_APPLIED.md
+DEPLOYMENT_*.md
+CATEGORY_*.md
+*_GUIDE.md
+*_IMPLEMENTATION.md
+*_QUICKSTART.md
+*_VISUAL_GUIDE.md
+*_SUMMARY.md
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Logs
+logs
+*.log
+
+# Package manager lock files (uncomment if not needed)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+# bun.lockb

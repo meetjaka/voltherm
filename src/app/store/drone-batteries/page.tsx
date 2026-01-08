@@ -14,7 +14,7 @@ const products = [
     slug: 'stackable-packs',
     title: 'Stackable Battery Packs',
     image:
-      'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&auto=format',
     specs: ['Modular', 'Scalable', 'Rack Mount']
   }
 ];

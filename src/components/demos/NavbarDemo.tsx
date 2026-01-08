@@ -77,34 +77,47 @@ function Navbar({ className }: { className?: string }) {
                     <div className='hidden items-center space-x-8 md:flex'>
                         <HoveredLink href='/'>Home</HoveredLink>
                         <HoveredLink href='/about'>About Us</HoveredLink>
-                        <MenuItem setActive={setActive} active={active} item='Products'>
-                            <div className='grid grid-cols-2 gap-10 p-4 text-sm'>
-                                <ProductItem
-                                    title='Automobile Application'
-                                    href='/products/automobile'
-                                    src='https://5.imimg.com/data5/SELLER/Default/2022/9/TL/WW/PA/100678072/60v-20ah-lithium-electric-vehicle-battery-pack.png'
-                                    description='High-performance battery solutions for electric vehicles.'
-                                />
-                                <ProductItem
-                                    title='Aerospace Application'
-                                    href='/products/aerospace'
-                                    src='https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?q=80&w=2670&auto=format&fit=crop'
-                                    description='Lightweight, reliable batteries for aerospace systems.'
-                                />
-                                <ProductItem
-                                    title='BESS Application'
-                                    href='/products/bess'
-                                    src='https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?q=80&w=2670&auto=format&fit=crop'
-                                    description='Battery Energy Storage System solutions.'
-                                />
-                                <ProductItem
-                                    title='Telecom Application'
-                                    href='/products/telecom'
-                                    src='https://images.unsplash.com/photo-1526628653408-7c62979aab60?q=80&w=2670&auto=format&fit=crop'
-                                    description='Reliable backup power for telecom infrastructure.'
-                                />
-                            </div>
-                        </MenuItem>
+                        <div className='relative' onMouseEnter={() => setActive('Products')}>
+                            <Link 
+                                href='/products' 
+                                className='cursor-pointer text-black hover:opacity-[0.9] dark:text-white'>
+                                Products
+                            </Link>
+                            {active === 'Products' && (
+                                <div className='absolute top-[calc(100%+1.2rem)] left-1/2 -translate-x-1/2 transform pt-4'>
+                                    <div className='overflow-hidden rounded-2xl border border-black/20 bg-white shadow-xl backdrop-blur-sm dark:border-white/20 dark:bg-black'>
+                                        <div className='h-full w-max p-4'>
+                                            <div className='grid grid-cols-2 gap-10 p-4 text-sm'>
+                                                <ProductItem
+                                                    title='Automobile Application'
+                                                    href='/products/automobile'
+                                                    src='https://5.imimg.com/data5/SELLER/Default/2022/9/TL/WW/PA/100678072/60v-20ah-lithium-electric-vehicle-battery-pack.png'
+                                                    description='High-performance battery solutions for electric vehicles.'
+                                                />
+                                                <ProductItem
+                                                    title='Aerospace Application'
+                                                    href='/products/aerospace'
+                                                    src='https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?q=80&w=2670&auto=format&fit=crop'
+                                                    description='Lightweight, reliable batteries for aerospace systems.'
+                                                />
+                                                <ProductItem
+                                                    title='BESS Application'
+                                                    href='/products/bess'
+                                                    src='https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?q=80&w=2670&auto=format&fit=crop'
+                                                    description='Battery Energy Storage System solutions.'
+                                                />
+                                                <ProductItem
+                                                    title='Telecom Application'
+                                                    href='/products/telecom'
+                                                    src='https://images.unsplash.com/photo-1526628653408-7c62979aab60?q=80&w=2670&auto=format&fit=crop'
+                                                    description='Reliable backup power for telecom infrastructure.'
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                         <HoveredLink href='/contact'>Contact</HoveredLink>
                         <HoveredLink href='/store'>Store</HoveredLink>
                     </div>
@@ -126,7 +139,12 @@ function Navbar({ className }: { className?: string }) {
                             About Us
                         </Link>
                         <div className='flex flex-col space-y-2'>
-                            <p className='font-semibold text-black dark:text-white'>Products</p>
+                            <Link
+                                href='/products'
+                                className='font-semibold text-black hover:underline dark:text-white'
+                                onClick={() => setIsMobileMenuOpen(false)}>
+                                Products
+                            </Link>
                             <div className='flex flex-col space-y-2 pl-4'>
                                 <Link
                                     href='/products/automobile'

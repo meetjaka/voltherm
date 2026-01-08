@@ -57,7 +57,7 @@ const productMap: Record<string, {
     title: 'Stackable Battery Packs',
     description:
       'Modular, rack-mount stackable packs for scalable energy storage deployments.',
-    image: 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?q=80&w=1200&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1200&auto=format',
     specs: [
       { label: 'Form Factor', value: 'Rack Mount' },
       { label: 'Scalability', value: 'Up to 500kWh' },
@@ -102,7 +102,7 @@ export default async function ProductDetailPage({ params }: Params) {
 
         {/* Hero visual */}
         <div className='mt-8 rounded-3xl border border-slate-200 bg-linear-to-br from-slate-50 to-white p-6 shadow-xl'>
-          <div className='relative h-[420px] overflow-hidden rounded-2xl'>
+          <div className='relative h-105 overflow-hidden rounded-2xl'>
             <Image src={product.image} alt={product.title} fill className='object-cover' />
           </div>
           <div className='mt-4 flex flex-col gap-3 sm:flex-row sm:justify-center'>
