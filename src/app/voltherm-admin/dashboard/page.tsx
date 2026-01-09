@@ -18,6 +18,7 @@ import {
   Save,
   X
 } from 'lucide-react';
+import CategoryIcon from '@/components/CategoryIcon';
 import { checkAdminSession, clearAdminSession } from '@/lib/adminAuth';
 import { 
   getProducts, 
@@ -1467,11 +1468,10 @@ function TwoLevelCategoriesTab({
               value={subCategoryFormData.icon}
               onChange={(e) => setSubCategoryFormData({ ...subCategoryFormData, icon: e.target.value })}
               className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-              placeholder='🚴'
-              maxLength={4}
+              placeholder='Bike'
               required
             />
-            <p className='text-xs text-slate-500 mt-1'>Use emoji: 🚴 🛺 🏍️ 🚗 ⚡ 🔋</p>
+            <p className='text-xs text-slate-500 mt-1'>Lucide icon names: Bike, Truck, Car, Plane, Zap, Battery, Home, Building, Server, etc.</p>
           </div>
 
           <div>

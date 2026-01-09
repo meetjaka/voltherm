@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ShoppingCart, X, Send, Check, AlertCircle, ArrowLeft, Filter } from 'lucide-react';
 import NavbarDemo from '@/components/demos/NavbarDemo';
+import CategoryIcon from '@/components/CategoryIcon';
 import { getProducts, getSubCategories, getMainCategories, type Product, type SubCategory, type MainCategory } from '@/lib/adminData';
 import { getCart, addToCart, removeFromCart, isInCart, getCartCount, clearCart, type CartItem } from '@/lib/cartStore';
 
@@ -259,13 +260,14 @@ export default function StorePage() {
                     <button
                       key={subCategory.id}
                       onClick={() => setSelectedSubCategoryId(subCategory.id)}
-                      className={`rounded-lg px-4 py-2 font-medium transition-all ${
+                      className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-all ${
                         selectedSubCategoryId === subCategory.id
                           ? 'bg-cyan-500 text-white'
                           : 'bg-white/10 text-slate-300 hover:bg-white/20'
                       }`}
                     >
-                      {subCategory.icon} {subCategory.name}
+                      <CategoryIcon name={subCategory.icon} className='w-4 h-4' />
+                      <span>{subCategory.name}</span>
                     </button>
                   ))}
                 </div>

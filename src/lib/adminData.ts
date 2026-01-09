@@ -139,7 +139,7 @@ export const defaultSubCategories: SubCategory[] = [
         name: 'E-Bike Solutions',
         slug: 'e-bike-solutions',
         description: 'High-performance battery solutions for electric bikes',
-        icon: '🚴',
+        icon: 'Bike',
         visible: true,
         order: 1
     },
@@ -149,7 +149,7 @@ export const defaultSubCategories: SubCategory[] = [
         name: 'Three-Wheeler',
         slug: 'three-wheeler',
         description: 'Robust battery systems for three-wheeler vehicles',
-        icon: '🛺',
+        icon: 'Truck',
         visible: true,
         order: 2
     },
@@ -159,7 +159,7 @@ export const defaultSubCategories: SubCategory[] = [
         name: 'Two-Wheeler',
         slug: 'two-wheeler',
         description: 'Compact and efficient batteries for two-wheelers',
-        icon: '🏍️',
+        icon: 'Bike',
         visible: true,
         order: 3
     },
@@ -170,7 +170,7 @@ export const defaultSubCategories: SubCategory[] = [
         name: 'UAV Systems',
         slug: 'uav-systems',
         description: 'Lightweight batteries for unmanned aerial vehicles',
-        icon: '🛩️',
+        icon: 'Plane',
         visible: true,
         order: 1
     },
@@ -180,7 +180,7 @@ export const defaultSubCategories: SubCategory[] = [
         name: 'Satellite Power',
         slug: 'satellite-power',
         description: 'High-reliability power systems for satellites',
-        icon: '🛰️',
+        icon: 'Satellite',
         visible: true,
         order: 2
     },
@@ -190,7 +190,7 @@ export const defaultSubCategories: SubCategory[] = [
         name: 'Aircraft Systems',
         slug: 'aircraft-systems',
         description: 'Aviation-grade battery solutions',
-        icon: '✈️',
+        icon: 'PlaneTakeoff',
         visible: true,
         order: 3
     },
@@ -201,7 +201,7 @@ export const defaultSubCategories: SubCategory[] = [
         name: 'Residential Storage',
         slug: 'residential-storage',
         description: 'Home energy storage solutions',
-        icon: '🏠',
+        icon: 'Home',
         visible: true,
         order: 1
     },
@@ -211,7 +211,7 @@ export const defaultSubCategories: SubCategory[] = [
         name: 'Commercial Storage',
         slug: 'commercial-storage',
         description: 'Large-scale commercial energy storage',
-        icon: '🏢',
+        icon: 'Building',
         visible: true,
         order: 2
     },
@@ -221,7 +221,7 @@ export const defaultSubCategories: SubCategory[] = [
         name: 'Grid Storage',
         slug: 'grid-storage',
         description: 'Utility-scale grid energy storage',
-        icon: '⚡',
+        icon: 'Zap',
         visible: true,
         order: 3
     },
@@ -232,7 +232,7 @@ export const defaultSubCategories: SubCategory[] = [
         name: 'Base Station',
         slug: 'base-station',
         description: 'Backup power for telecom base stations',
-        icon: '📡',
+        icon: 'Radio',
         visible: true,
         order: 1
     },
@@ -242,7 +242,7 @@ export const defaultSubCategories: SubCategory[] = [
         name: 'Data Center',
         slug: 'data-center',
         description: 'Reliable power for data centers',
-        icon: '🖥️',
+        icon: 'Server',
         visible: true,
         order: 2
     },
@@ -252,7 +252,7 @@ export const defaultSubCategories: SubCategory[] = [
         name: 'Remote Sites',
         slug: 'remote-sites',
         description: 'Off-grid telecom power solutions',
-        icon: '📶',
+        icon: 'Signal',
         visible: true,
         order: 3
     }
