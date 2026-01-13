@@ -117,14 +117,14 @@ const ProductCard = ({ product }: { product: Product }) => {
     return (
         <>
             <CardContainer className='inter-var w-full'>
-                <CardBody className='group/card relative h-auto w-full rounded-xl border border-slate-200 bg-white p-6 transition-all hover:shadow-2xl dark:border-white/20 dark:bg-black'>
-                    <CardItem translateZ='50' className='text-xl font-bold text-slate-900 dark:text-white'>
+                <CardBody className='group/card relative h-auto w-full rounded-xl border border-slate-200 bg-white p-6 transition-all hover:shadow-2xl'>
+                    <CardItem translateZ='50' className='text-xl font-bold text-slate-900'>
                         {product.name}
                     </CardItem>
                     <CardItem
                         as='p'
                         translateZ='60'
-                        className='mt-2 max-w-sm text-sm text-slate-600 dark:text-neutral-300'>
+                        className='mt-2 max-w-sm text-sm text-slate-600'>
                         {product.tagline}
                     </CardItem>
 

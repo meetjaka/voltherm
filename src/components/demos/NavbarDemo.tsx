@@ -45,7 +45,7 @@ function Navbar({ className }: { className?: string }) {
                             height={32}
                             className='object-contain md:h-10 md:w-10'
                         />
-                        <span className='text-sm font-bold md:text-lg'>Voltherm Technologies</span>
+                        <span className='text-sm font-bold text-slate-900 md:text-lg'>Voltherm Technologies</span>
                     </Link>
 
                     {/* Mobile Menu Button */}
@@ -55,19 +55,19 @@ function Navbar({ className }: { className?: string }) {
                         aria-label='Toggle menu'>
                         <span
                             className={cn(
-                                'h-0.5 w-6 bg-black transition-all dark:bg-white',
+                                'h-0.5 w-6 bg-slate-700 transition-all',
                                 isMobileMenuOpen && 'translate-y-2 rotate-45'
                             )}
                         />
                         <span
                             className={cn(
-                                'h-0.5 w-6 bg-black transition-all dark:bg-white',
+                                'h-0.5 w-6 bg-slate-700 transition-all',
                                 isMobileMenuOpen && 'opacity-0'
                             )}
                         />
                         <span
                             className={cn(
-                                'h-0.5 w-6 bg-black transition-all dark:bg-white',
+                                'h-0.5 w-6 bg-slate-700 transition-all',
                                 isMobileMenuOpen && '-translate-y-2 -rotate-45'
                             )}
                         />
@@ -80,12 +80,12 @@ function Navbar({ className }: { className?: string }) {
                         <div className='relative' onMouseEnter={() => setActive('Products')}>
                             <Link 
                                 href='/products' 
-                                className='cursor-pointer text-black hover:opacity-[0.9] dark:text-white'>
+                                className='cursor-pointer text-slate-700 hover:text-slate-900'>
                                 Products
                             </Link>
                             {active === 'Products' && (
                                 <div className='absolute top-[calc(100%+1.2rem)] left-1/2 -translate-x-1/2 transform pt-4'>
-                                    <div className='overflow-hidden rounded-2xl border border-black/20 bg-white shadow-xl backdrop-blur-sm dark:border-white/20 dark:bg-black'>
+                                    <div className='overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl backdrop-blur-sm'>
                                         <div className='h-full w-max p-4'>
                                             <div className='grid grid-cols-2 gap-10 p-4 text-sm'>
                                                 <ProductItem
@@ -125,48 +125,48 @@ function Navbar({ className }: { className?: string }) {
 
                 {/* Mobile Menu */}
                 {isMobileMenuOpen && (
-                    <div className='absolute top-full right-0 left-0 mt-4 flex flex-col space-y-4 rounded-2xl border border-black/20 bg-white p-6 shadow-xl md:hidden dark:border-white/20 dark:bg-black'>
+                    <div className='absolute top-full right-0 left-0 mt-4 flex flex-col space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xl md:hidden'>
                         <Link
                             href='/'
-                            className='text-neutral-700 hover:text-black dark:text-neutral-200'
+                            className='text-slate-700 hover:text-slate-900'
                             onClick={() => setIsMobileMenuOpen(false)}>
                             Home
                         </Link>
                         <Link
                             href='/about'
-                            className='text-neutral-700 hover:text-black dark:text-neutral-200'
+                            className='text-slate-700 hover:text-slate-900'
                             onClick={() => setIsMobileMenuOpen(false)}>
                             About Us
                         </Link>
                         <div className='flex flex-col space-y-2'>
                             <Link
                                 href='/products'
-                                className='font-semibold text-black hover:underline dark:text-white'
+                                className='font-semibold text-slate-900 hover:underline'
                                 onClick={() => setIsMobileMenuOpen(false)}>
                                 Products
                             </Link>
                             <div className='flex flex-col space-y-2 pl-4'>
                                 <Link
                                     href='/products/automobile'
-                                    className='text-sm text-neutral-700 hover:text-black dark:text-neutral-200'
+                                    className='text-sm text-slate-600 hover:text-slate-900'
                                     onClick={() => setIsMobileMenuOpen(false)}>
                                     Automobile Application
                                 </Link>
                                 <Link
                                     href='/products/aerospace'
-                                    className='text-sm text-neutral-700 hover:text-black dark:text-neutral-200'
+                                    className='text-sm text-slate-600 hover:text-slate-900'
                                     onClick={() => setIsMobileMenuOpen(false)}>
                                     Aerospace Application
                                 </Link>
                                 <Link
                                     href='/products/bess'
-                                    className='text-sm text-neutral-700 hover:text-black dark:text-neutral-200'
+                                    className='text-sm text-slate-600 hover:text-slate-900'
                                     onClick={() => setIsMobileMenuOpen(false)}>
                                     BESS Application
                                 </Link>
                                 <Link
                                     href='/products/telecom'
-                                    className='text-sm text-neutral-700 hover:text-black dark:text-neutral-200'
+                                    className='text-sm text-slate-600 hover:text-slate-900'
                                     onClick={() => setIsMobileMenuOpen(false)}>
                                     Telecom Application
                                 </Link>
@@ -174,13 +174,13 @@ function Navbar({ className }: { className?: string }) {
                         </div>
                         <Link
                             href='/contact'
-                            className='text-neutral-700 hover:text-black dark:text-neutral-200'
+                            className='text-slate-700 hover:text-slate-900'
                             onClick={() => setIsMobileMenuOpen(false)}>
                             Contact
                         </Link>
                         <Link
                             href='/store'
-                            className='text-neutral-700 hover:text-black dark:text-neutral-200'
+                            className='text-slate-700 hover:text-slate-900'
                             onClick={() => setIsMobileMenuOpen(false)}>
                             Store
                         </Link>

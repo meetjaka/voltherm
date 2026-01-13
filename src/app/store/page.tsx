@@ -166,7 +166,7 @@ export default function StorePage() {
       {/* Fixed Cart Button */}
       <button
         onClick={() => setShowCart(true)}
-        className='fixed right-6 bottom-6 z-40 flex items-center gap-2 rounded-full bg-linear-to-r from-teal-500 to-cyan-500 px-6 py-4 text-white shadow-2xl transition-all hover:scale-105 hover:shadow-teal-500/50'
+        className='fixed right-6 bottom-6 z-40 flex items-center gap-2 rounded-full bg-teal-500 px-6 py-4 text-white shadow-2xl transition-all hover:scale-105 hover:bg-teal-600'
       >
         <ShoppingCart className='h-6 w-6' />
         <span className='font-semibold'>{cart.length}</span>
@@ -366,7 +366,7 @@ export default function StorePage() {
                 {product.specs.slice(0, 3).map((spec, idx) => (
                   <span
                     key={idx}
-                    className={`rounded-full bg-linear-to-r ${product.color} px-3 py-1 text-xs font-medium text-white`}
+                    className='rounded-full border-2 border-cyan-500 bg-white px-3 py-1 text-xs font-medium text-cyan-500'
                   >
                     {spec}
                   </span>
@@ -382,7 +382,7 @@ export default function StorePage() {
                     className={`flex-1 rounded-lg px-4 py-3 font-semibold transition-all ${
                       product.available === false
                         ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                        : 'bg-linear-to-r from-teal-500 to-cyan-500 text-white hover:shadow-lg hover:shadow-teal-500/50'
+                        : 'bg-teal-500 text-white hover:bg-teal-600 hover:shadow-lg'
                     }`}
                   >
                     {product.available === false ? 'Unavailable' : 'Add to Cart'}
@@ -421,7 +421,7 @@ export default function StorePage() {
           {/* Cart Panel */}
           <div className='relative h-full w-full max-w-md bg-white shadow-2xl overflow-hidden flex flex-col'>
             {/* Header */}
-            <div className='bg-linear-to-r from-teal-500 to-cyan-500 p-6 text-white'>
+            <div className='bg-teal-500 p-6 text-white'>
               <div className='flex items-center justify-between'>
                 <div>
                   <h2 className='text-2xl font-bold'>Your Cart</h2>
@@ -489,7 +489,7 @@ export default function StorePage() {
                     setShowCart(false);
                     setShowInquiryForm(true);
                   }}
-                  className='w-full rounded-xl bg-linear-to-r from-teal-500 to-cyan-500 px-6 py-4 font-semibold text-white transition-all hover:shadow-lg hover:shadow-teal-500/50'
+                  className='w-full rounded-xl bg-teal-500 px-6 py-4 font-semibold text-white transition-all hover:bg-teal-600 hover:shadow-lg'
                 >
                   Proceed to Inquiry
                   <Send className='inline-block ml-2 h-5 w-5' />
@@ -525,7 +525,7 @@ export default function StorePage() {
             ) : (
               <>
                 {/* Header */}
-                <div className='bg-linear-to-r from-teal-500 to-cyan-500 p-6 text-white'>
+                <div className='bg-teal-500 p-6 text-white'>
                   <div className='flex items-center justify-between'>
                     <div>
                       <h2 className='text-2xl font-bold'>Send Inquiry</h2>
@@ -632,7 +632,7 @@ export default function StorePage() {
                   <button
                     type='submit'
                     disabled={submitting}
-                    className='w-full rounded-xl bg-linear-to-r from-teal-500 to-cyan-500 px-6 py-4 font-semibold text-white transition-all hover:shadow-lg hover:shadow-teal-500/50 disabled:opacity-50 disabled:cursor-not-allowed'
+                    className='w-full rounded-xl bg-teal-500 px-6 py-4 font-semibold text-white transition-all hover:bg-teal-600 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed'
                   >
                     {submitting ? (
                       <span className='flex items-center justify-center gap-2'>
