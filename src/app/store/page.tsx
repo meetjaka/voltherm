@@ -515,6 +515,26 @@ export default function StorePage() {
                   </div>
                 </div>
 
+                {/* Technical Specifications */}
+                {selectedProduct.technicalSpecs && selectedProduct.technicalSpecs.length > 0 && (
+                  <div className='mb-6'>
+                    <h3 className='text-lg font-semibold text-slate-900 mb-3 uppercase text-slate-500 text-sm'>
+                      Technical Specifications
+                    </h3>
+                    <div className='space-y-3'>
+                      {selectedProduct.technicalSpecs.map((spec, idx) => (
+                        <div key={idx} className='flex justify-between items-center border-b border-slate-200 pb-2'>
+                          <span className='text-slate-600'>{spec.key}</span>
+                          <span className='font-semibold text-slate-900'>{spec.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className='text-xs text-slate-500 mt-4 italic'>
+                      For more details or specifications, download the datasheet below
+                    </p>
+                  </div>
+                )}
+
                 {/* Actions */}
                 <div className='mt-auto space-y-3'>
                   <button className='w-full flex items-center justify-center gap-2 rounded-lg border border-teal-500 bg-white px-6 py-3 font-semibold text-teal-500 transition-all hover:bg-teal-50'>

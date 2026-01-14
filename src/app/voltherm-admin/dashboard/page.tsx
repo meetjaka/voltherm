@@ -509,6 +509,104 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
             />
           </div>
 
+          {/* Capacity, Voltage, Price */}
+          <div className='grid grid-cols-3 gap-4'>
+            <div>
+              <label className='block text-sm font-medium text-slate-700 mb-2'>Capacity (Optional)</label>
+              <input
+                type='text'
+                value={formData.capacity || ''}
+                onChange={(e) => setFormData({ ...formData, capacity: e.target.value || undefined })}
+                className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+                placeholder='e.g., 75 kWh'
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-slate-700 mb-2'>Voltage (Optional)</label>
+              <input
+                type='text'
+                value={formData.voltage || ''}
+                onChange={(e) => setFormData({ ...formData, voltage: e.target.value || undefined })}
+                className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+                placeholder='e.g., 400V'
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-slate-700 mb-2'>Price (Optional)</label>
+              <input
+                type='number'
+                value={formData.price || ''}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value ? Number(e.target.value) : undefined })}
+                className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+                placeholder='e.g., 50000'
+              />
+            </div>
+          </div>
+
+          {/* Technical Specifications */}
+          <div>
+            <div className='flex items-center justify-between mb-2'>
+              <label className='block text-sm font-medium text-slate-700'>Technical Specifications (Max 6)</label>
+              <button
+                type='button'
+                onClick={() => {
+                  const current = formData.technicalSpecs || [];
+                  if (current.length < 6) {
+                    setFormData({
+                      ...formData,
+                      technicalSpecs: [...current, { key: '', value: '' }]
+                    });
+                  }
+                }}
+                disabled={(formData.technicalSpecs || []).length >= 6}
+                className='flex items-center gap-1 px-3 py-1 text-sm bg-teal-100 text-teal-600 rounded-lg hover:bg-teal-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+              >
+                <span className='text-lg'>+</span> Add
+              </button>
+            </div>
+            <div className='space-y-2'>
+              {(formData.technicalSpecs || []).map((spec, idx) => (
+                <div key={idx} className='flex gap-2'>
+                  <input
+                    type='text'
+                    value={spec.key}
+                    onChange={(e) => {
+                      const updated = [...(formData.technicalSpecs || [])];
+                      updated[idx] = { ...updated[idx], key: e.target.value };
+                      setFormData({ ...formData, technicalSpecs: updated });
+                    }}
+                    placeholder='e.g., Energy Density'
+                    className='flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+                  />
+                  <input
+                    type='text'
+                    value={spec.value}
+                    onChange={(e) => {
+                      const updated = [...(formData.technicalSpecs || [])];
+                      updated[idx] = { ...updated[idx], value: e.target.value };
+                      setFormData({ ...formData, technicalSpecs: updated });
+                    }}
+                    placeholder='e.g., 250 Wh/kg'
+                    className='flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+                  />
+                  <button
+                    type='button'
+                    onClick={() => {
+                      const updated = (formData.technicalSpecs || []).filter((_, i) => i !== idx);
+                      setFormData({ ...formData, technicalSpecs: updated });
+                    }}
+                    className='px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors'
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {(!formData.technicalSpecs || formData.technicalSpecs.length === 0) && (
+                <p className='text-sm text-slate-500 italic'>No technical specifications added yet. Click + Add to create one.</p>
+              )}
+            </div>
+          </div>
+
           <div>
             <label className='block text-sm font-medium text-slate-700 mb-2'>Sub-Category</label>
             <select

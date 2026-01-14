@@ -16,6 +16,7 @@ export interface Product {
     price?: number; // Optional price field
     capacity?: string; // Battery capacity (e.g., "75 kWh")
     voltage?: string; // Battery voltage (e.g., "400V")
+    technicalSpecs?: Array<{ key: string; value: string }>; // Technical specifications (max 6)
 }
 
 export interface MainCategory {
