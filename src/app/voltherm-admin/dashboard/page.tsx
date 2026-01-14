@@ -115,6 +115,23 @@ export default function AdminDashboard() {
   };
 
   const handleToggleFeatured = (id: number) => {
+    const currentProduct = products.find(p => p.id === id);
+    const featuredCount = products.filter(p => p.featured).length;
+    
+    // Check if trying to feature a product (currently not featured)
+    if (!currentProduct?.featured) {
+      if (featuredCount >= 6) {
+        toast.error('Maximum 6 products can be featured on homepage slider');
+        return;
+      }
+    } else {
+      // Check if trying to unfeature a product (currently featured)
+      if (featuredCount <= 3) {
+        toast.error('Minimum 3 products must be featured on homepage slider');
+        return;
+      }
+    }
+    
     const updatedProducts = products.map(p => 
       p.id === id ? { ...p, featured: !p.featured } : p
     );
