@@ -216,6 +216,8 @@ export default function ContactPage() {
                                             id='email'
                                             name='email'
                                             required
+                                            pattern='[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
+                                            title='Please enter a valid email address'
                                             value={formData.email}
                                             onChange={handleChange}
                                             placeholder='Your email'
@@ -253,9 +255,18 @@ export default function ContactPage() {
                                             type='tel'
                                             id='phone'
                                             name='phone'
+                                            pattern='[0-9]{10}'
+                                            minLength={10}
+                                            maxLength={10}
+                                            title='Please enter a valid 10-digit mobile number'
                                             value={formData.phone}
-                                            onChange={handleChange}
-                                            placeholder='Your phone number'
+                                            onChange={(e) => {
+                                                const value = e.target.value.replace(/\D/g, '');
+                                                if (value.length <= 10) {
+                                                    setFormData({ ...formData, phone: value });
+                                                }
+                                            }}
+                                            placeholder='9876543210'
                                             className='w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 transition-all outline-none placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20'
                                         />
                                     </div>

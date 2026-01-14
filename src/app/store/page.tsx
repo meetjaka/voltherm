@@ -579,6 +579,8 @@ export default function StorePage() {
                       <input
                         type='email'
                         required
+                        pattern='[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
+                        title='Please enter a valid email address'
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className='w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500'
@@ -593,10 +595,19 @@ export default function StorePage() {
                       <input
                         type='tel'
                         required
+                        pattern='[0-9]{10}'
+                        minLength={10}
+                        maxLength={10}
+                        title='Please enter a valid 10-digit mobile number'
                         value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '');
+                          if (value.length <= 10) {
+                            setFormData({ ...formData, phone: value });
+                          }
+                        }}
                         className='w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500'
-                        placeholder='+91 98765 43210'
+                        placeholder='9876543210'
                       />
                     </div>
 
