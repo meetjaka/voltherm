@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, X, Send, Check, AlertCircle, ArrowLeft, Filter } from 'lucide-react';
+import { ShoppingCart, X, Send, Check, AlertCircle, ArrowLeft, Filter, Download } from 'lucide-react';
 import NavbarDemo from '@/components/demos/NavbarDemo';
 import CategoryIcon from '@/components/CategoryIcon';
 import { getProducts, getSubCategories, getMainCategories, type Product, type SubCategory, type MainCategory } from '@/lib/adminData';
@@ -16,6 +16,7 @@ export default function StorePage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [showInquiryForm, setShowInquiryForm] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [filterAvailable, setFilterAvailable] = useState<'all' | 'available' | 'unavailable'>('all');
   const [selectedMainCategoryId, setSelectedMainCategoryId] = useState<string | 'all'>('all');
   const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<string | 'all'>('all');
@@ -362,6 +363,28 @@ export default function StorePage() {
                 {product.description}
               </p>
 
+              {/* Info Blocks - Capacity, Voltage, Price */}
+              <div className='grid grid-cols-3 gap-2 mb-4'>
+                <div className='rounded-lg border border-slate-200 bg-slate-50 p-2 text-center'>
+                  <div className='text-xs text-slate-500'>Capacity</div>
+                  <div className='mt-1 text-sm font-semibold text-slate-900'>
+                    {product.capacity || 'N/A'}
+                  </div>
+                </div>
+                <div className='rounded-lg border border-slate-200 bg-slate-50 p-2 text-center'>
+                  <div className='text-xs text-slate-500'>Voltage</div>
+                  <div className='mt-1 text-sm font-semibold text-slate-900'>
+                    {product.voltage || 'N/A'}
+                  </div>
+                </div>
+                <div className='rounded-lg border border-slate-200 bg-slate-50 p-2 text-center'>
+                  <div className='text-xs text-slate-500'>Price</div>
+                  <div className='mt-1 text-sm font-semibold text-teal-600'>
+                    {product.price ? `₹${product.price.toLocaleString()}` : 'N/A'}
+                  </div>
+                </div>
+              </div>
+
               {/* Specs */}
               <div className='flex flex-wrap gap-2 mb-4'>
                 {product.specs.slice(0, 3).map((spec, idx) => (
@@ -376,11 +399,17 @@ export default function StorePage() {
 
               {/* Actions */}
               <div className='flex gap-2'>
+                <button
+                  onClick={() => setSelectedProduct(product)}
+                  className='flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50'
+                >
+                  More Details →
+                </button>
                 {!isInCart(product.id) ? (
                   <button
                     onClick={() => handleAddToCart(product)}
                     disabled={product.available === false}
-                    className={`flex-1 rounded-lg px-4 py-3 font-semibold transition-all ${
+                    className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
                       product.available === false
                         ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
                         : 'bg-teal-500 text-white hover:bg-teal-600 hover:shadow-lg'
@@ -391,9 +420,9 @@ export default function StorePage() {
                 ) : (
                   <button
                     onClick={() => handleRemoveFromCart(product.id)}
-                    className='flex-1 rounded-lg border-2 border-teal-500 bg-white px-4 py-3 font-semibold text-teal-500 transition-all hover:bg-teal-50'
+                    className='flex-1 rounded-lg border-2 border-teal-500 bg-white px-4 py-2.5 text-sm font-semibold text-teal-500 transition-all hover:bg-teal-50'
                   >
-                    Remove from Cart
+                    Remove
                   </button>
                 )}
               </div>
@@ -409,6 +438,126 @@ export default function StorePage() {
           </div>
         )}
       </section>
+
+      {/* Product Details Modal */}
+      {selectedProduct && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
+          {/* Backdrop */}
+          <div
+            className='absolute inset-0 bg-black/70 backdrop-blur-sm'
+            onClick={() => setSelectedProduct(null)}
+          />
+          
+          {/* Modal */}
+          <div className='relative z-10 w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl'>
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedProduct(null)}
+              className='absolute top-4 right-4 z-20 rounded-full bg-white p-2 shadow-lg transition-all hover:bg-slate-100'
+            >
+              <X className='h-5 w-5 text-slate-700' />
+            </button>
+
+            <div className='grid md:grid-cols-2 gap-8 p-8'>
+              {/* Left: Image */}
+              <div className='rounded-lg overflow-hidden bg-slate-100'>
+                <img
+                  src={selectedProduct.image}
+                  alt={selectedProduct.title}
+                  className='w-full h-full object-cover'
+                />
+              </div>
+
+              {/* Right: Details */}
+              <div className='flex flex-col'>
+                <h2 className='text-3xl font-bold text-slate-900 mb-4'>
+                  {selectedProduct.title}
+                </h2>
+                
+                <p className='text-slate-600 mb-6 leading-relaxed'>
+                  {selectedProduct.description}
+                </p>
+
+                {/* Info Blocks */}
+                <div className='grid grid-cols-3 gap-4 mb-6'>
+                  <div className='rounded-lg border border-slate-200 bg-slate-50 p-4 text-center'>
+                    <div className='text-sm text-slate-500 mb-1'>Capacity</div>
+                    <div className='text-lg font-bold text-slate-900'>
+                      {selectedProduct.capacity || 'N/A'}
+                    </div>
+                  </div>
+                  <div className='rounded-lg border border-slate-200 bg-slate-50 p-4 text-center'>
+                    <div className='text-sm text-slate-500 mb-1'>Voltage</div>
+                    <div className='text-lg font-bold text-slate-900'>
+                      {selectedProduct.voltage || 'N/A'}
+                    </div>
+                  </div>
+                  <div className='rounded-lg border border-slate-200 bg-slate-50 p-4 text-center'>
+                    <div className='text-sm text-slate-500 mb-1'>Price</div>
+                    <div className='text-lg font-bold text-teal-600'>
+                      {selectedProduct.price ? `₹${selectedProduct.price.toLocaleString()}` : 'N/A'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Specifications */}
+                <div className='mb-6'>
+                  <h3 className='text-lg font-semibold text-slate-900 mb-3'>Specifications</h3>
+                  <div className='flex flex-wrap gap-2'>
+                    {selectedProduct.specs.map((spec, idx) => (
+                      <span
+                        key={idx}
+                        className='rounded-full border-2 border-cyan-500 bg-white px-4 py-2 text-sm font-medium text-cyan-500'
+                      >
+                        {spec}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className='mt-auto space-y-3'>
+                  <button className='w-full flex items-center justify-center gap-2 rounded-lg border border-teal-500 bg-white px-6 py-3 font-semibold text-teal-500 transition-all hover:bg-teal-50'>
+                    <Download className='h-5 w-5' />
+                    Download Datasheet
+                  </button>
+                  
+                  <button className='w-full rounded-lg bg-teal-500 px-6 py-3 font-semibold text-white transition-all hover:bg-teal-600 hover:shadow-lg'>
+                    Request a Quote
+                  </button>
+
+                  {!isInCart(selectedProduct.id) ? (
+                    <button
+                      onClick={() => {
+                        handleAddToCart(selectedProduct);
+                        setSelectedProduct(null);
+                      }}
+                      disabled={selectedProduct.available === false}
+                      className={`w-full rounded-lg px-6 py-3 font-semibold transition-all ${
+                        selectedProduct.available === false
+                          ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                          : 'bg-cyan-500 text-white hover:bg-cyan-600 hover:shadow-lg'
+                      }`}
+                    >
+                      {selectedProduct.available === false ? 'Unavailable' : 'Add to Cart'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        handleRemoveFromCart(selectedProduct.id);
+                        setSelectedProduct(null);
+                      }}
+                      className='w-full rounded-lg border-2 border-cyan-500 bg-white px-6 py-3 font-semibold text-cyan-500 transition-all hover:bg-cyan-50'
+                    >
+                      Remove from Cart
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Cart Sidebar */}
       {showCart && (

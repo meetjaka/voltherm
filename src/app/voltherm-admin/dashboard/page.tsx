@@ -435,7 +435,6 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
         description: '',
         image: '',
         specs: [''],
-        color: 'from-teal-500 to-cyan-400',
         featured: false,
         available: true
       });
@@ -508,22 +507,6 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
               className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
               placeholder='Spec 1, Spec 2, Spec 3'
             />
-          </div>
-
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>Color Gradient</label>
-            <select
-              value={formData.color}
-              onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-            >
-              <option value='from-teal-500 to-cyan-400'>Teal to Cyan</option>
-              <option value='from-blue-500 to-cyan-400'>Blue to Cyan</option>
-              <option value='from-purple-500 to-pink-400'>Purple to Pink</option>
-              <option value='from-amber-500 to-orange-400'>Amber to Orange</option>
-              <option value='from-red-500 to-pink-400'>Red to Pink</option>
-              <option value='from-slate-500 to-gray-600'>Slate to Gray</option>
-            </select>
           </div>
 
           <div>
