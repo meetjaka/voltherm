@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
     // Uncomment below line only for Docker deployments:
     // output: 'standalone',
     images: {
+        // NOTE: Product images added by admin use 'unoptimized' prop
+        // so they work with ANY external URL without configuring hostname here.
+        // Only static/fixed images need to be configured below.
         remotePatterns: [
             {
                 protocol: 'https',
@@ -41,6 +44,12 @@ const nextConfig: NextConfig = {
             {
                 protocol: 'https',
                 hostname: 'encrypted-tbn0.gstatic.com',
+                port: '',
+                pathname: '/**'
+            },
+            {
+                protocol: 'https',
+                hostname: 'img.freepik.com',
                 port: '',
                 pathname: '/**'
             }

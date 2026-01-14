@@ -81,6 +81,7 @@ export default function ProductCarouselDemo() {
                                 fill
                                 className='object-cover transition-transform duration-500 hover:scale-105'
                                 priority
+                                unoptimized
                             />
                             {/* Overlay Gradient */}
                             <div className={`absolute inset-0 bg-linear-to-br ${product.color} opacity-20 mix-blend-multiply`}></div>
