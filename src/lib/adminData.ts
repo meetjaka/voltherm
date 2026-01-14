@@ -12,6 +12,7 @@ export interface Product {
     categoryId?: string; // Deprecated - for backward compatibility
     visible?: boolean;
     available?: boolean; // Product availability for store
+    featured?: boolean; // Product featured on home page slider
     price?: number; // Optional price field
 }
 

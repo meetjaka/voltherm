@@ -16,7 +16,8 @@ import {
   Eye,
   EyeOff,
   Save,
-  X
+  X,
+  Star
 } from 'lucide-react';
 import CategoryIcon from '@/components/CategoryIcon';
 import { checkAdminSession, clearAdminSession } from '@/lib/adminAuth';
@@ -51,6 +52,7 @@ import { toast } from 'sonner';
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'products' | 'contact' | 'certificates' | 'inquiries' | 'categories' | 'overview'>('overview');
   const [products, setProducts] = useState<Product[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
@@ -69,6 +71,8 @@ export default function AdminDashboard() {
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>(''); // For sub-category management
 
   useEffect(() => {
+    setMounted(true);
+    
     if (!checkAdminSession()) {
       router.push('/voltherm-admin');
       return;
@@ -92,7 +96,7 @@ export default function AdminDashboard() {
   const handleSaveProduct = (product: Product) => {
     const updatedProducts = editingProduct?.id 
       ? products.map(p => p.id === product.id ? product : p)
-      : [...products, { ...product, id: Date.now() }];
+      : [...products, { ...product, id: Math.floor(Math.random() * 1000000000) }];
     
     setProducts(updatedProducts);
     saveProducts(updatedProducts);
@@ -110,13 +114,13 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleToggleProductVisibility = (id: number) => {
+  const handleToggleFeatured = (id: number) => {
     const updatedProducts = products.map(p => 
-      p.id === id ? { ...p, visible: !p.visible } : p
+      p.id === id ? { ...p, featured: !p.featured } : p
     );
     setProducts(updatedProducts);
     saveProducts(updatedProducts);
-    toast.success('Product visibility updated');
+    toast.success('Product featured status updated');
   };
 
   const handleToggleProductAvailability = (id: number) => {
@@ -131,7 +135,7 @@ export default function AdminDashboard() {
   const handleSaveCertificate = (cert: Certificate) => {
     const updatedCerts = editingCertificate?.id 
       ? certificates.map(c => c.id === cert.id ? cert : c)
-      : [...certificates, { ...cert, id: `cert${Date.now()}` }];
+      : [...certificates, { ...cert, id: `cert${Math.floor(Math.random() * 1000000000)}` }];
     
     setCertificates(updatedCerts);
     saveCertificates(updatedCerts);
@@ -156,7 +160,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (!checkAdminSession()) {
+  if (!mounted) {
     return null;
   }
 
@@ -271,7 +275,7 @@ export default function AdminDashboard() {
               <OverviewTab 
                 productsCount={products.length}
                 certificatesCount={certificates.length}
-                visibleProductsCount={products.filter(p => p.visible).length}
+                featuredProductsCount={products.filter(p => p.featured).length}
                 inquiriesCount={inquiries.length}
                 newInquiriesCount={inquiries.filter(i => i.status === 'new').length}
               />
@@ -288,7 +292,7 @@ export default function AdminDashboard() {
                 setIsAddingProduct={setIsAddingProduct}
                 onSave={handleSaveProduct}
                 onDelete={handleDeleteProduct}
-                onToggleVisibility={handleToggleProductVisibility}
+                onToggleFeatured={handleToggleFeatured}
                 onToggleAvailability={handleToggleProductAvailability}
               />
             )}
@@ -411,7 +415,7 @@ export default function AdminDashboard() {
 }
 
 // Overview Tab Component
-function OverviewTab({ productsCount, certificatesCount, visibleProductsCount, inquiriesCount, newInquiriesCount }: any) {
+function OverviewTab({ productsCount, certificatesCount, featuredProductsCount, inquiriesCount, newInquiriesCount }: any) {
   return (
     <div className='space-y-6'>
       <div>
@@ -434,12 +438,12 @@ function OverviewTab({ productsCount, certificatesCount, visibleProductsCount, i
 
         <div className='bg-white rounded-xl border border-slate-200 p-6'>
           <div className='flex items-center gap-4'>
-            <div className='w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center'>
-              <Eye className='w-6 h-6 text-green-600' />
+            <div className='w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center'>
+              <span className='text-2xl'>⭐</span>
             </div>
             <div>
-              <p className='text-2xl font-bold text-slate-900'>{visibleProductsCount}</p>
-              <p className='text-sm text-slate-600'>Visible Products</p>
+              <p className='text-2xl font-bold text-slate-900'>{featuredProductsCount}</p>
+              <p className='text-sm text-slate-600'>Featured Products</p>
             </div>
           </div>
         </div>
@@ -490,7 +494,7 @@ function OverviewTab({ productsCount, certificatesCount, visibleProductsCount, i
 }
 
 // Products Tab Component
-function ProductsTab({ products, categories, mainCategories, editingProduct, isAddingProduct, setEditingProduct, setIsAddingProduct, onSave, onDelete, onToggleVisibility, onToggleAvailability }: any) {
+function ProductsTab({ products, categories, mainCategories, editingProduct, isAddingProduct, setEditingProduct, setIsAddingProduct, onSave, onDelete, onToggleFeatured, onToggleAvailability }: any) {
   const [formData, setFormData] = useState<Product>({
     id: 0,
     title: '',
@@ -498,7 +502,7 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
     image: '',
     specs: [''],
     color: 'from-teal-500 to-cyan-400',
-    visible: true,
+    featured: false,
     available: true
   });
 
@@ -513,7 +517,7 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
         image: '',
         specs: [''],
         color: 'from-teal-500 to-cyan-400',
-        visible: true,
+        featured: false,
         available: true
       });
     }
@@ -631,13 +635,13 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
           <div className='flex items-center gap-2'>
             <input
               type='checkbox'
-              id='visible'
-              checked={formData.visible}
-              onChange={(e) => setFormData({ ...formData, visible: e.target.checked })}
+              id='featured'
+              checked={formData.featured}
+              onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
               className='w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500'
             />
-            <label htmlFor='visible' className='text-sm font-medium text-slate-700'>
-              Visible on homepage
+            <label htmlFor='featured' className='text-sm font-medium text-slate-700 flex items-center gap-1'>
+              <span>⭐</span> Featured on homepage slider
             </label>
           </div>
 
@@ -710,15 +714,15 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
                   </div>
                   <div className='flex items-center gap-2'>
                     <button
-                      onClick={() => onToggleVisibility(product.id)}
+                      onClick={() => onToggleFeatured(product.id)}
                       className={`p-2 rounded-lg transition-colors ${
-                        product.visible
-                          ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                        product.featured
+                          ? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
                           : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
                       }`}
-                      title={product.visible ? 'Visible on website' : 'Hidden from website'}
+                      title={product.featured ? 'Featured on homepage slider' : 'Not featured on homepage'}
                     >
-                      {product.visible ? <Eye className='w-4 h-4' /> : <EyeOff className='w-4 h-4' />}
+                      <Star className={`w-4 h-4 ${product.featured ? 'fill-amber-600' : ''}`} />
                     </button>
                     <button
                       onClick={() => onToggleAvailability(product.id)}

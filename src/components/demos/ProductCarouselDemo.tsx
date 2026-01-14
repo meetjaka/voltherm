@@ -12,10 +12,10 @@ export default function ProductCarouselDemo() {
     const [autoPlay, setAutoPlay] = useState(true);
 
     useEffect(() => {
-        // Load products from admin data and filter visible ones
+        // Load products from admin data and filter featured ones
         const allProducts = getProducts();
-        const visibleProducts = allProducts.filter(p => p.visible !== false);
-        setProducts(visibleProducts);
+        const featuredProducts = allProducts.filter(p => p.featured === true);
+        setProducts(featuredProducts);
     }, []);
 
     useEffect(() => {
