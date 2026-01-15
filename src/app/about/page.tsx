@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import Image from 'next/image';
+import { Battery, Sun, Plug, Lightbulb, Rocket, Sparkles, Leaf } from 'lucide-react';
 
 import NavbarDemo from '@/components/demos/NavbarDemo';
 import { type Certificate, getCertificates } from '@/lib/adminData';
@@ -95,13 +96,13 @@ export default function AboutPage() {
                             {/* Services Grid */}
                             <div className='grid gap-4 sm:grid-cols-2'>
                                 {[
-                                    { icon: '⚡', title: 'Energy Storage' },
-                                    { icon: '☀️', title: 'Solar Consumer Products' },
-                                    { icon: '🔌', title: 'EV Charging Stations EPC' },
-                                    { icon: '💡', title: 'Solar & EV Consultancy' }
+                                    { icon: Battery, title: 'Energy Storage' },
+                                    { icon: Sun, title: 'Solar Consumer Products' },
+                                    { icon: Plug, title: 'EV Charging Stations EPC' },
+                                    { icon: Lightbulb, title: 'Solar & EV Consultancy' }
                                 ].map((service, index) => (
                                     <div key={index} className='flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-teal-300 hover:bg-teal-50 transition-all group'>
-                                        <div className='text-3xl group-hover:scale-110 transition-transform'>{service.icon}</div>
+                                        <service.icon className='h-7 w-7 text-teal-600 group-hover:scale-110 transition-transform' />
                                         <span className='font-semibold text-slate-900'>{service.title}</span>
                                     </div>
                                 ))}
@@ -120,12 +121,12 @@ export default function AboutPage() {
                     </div>
                     <div className='grid gap-8 md:grid-cols-3'>
                         {[
-                            { title: 'Innovation', desc: 'Pioneering cutting-edge solutions in renewable energy', icon: '🚀' },
-                            { title: 'Quality', desc: 'ISO certified processes ensuring highest standards', icon: '✨' },
-                            { title: 'Sustainability', desc: 'Committed to a greener, cleaner future', icon: '🌱' }
+                            { title: 'Innovation', desc: 'Pioneering cutting-edge solutions in renewable energy', icon: Rocket },
+                            { title: 'Quality', desc: 'ISO certified processes ensuring highest standards', icon: Sparkles },
+                            { title: 'Sustainability', desc: 'Committed to a greener, cleaner future', icon: Leaf }
                         ].map((value, index) => (
                             <div key={index} className='bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all'>
-                                <div className='text-5xl mb-4'>{value.icon}</div>
+                                <value.icon className='h-12 w-12 text-teal-400 mb-4' />
                                 <h3 className='text-2xl font-bold text-white mb-3'>{value.title}</h3>
                                 <p className='text-slate-300'>{value.desc}</p>
                             </div>
