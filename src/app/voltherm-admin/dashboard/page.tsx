@@ -20,7 +20,8 @@ import {
   AlertCircle,
   Save,
   Eye,
-  EyeOff,
+  Rows,
+  Columns,
   Star
 } from 'lucide-react';
 import CategoryIcon from '@/components/CategoryIcon';
@@ -400,6 +401,7 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
     featured: false,
     available: true
   });
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (editingProduct) {
@@ -417,72 +419,114 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
     }
   }, [editingProduct, isAddingProduct]);
 
+  const filteredProducts = products.filter((p: Product) => 
+    p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (editingProduct || isAddingProduct) {
     return (
-      <div className='bg-white rounded-2xl border border-slate-200 p-6 shadow-sm'>
-        <div className='flex items-center justify-between mb-6'>
-          <h3 className='text-xl font-bold text-slate-900'>
-            {editingProduct ? 'Edit Product' : 'Add Product'}
-          </h3>
+      <div className='bg-white rounded-2xl border border-slate-200 p-8 shadow-sm max-w-4xl'>
+        <div className='flex items-center justify-between mb-8'>
+          <div>
+            <h3 className='text-2xl font-bold text-slate-900'>
+              {editingProduct ? 'Edit Product' : 'Add New Product'}
+            </h3>
+            <p className='text-slate-500 text-sm mt-1'>Fill in all required fields to create or update a product</p>
+          </div>
           <button
             onClick={() => {
               setEditingProduct(null);
               setIsAddingProduct(false);
             }}
-            className='text-slate-400 hover:text-slate-600'
+            className='p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors'
           >
-            <X className='w-5 h-5' />
+            <X className='w-6 h-6' />
           </button>
         </div>
 
         <form onSubmit={(e) => {
           e.preventDefault();
           onSave(formData);
-        }} className='space-y-4'>
-          <input
-            type='text'
-            placeholder='Product Title'
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-            required
-          />
+        }} className='space-y-6'>
+          {/* Basic Information */}
+          <div className='border-b border-slate-200 pb-6'>
+            <h4 className='text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider'>Basic Information</h4>
+            <div className='space-y-4'>
+              <div>
+                <label className='block text-sm font-medium text-slate-700 mb-2'>Product Title *</label>
+                <input
+                  type='text'
+                  placeholder='Enter product name'
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+                  required
+                />
+              </div>
 
-          <textarea
-            placeholder='Description'
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            rows={3}
-            className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-            required
-          />
+              <div>
+                <label className='block text-sm font-medium text-slate-700 mb-2'>Description *</label>
+                <textarea
+                  placeholder='Enter detailed product description'
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                  className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none'
+                  required
+                />
+              </div>
 
-          <input
-            type='url'
-            placeholder='Image URL'
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-            required
-          />
-
-          <input
-            type='text'
-            placeholder='Specs (comma-separated)'
-            value={formData.specs.join(', ')}
-            onChange={(e) => setFormData({ ...formData, specs: e.target.value.split(',').map(s => s.trim()) })}
-            className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-          />
-
-          <div className='grid grid-cols-3 gap-4'>
-            <input type='text' placeholder='Capacity' value={formData.capacity || ''} onChange={(e) => setFormData({ ...formData, capacity: e.target.value || undefined })} className='px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent' />
-            <input type='text' placeholder='Voltage' value={formData.voltage || ''} onChange={(e) => setFormData({ ...formData, voltage: e.target.value || undefined })} className='px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent' />
-            <input type='number' placeholder='Price' value={formData.price || ''} onChange={(e) => setFormData({ ...formData, price: e.target.value ? Number(e.target.value) : undefined })} className='px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent' />
+              <div>
+                <label className='block text-sm font-medium text-slate-700 mb-2'>Image URL *</label>
+                <input
+                  type='url'
+                  placeholder='https://example.com/product-image.jpg'
+                  value={formData.image}
+                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                  className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+                  required
+                />
+              </div>
+            </div>
           </div>
 
-          <div>
-            <div className='flex items-center justify-between mb-2'>
-              <label className='text-sm font-medium text-slate-700'>Technical Specs (Max 6)</label>
+          {/* Specifications */}
+          <div className='border-b border-slate-200 pb-6'>
+            <h4 className='text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider'>Specifications</h4>
+            <div className='space-y-4'>
+              <div>
+                <label className='block text-sm font-medium text-slate-700 mb-2'>Quick Specs (comma-separated)</label>
+                <input
+                  type='text'
+                  placeholder='e.g., Portable, Compact, Lightweight'
+                  value={formData.specs.join(', ')}
+                  onChange={(e) => setFormData({ ...formData, specs: e.target.value.split(',').map(s => s.trim()).filter(s => s) })}
+                  className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+                />
+              </div>
+
+              <div className='grid grid-cols-3 gap-4'>
+                <div>
+                  <label className='block text-sm font-medium text-slate-700 mb-2'>Capacity</label>
+                  <input type='text' placeholder='e.g., 75 kWh' value={formData.capacity || ''} onChange={(e) => setFormData({ ...formData, capacity: e.target.value || undefined })} className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent' />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-slate-700 mb-2'>Voltage</label>
+                  <input type='text' placeholder='e.g., 400V' value={formData.voltage || ''} onChange={(e) => setFormData({ ...formData, voltage: e.target.value || undefined })} className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent' />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-slate-700 mb-2'>Price</label>
+                  <input type='number' placeholder='e.g., 50000' value={formData.price || ''} onChange={(e) => setFormData({ ...formData, price: e.target.value ? Number(e.target.value) : undefined })} className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent' />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Technical Specs */}
+          <div className='border-b border-slate-200 pb-6'>
+            <div className='flex items-center justify-between mb-4'>
+              <h4 className='text-sm font-bold text-slate-700 uppercase tracking-wider'>Technical Specifications (Max 6)</h4>
               <button
                 type='button'
                 onClick={() => {
@@ -494,48 +538,121 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
                     });
                   }
                 }}
-                className='text-sm px-3 py-1 bg-teal-100 text-teal-600 rounded hover:bg-teal-200 transition-colors'
+                disabled={(formData.technicalSpecs || []).length >= 6}
+                className='flex items-center gap-1 px-3 py-1.5 text-sm bg-teal-100 text-teal-600 rounded-lg hover:bg-teal-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium'
               >
-                + Add
+                <Plus className='w-4 h-4' /> Add Spec
               </button>
             </div>
-            <div className='space-y-2'>
+            <div className='space-y-3'>
               {(formData.technicalSpecs || []).map((spec, idx) => (
                 <div key={idx} className='flex gap-2'>
-                  <input type='text' placeholder='Key' value={spec.key} onChange={(e) => { const updated = [...(formData.technicalSpecs || [])]; updated[idx] = { ...updated[idx], key: e.target.value }; setFormData({ ...formData, technicalSpecs: updated }); }} className='flex-1 px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
-                  <input type='text' placeholder='Value' value={spec.value} onChange={(e) => { const updated = [...(formData.technicalSpecs || [])]; updated[idx] = { ...updated[idx], value: e.target.value }; setFormData({ ...formData, technicalSpecs: updated }); }} className='flex-1 px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
-                  <button type='button' onClick={() => { const updated = (formData.technicalSpecs || []).filter((_, i) => i !== idx); setFormData({ ...formData, technicalSpecs: updated }); }} className='px-3 py-2 text-red-600 hover:text-red-700'>×</button>
+                  <input
+                    type='text'
+                    placeholder='e.g., Energy Density'
+                    value={spec.key}
+                    onChange={(e) => {
+                      const updated = [...(formData.technicalSpecs || [])];
+                      updated[idx] = { ...updated[idx], key: e.target.value };
+                      setFormData({ ...formData, technicalSpecs: updated });
+                    }}
+                    className='flex-1 px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+                  />
+                  <input
+                    type='text'
+                    placeholder='e.g., 250 Wh/kg'
+                    value={spec.value}
+                    onChange={(e) => {
+                      const updated = [...(formData.technicalSpecs || [])];
+                      updated[idx] = { ...updated[idx], value: e.target.value };
+                      setFormData({ ...formData, technicalSpecs: updated });
+                    }}
+                    className='flex-1 px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+                  />
+                  <button
+                    type='button'
+                    onClick={() => {
+                      const updated = (formData.technicalSpecs || []).filter((_, i) => i !== idx);
+                      setFormData({ ...formData, technicalSpecs: updated });
+                    }}
+                    className='px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors'
+                  >
+                    <Trash2 className='w-4 h-4' />
+                  </button>
                 </div>
               ))}
+              {(!formData.technicalSpecs || formData.technicalSpecs.length === 0) && (
+                <p className='text-sm text-slate-500 italic text-center py-2'>No technical specs added yet</p>
+              )}
             </div>
           </div>
 
-          <select
-            value={formData.subCategoryId || formData.categoryId || ''}
-            onChange={(e) => setFormData({ ...formData, subCategoryId: e.target.value || undefined, categoryId: e.target.value || undefined })}
-            className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500'
-          >
-            <option value=''>No Sub-Category</option>
-            {mainCategories.map((mainCat: MainCategory) => {
-              const subCats = categories.filter((c: SubCategory) => c.mainCategoryId === mainCat.id);
-              return (
-                <optgroup key={mainCat.id} label={mainCat.name}>
-                  {subCats.map((subCat: SubCategory) => (
-                    <option key={subCat.id} value={subCat.id}>{subCat.icon} {subCat.name}</option>
-                  ))}
-                </optgroup>
-              );
-            })}
-          </select>
+          {/* Category & Status */}
+          <div className='border-b border-slate-200 pb-6'>
+            <h4 className='text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider'>Category & Status</h4>
+            <div className='space-y-4'>
+              <div>
+                <label className='block text-sm font-medium text-slate-700 mb-2'>Category</label>
+                <select
+                  value={formData.subCategoryId || formData.categoryId || ''}
+                  onChange={(e) => setFormData({ ...formData, subCategoryId: e.target.value || undefined, categoryId: e.target.value || undefined })}
+                  className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+                >
+                  <option value=''>Select a category...</option>
+                  {mainCategories.map((mainCat: MainCategory) => {
+                    const subCats = categories.filter((c: SubCategory) => c.mainCategoryId === mainCat.id);
+                    if (subCats.length === 0) return null;
+                    return (
+                      <optgroup key={mainCat.id} label={mainCat.name}>
+                        {subCats.map((subCat: SubCategory) => (
+                          <option key={subCat.id} value={subCat.id}>{subCat.icon} {subCat.name}</option>
+                        ))}
+                      </optgroup>
+                    );
+                  })}
+                </select>
+              </div>
 
-          <label className='flex items-center gap-2 text-slate-700'>
-            <input type='checkbox' checked={formData.featured} onChange={(e) => setFormData({ ...formData, featured: e.target.checked })} className='w-4 h-4' />
-            <span className='text-sm'>Featured on homepage</span>
-          </label>
+              <div className='grid grid-cols-2 gap-4'>
+                <label className='flex items-center gap-3 p-3 border border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors'>
+                  <input type='checkbox' checked={formData.featured} onChange={(e) => setFormData({ ...formData, featured: e.target.checked })} className='w-4 h-4 text-teal-600 border-slate-300 rounded' />
+                  <div>
+                    <span className='font-medium text-slate-700'>⭐ Featured</span>
+                    <p className='text-xs text-slate-500'>Show on homepage slider</p>
+                  </div>
+                </label>
 
-          <button type='submit' className='w-full py-3 bg-linear-to-r from-teal-600 to-cyan-600 text-white font-medium rounded-lg hover:from-teal-700 hover:to-cyan-700'>
-            Save Product
-          </button>
+                <label className='flex items-center gap-3 p-3 border border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors'>
+                  <input type='checkbox' checked={formData.available !== false} onChange={(e) => setFormData({ ...formData, available: e.target.checked ? true : false })} className='w-4 h-4 text-teal-600 border-slate-300 rounded' />
+                  <div>
+                    <span className='font-medium text-slate-700'>📦 Available</span>
+                    <p className='text-xs text-slate-500'>Product is in stock</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Buttons */}
+          <div className='flex gap-3 pt-6'>
+            <button
+              type='submit'
+              className='flex-1 py-3 px-4 bg-linear-to-r from-teal-600 to-cyan-600 text-white font-medium rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2'
+            >
+              <Save className='w-4 h-4' />
+              Save Product
+            </button>
+            <button
+              type='button'
+              onClick={() => {
+                setEditingProduct(null);
+                setIsAddingProduct(false);
+              }}
+              className='px-4 py-3 bg-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-300 transition-colors'
+            >
+              Cancel
+            </button>
+          </div>
         </form>
       </div>
     );
@@ -545,73 +662,141 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
     <div className='space-y-6'>
       <div className='flex items-center justify-between'>
         <div>
-          <h2 className='text-2xl font-bold text-slate-900'>Products ({products.length})</h2>
-          <p className='text-slate-600 text-sm'>Manage your product catalog</p>
+          <h2 className='text-3xl font-bold text-slate-900'>Products</h2>
+          <p className='text-slate-600 text-sm mt-1'>{filteredProducts.length} of {products.length} products</p>
         </div>
         <button
           onClick={() => setIsAddingProduct(true)}
-          className='flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium'
+          className='flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-teal-600 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all font-medium'
         >
           <Plus className='w-4 h-4' />
           Add Product
         </button>
       </div>
 
-      <div className='grid gap-4'>
-        {products.map((product: Product) => (
-          <div key={product.id} className='bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all'>
-            <div className='flex items-start gap-4'>
-              <img src={product.image} alt={product.title} className='w-20 h-20 object-cover rounded-lg' />
-              <div className='flex-1'>
-                <div className='flex items-start justify-between'>
-                  <div>
-                    <div className='flex items-center gap-2 mb-1'>
-                      <h3 className='font-bold text-slate-900'>{product.title}</h3>
-                      {product.available === false && (
-                        <span className='px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-semibold'>
-                          Unavailable
-                        </span>
-                      )}
-                      {(product.subCategoryId || product.categoryId) && (() => {
-                        const subCat = categories.find((c: SubCategory) => c.id === (product.subCategoryId || product.categoryId));
-                        if (!subCat) return null;
-                        const mainCat = mainCategories.find((m: MainCategory) => m.id === subCat.mainCategoryId);
-                        return (
-                          <span className='px-2 py-0.5 bg-teal-100 text-teal-700 text-xs rounded-full font-semibold'>
-                            {subCat.icon} {subCat.name} {mainCat && `· ${mainCat.name}`}
-                          </span>
-                        );
-                      })()}
-                    </div>
-                    <p className='text-slate-600 text-sm mt-1'>{product.description}</p>
-                    <div className='flex flex-wrap gap-1 mt-2'>
-                      {product.specs.map((spec, idx) => (
-                        <span key={idx} className='px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded'>
-                          {spec}
-                        </span>
-                      ))}
-                    </div>
+      {/* Search Bar */}
+      <div className='bg-white rounded-xl border border-slate-200 p-4'>
+        <input
+          type='text'
+          placeholder='Search products by name or description...'
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+        />
+      </div>
+
+      {/* Products Grid */}
+      {filteredProducts.length === 0 ? (
+        <div className='bg-white rounded-xl border border-slate-200 p-12 text-center'>
+          <Package className='w-16 h-16 text-slate-300 mx-auto mb-4' />
+          <h3 className='text-xl font-bold text-slate-900 mb-2'>No products found</h3>
+          <p className='text-slate-600'>{searchQuery ? 'Try a different search term' : 'Create your first product to get started'}</p>
+        </div>
+      ) : (
+        <div className='space-y-2'>
+          {filteredProducts.map((product: Product) => (
+            <div key={product.id} className='bg-white rounded-xl border border-slate-200 hover:border-teal-300 hover:shadow-md transition-all overflow-hidden'>
+              <div className='flex items-center gap-3 p-4'>
+                {/* Product Image - Compact */}
+                <div className='relative shrink-0'>
+                  <div className='w-24 h-24 rounded-lg border-3 border-cyan-400 overflow-hidden bg-slate-50 shadow-md'>
+                    <img src={product.image} alt={product.title} className='w-full h-full object-cover' />
                   </div>
-                  <div className='flex items-center gap-2'>
-                    <button onClick={() => onToggleFeatured(product.id)} className={`p-2 rounded transition-colors ${product.featured ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'}`} title={product.featured ? 'Featured on homepage slider' : 'Not featured on homepage'}>
-                      <Star className={`w-4 h-4 ${product.featured ? 'fill-amber-600' : ''}`} />
-                    </button>
-                    <button onClick={() => onToggleAvailability(product.id)} className={`p-2 rounded transition-colors ${product.available !== false ? 'bg-teal-100 text-teal-600 hover:bg-teal-200' : 'bg-amber-100 text-amber-600 hover:bg-amber-200'}`} title={product.available !== false ? 'Available in store' : 'Unavailable in store'}>
-                      {product.available !== false ? <Package className='w-4 h-4' /> : <Package className='w-4 h-4 opacity-50' />}
-                    </button>
-                    <button onClick={() => setEditingProduct(product)} className='p-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors'>
-                      <Edit className='w-4 h-4' />
-                    </button>
-                    <button onClick={() => onDelete(product.id)} className='p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors'>
-                      <Trash2 className='w-4 h-4' />
-                    </button>
+                  {product.featured && (
+                    <div className='absolute -top-1 -right-1 bg-amber-400 text-white p-1 rounded-full shadow-md'>
+                      <Star className='w-3.5 h-3.5 fill-current' />
+                    </div>
+                  )}
+                </div>
+
+                {/* Product Details - Compact */}
+                <div className='flex-1 min-w-0'>
+                  <div className='flex items-baseline gap-2 mb-1'>
+                    <h3 className='font-bold text-slate-900 text-sm truncate'>{product.title}</h3>
+                    {product.available === false && (
+                      <span className='px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-full whitespace-nowrap shrink-0'>⚠️ Unavailable</span>
+                    )}
                   </div>
+                  <p className='text-slate-600 text-xs line-clamp-1 mb-2'>{product.description}</p>
+
+                  {/* Category & Specs */}
+                  <div className='flex items-center gap-2 flex-wrap mb-2'>
+                    {(product.subCategoryId || product.categoryId) && (() => {
+                      const subCat = categories.find((c: SubCategory) => c.id === (product.subCategoryId || product.categoryId));
+                      if (!subCat) return null;
+                      return (
+                        <span className='px-2 py-0.5 bg-teal-100 text-teal-700 text-xs font-semibold rounded-full'>
+                          {subCat.icon} {subCat.name}
+                        </span>
+                      );
+                    })()}
+                    {product.specs.slice(0, 2).map((spec, idx) => (
+                      <span key={idx} className='px-2 py-0.5 bg-slate-100 text-slate-700 text-xs rounded'>
+                        {spec}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Price & Specs - Compact */}
+                  <div className='flex items-center gap-2 text-xs flex-wrap'>
+                    {product.price && (
+                      <span className='px-2 py-0.5 bg-green-50 text-green-700 rounded font-bold'>💰 PKR {(product.price / 1000).toFixed(0)}K</span>
+                    )}
+                    {product.capacity && (
+                      <span className='px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-medium'>⚡ {product.capacity}</span>
+                    )}
+                    {product.voltage && (
+                      <span className='px-2 py-0.5 bg-purple-50 text-purple-700 rounded font-medium'>🔌 {product.voltage}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons - Compact */}
+                <div className='flex gap-1.5 shrink-0'>
+                  <button
+                    onClick={() => onToggleFeatured(product.id)}
+                    className={`w-9 h-9 rounded-lg transition-all transform hover:scale-110 flex items-center justify-center text-sm shadow-sm ${
+                      product.featured
+                        ? 'bg-amber-400 text-white hover:bg-amber-500'
+                        : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                    }`}
+                    title={product.featured ? 'Remove from featured' : 'Add to featured'}
+                  >
+                    ⭐
+                  </button>
+                  <button
+                    onClick={() => onToggleAvailability(product.id)}
+                    className={`w-9 h-9 rounded-lg transition-all transform hover:scale-110 flex items-center justify-center shadow-sm ${
+                      product.available !== false
+                        ? 'bg-teal-100 text-teal-600 hover:bg-teal-200'
+                        : 'bg-amber-100 text-amber-600 hover:bg-amber-200'
+                    }`}
+                    title={product.available !== false ? 'Mark unavailable' : 'Mark available'}
+                  >
+                    <Package className='w-4 h-4' />
+                  </button>
+                  <button
+                    onClick={() => setEditingProduct(product)}
+                    className='w-9 h-9 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-all transform hover:scale-110 flex items-center justify-center shadow-sm'
+                    title='Edit product'
+                  >
+                    <Edit className='w-4 h-4' />
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm('Delete this product?')) onDelete(product.id);
+                    }}
+                    className='w-9 h-9 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-all transform hover:scale-110 flex items-center justify-center shadow-sm'
+                    title='Delete product'
+                  >
+                    <Trash2 className='w-4 h-4' />
+                  </button>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -670,9 +855,20 @@ function CertificatesTab({ certificates, editingCertificate, isAddingCertificate
   if (editingCertificate || isAddingCertificate) {
     return (
       <div className='bg-white rounded-2xl border border-slate-200 p-6 shadow-sm'>
-        <h3 className='text-xl font-bold text-slate-900 mb-6'>
-          {editingCertificate ? 'Edit Certificate' : 'Add Certificate'}
-        </h3>
+        <div className='flex items-center justify-between mb-6'>
+          <h3 className='text-xl font-bold text-slate-900'>
+            {editingCertificate ? 'Edit Certificate' : 'Add Certificate'}
+          </h3>
+          <button
+            onClick={() => {
+              setEditingCertificate(null);
+              setIsAddingCertificate(false);
+            }}
+            className='text-slate-600 hover:text-slate-900'
+          >
+            <X className='w-5 h-5' />
+          </button>
+        </div>
         <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className='space-y-4'>
           <input type='text' placeholder='Title' value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' required />
           <input type='text' placeholder='Alt Text' value={formData.alt} onChange={(e) => setFormData({ ...formData, alt: e.target.value })} className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' required />
@@ -714,6 +910,7 @@ function CertificatesTab({ certificates, editingCertificate, isAddingCertificate
 function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | Inquiry['status']>('all');
+  const [viewMode, setViewMode] = useState<'compact' | 'large'>('compact');
 
   const filteredInquiries = statusFilter === 'all' 
     ? inquiries 
@@ -736,22 +933,34 @@ function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
           <h2 className='text-2xl font-bold text-slate-900'>Inbox</h2>
           <p className='text-slate-600 text-sm'>Manage customer inquiries</p>
         </div>
-        <div className='flex gap-2'>
-          {['all', 'new', 'in-progress', 'completed', 'rejected'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status as any)}
-              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                statusFilter === status
-                  ? 'bg-teal-600 text-white'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
-              {status === 'all' && ` (${inquiries.length})`}
-              {status === 'new' && ` (${inquiries.filter((i: Inquiry) => i.status === 'new').length})`}
-            </button>
-          ))}
+        <div className='flex items-center gap-3'>
+          {/* View Toggle */}
+          <button
+            onClick={() => setViewMode(viewMode === 'compact' ? 'large' : 'compact')}
+            className='w-10 h-10 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center justify-center shadow-sm'
+            title={`Switch to ${viewMode === 'compact' ? 'large' : 'compact'} view`}
+          >
+            {viewMode === 'compact' ? <Rows className='w-5 h-5' /> : <Columns className='w-5 h-5' />}
+          </button>
+
+          {/* Status Filters */}
+          <div className='flex gap-2'>
+            {['all', 'new', 'in-progress', 'completed', 'rejected'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status as any)}
+                className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                  statusFilter === status
+                    ? 'bg-teal-600 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
+                {status === 'all' && ` (${inquiries.length})`}
+                {status === 'new' && ` (${inquiries.filter((i: Inquiry) => i.status === 'new').length})`}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -765,105 +974,195 @@ function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
               : `No ${statusFilter} inquiries`}
           </p>
         </div>
-      ) : (
-        <div className='space-y-3'>
+      ) : viewMode === 'compact' ? (
+        // COMPACT VIEW
+        <div className='space-y-2'>
           {filteredInquiries.map((inquiry: Inquiry) => (
             <div
               key={inquiry.id}
-              className='bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-all'
+              className='bg-white rounded-lg border border-slate-200 hover:border-teal-300 hover:shadow-md transition-all overflow-hidden'
             >
-              <div className='flex items-start justify-between mb-4'>
-                <div className='flex-1'>
-                  <div className='flex items-center gap-3 mb-2'>
-                    <h3 className='text-lg font-bold text-slate-900'>{inquiry.customerName}</h3>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(inquiry.status)}`}>
-                      {inquiry.status.replace('-', ' ').toUpperCase()}
+              <div className='flex items-center justify-between p-4'>
+                <div className='flex-1 min-w-0'>
+                  <div className='flex items-center gap-2 mb-1'>
+                    <h3 className='font-bold text-slate-900 text-sm truncate'>{inquiry.customerName}</h3>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 ${getStatusColor(inquiry.status)}`}>
+                      {inquiry.status === 'in-progress' ? 'Progress' : inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
                     </span>
                   </div>
-                  <div className='flex flex-wrap gap-4 text-sm text-slate-600'>
-                    <span className='flex items-center gap-1'>
-                      <Mail className='w-4 h-4' />
+                  <div className='flex items-center gap-2 text-xs text-slate-600 flex-wrap mb-1'>
+                    <span className='flex items-center gap-1 truncate'>
+                      <Mail className='w-3 h-3 shrink-0' />
                       {inquiry.customerEmail}
                     </span>
-                    {inquiry.customerPhone && <span>{inquiry.customerPhone}</span>}
-                    {inquiry.companyName && <span>Company: {inquiry.companyName}</span>}
+                    {inquiry.customerPhone && (
+                      <span className='px-2 py-0.5 bg-slate-100 text-slate-700 rounded'>📞 {inquiry.customerPhone}</span>
+                    )}
                   </div>
-                  <p className='text-xs text-slate-500 mt-2'>
-                    {inquiry.createdAt ? new Date(inquiry.createdAt).toLocaleString() : 'N/A'}
-                  </p>
+                  {inquiry.companyName && (
+                    <p className='text-xs text-slate-500'>🏢 {inquiry.companyName}</p>
+                  )}
+                  {inquiry.products && inquiry.products.length > 0 && (
+                    <div className='flex items-center gap-1 text-xs text-teal-700 mt-1'>
+                      <span className='font-semibold'>📦 {inquiry.products.length} Product{inquiry.products.length > 1 ? 's' : ''}</span>
+                    </div>
+                  )}
                 </div>
 
-                <div className='flex gap-2'>
+                {/* Action Buttons - Compact */}
+                <div className='flex gap-1.5 shrink-0 ml-3'>
                   <button
                     onClick={() => setSelectedInquiry(inquiry)}
-                    className='px-3 py-1.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium'
+                    className='w-9 h-9 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-all transform hover:scale-110 flex items-center justify-center shadow-sm'
+                    title='View details'
                   >
-                    View Details
+                    <Eye className='w-4 h-4' />
                   </button>
+                  {inquiry.status !== 'in-progress' && (
+                    <button
+                      onClick={() => onStatusChange(inquiry.id, 'in-progress')}
+                      className='w-9 h-9 rounded-lg bg-cyan-100 text-cyan-600 hover:bg-cyan-200 transition-all transform hover:scale-110 flex items-center justify-center shadow-sm'
+                      title='Mark in progress'
+                    >
+                      ⏳
+                    </button>
+                  )}
+                  {inquiry.status !== 'completed' && (
+                    <button
+                      onClick={() => onStatusChange(inquiry.id, 'completed')}
+                      className='w-9 h-9 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 transition-all transform hover:scale-110 flex items-center justify-center shadow-sm'
+                      title='Mark completed'
+                    >
+                      ✓
+                    </button>
+                  )}
+                  {inquiry.status !== 'rejected' && (
+                    <button
+                      onClick={() => onStatusChange(inquiry.id, 'rejected')}
+                      className='w-9 h-9 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-all transform hover:scale-110 flex items-center justify-center shadow-sm'
+                      title='Reject'
+                    >
+                      ✕
+                    </button>
+                  )}
                   <button
                     onClick={() => {
-                      if (confirm('Are you sure you want to delete this inquiry?')) {
-                        onDelete(inquiry.id);
-                      }
+                      if (confirm('Delete this inquiry?')) onDelete(inquiry.id);
                     }}
-                    className='px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium'
+                    className='w-9 h-9 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-all transform hover:scale-110 flex items-center justify-center shadow-sm'
+                    title='Delete inquiry'
                   >
                     <Trash2 className='w-4 h-4' />
                   </button>
                 </div>
               </div>
-
-              {/* Products Interested In */}
-              {inquiry.products && inquiry.products.length > 0 && (
-                <div className='mb-3'>
-                  <h4 className='text-sm font-semibold text-slate-700 mb-2'>Products ({inquiry.products.length}):</h4>
-                  <div className='flex flex-wrap gap-2'>
-                    {inquiry.products.map((product) => (
-                      <span
-                        key={product.id}
-                        className='px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium'
-                      >
-                        {product.title}
+            </div>
+          ))}
+        </div>
+      ) : (
+        // LARGE VIEW
+        <div className='space-y-4'>
+          {filteredInquiries.map((inquiry: Inquiry) => (
+            <div
+              key={inquiry.id}
+              className='bg-white rounded-2xl border-2 border-slate-200 hover:border-teal-400 hover:shadow-lg transition-all overflow-hidden'
+            >
+              <div className='p-6'>
+                <div className='flex items-start justify-between mb-4'>
+                  <div className='flex-1'>
+                    <h3 className='text-lg font-bold text-slate-900 mb-1'>{inquiry.customerName}</h3>
+                    <div className='flex items-center gap-3 text-sm text-slate-600 flex-wrap'>
+                      <span className='flex items-center gap-1'>
+                        <Mail className='w-4 h-4' />
+                        {inquiry.customerEmail}
                       </span>
-                    ))}
+                      {inquiry.customerPhone && (
+                        <span className='flex items-center gap-1'>📞 {inquiry.customerPhone}</span>
+                      )}
+                      {inquiry.companyName && (
+                        <span className='flex items-center gap-1'>🏢 {inquiry.companyName}</span>
+                      )}
+                    </div>
                   </div>
+                  <span className={`px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap shrink-0 ${getStatusColor(inquiry.status)}`}>
+                    {inquiry.status === 'in-progress' ? 'In Progress' : inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
+                  </span>
                 </div>
-              )}
 
-              {/* Requirements */}
-              <div className='mb-4'>
-                <h4 className='text-sm font-semibold text-slate-700 mb-1'>Requirements:</h4>
-                <p className='text-sm text-slate-600 bg-slate-50 rounded-lg p-3'>
-                  {inquiry.requirements}
-                </p>
-              </div>
+                {inquiry.createdAt && (
+                  <p className='text-xs text-slate-500 mb-3'>📅 {new Date(inquiry.createdAt).toLocaleString()}</p>
+                )}
 
-              {/* Status Actions */}
-              <div className='flex gap-2 pt-3 border-t border-slate-100'>
-                {inquiry.status !== 'in-progress' && (
-                  <button
-                    onClick={() => onStatusChange(inquiry.id, 'in-progress')}
-                    className='px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium'
-                  >
-                    Mark In Progress
-                  </button>
+                {inquiry.products && inquiry.products.length > 0 && (
+                  <div className='mb-3'>
+                    <p className='text-sm font-semibold text-slate-700 mb-2'>📦 Products Interested In:</p>
+                    <div className='flex flex-wrap gap-2'>
+                      {inquiry.products.map((product) => (
+                        <span key={product.id} className='px-3 py-1 bg-teal-100 text-teal-700 text-xs rounded-full font-medium'>
+                          {product.title}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 )}
-                {inquiry.status !== 'completed' && (
-                  <button
-                    onClick={() => onStatusChange(inquiry.id, 'completed')}
-                    className='px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium'
-                  >
-                    Mark Completed
-                  </button>
+
+                <div className='mb-4'>
+                  <p className='text-sm font-semibold text-slate-700 mb-2'>Requirements:</p>
+                  <p className='text-slate-700 bg-slate-50 rounded-lg p-3 text-sm whitespace-pre-wrap'>
+                    {inquiry.requirements}
+                  </p>
+                </div>
+
+                {inquiry.notes && (
+                  <div className='mb-4'>
+                    <p className='text-sm font-semibold text-slate-700 mb-2'>Admin Notes:</p>
+                    <p className='text-slate-700 bg-slate-50 rounded-lg p-3 text-sm'>
+                      {inquiry.notes}
+                    </p>
+                  </div>
                 )}
-                {inquiry.status !== 'rejected' && (
+
+                {/* Actions - Large View */}
+                <div className='flex items-center gap-2 pt-3 border-t border-slate-200'>
                   <button
-                    onClick={() => onStatusChange(inquiry.id, 'rejected')}
-                    className='px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium'
+                    onClick={() => setSelectedInquiry(inquiry)}
+                    className='px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-all font-medium text-sm flex items-center gap-2'
                   >
-                    Reject
+                    <Eye className='w-4 h-4' /> View Details
                   </button>
-                )}
+                  {inquiry.status !== 'in-progress' && (
+                    <button
+                      onClick={() => onStatusChange(inquiry.id, 'in-progress')}
+                      className='px-4 py-2 bg-cyan-100 text-cyan-600 rounded-lg hover:bg-cyan-200 transition-all font-medium text-sm'
+                    >
+                      In Progress
+                    </button>
+                  )}
+                  {inquiry.status !== 'completed' && (
+                    <button
+                      onClick={() => onStatusChange(inquiry.id, 'completed')}
+                      className='px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-all font-medium text-sm'
+                    >
+                      Complete
+                    </button>
+                  )}
+                  {inquiry.status !== 'rejected' && (
+                    <button
+                      onClick={() => onStatusChange(inquiry.id, 'rejected')}
+                      className='px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-all font-medium text-sm'
+                    >
+                      Reject
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (confirm('Delete this inquiry?')) onDelete(inquiry.id);
+                    }}
+                    className='px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-all font-medium text-sm ml-auto flex items-center gap-2'
+                  >
+                    <Trash2 className='w-4 h-4' /> Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}
