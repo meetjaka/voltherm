@@ -93,7 +93,7 @@ const SidebarSection = ({ title, children }: any) => (
 export default function AdminDashboard() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'inquiries' | 'certificates' | 'contact'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'inquiries' | 'certificates' | 'contact' | 'settings'>('overview');
   
   const [products, setProducts] = useState<Product[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
@@ -212,6 +212,10 @@ export default function AdminDashboard() {
                 <SidebarSection title="Site Content">
                   <SidebarItem id="certificates" label="Certificates" icon={ImageIcon} activeTab={activeTab} setActiveTab={setActiveTab} />
                 </SidebarSection>
+
+                <SidebarSection title="Account">
+                  <SidebarItem id="settings" label="Settings" icon={Settings} activeTab={activeTab} setActiveTab={setActiveTab} />
+                </SidebarSection>
               </nav>
 
               {/* Quick Actions Footer */}
@@ -299,6 +303,10 @@ export default function AdminDashboard() {
                 }}
               />
             )}
+
+            {activeTab === 'settings' && (
+              <SettingsTab />
+            )}
             
             {activeTab === 'certificates' && (
               <CertificatesTab
@@ -384,6 +392,264 @@ function OverviewTab({ products, inquiries, certificates, setActiveTab }: any) {
           </div>
           <p className="text-3xl font-bold text-slate-900">{certificates.length}</p>
           <p className="text-sm font-medium text-slate-500">Certificates</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Settings Tab
+function SettingsTab() {
+  const [adminId, setAdminId] = useState('');
+  const [adminPass, setAdminPass] = useState('');
+  
+  // Change Password States
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  
+  // Change Username States
+  const [verifyPassword, setVerifyPassword] = useState('');
+  const [newUsername, setNewUsername] = useState('');
+  const [showVerifyPassword, setShowVerifyPassword] = useState(false);
+  
+  // Load current credentials from localStorage (temporary mock)
+  useEffect(() => {
+    const storedId = localStorage.getItem('admin_id') || 'admin123';
+    const storedPass = localStorage.getItem('admin_password') || '123456789';
+    setAdminId(storedId);
+    setAdminPass(storedPass);
+  }, []);
+  
+  const handleChangePassword = () => {
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error('All fields are required');
+      return;
+    }
+    
+    if (currentPassword !== adminPass) {
+      toast.error('Current password is incorrect');
+      return;
+    }
+    
+    if (newPassword.length < 8) {
+      toast.error('New password must be at least 8 characters');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    
+    // Save new password (temporary localStorage - will be replaced with API)
+    localStorage.setItem('admin_password', newPassword);
+    setAdminPass(newPassword);
+    
+    // Clear form
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    
+    toast.success('Password changed successfully!');
+  };
+  
+  const handleChangeUsername = () => {
+    // Validation
+    if (!verifyPassword || !newUsername) {
+      toast.error('All fields are required');
+      return;
+    }
+    
+    if (verifyPassword !== adminPass) {
+      toast.error('Password is incorrect');
+      return;
+    }
+    
+    if (newUsername.length < 3) {
+      toast.error('Username must be at least 3 characters');
+      return;
+    }
+    
+    if (newUsername === adminId) {
+      toast.error('New username is same as current');
+      return;
+    }
+    
+    // Save new username (temporary localStorage - will be replaced with API)
+    localStorage.setItem('admin_id', newUsername);
+    setAdminId(newUsername);
+    
+    // Clear form
+    setVerifyPassword('');
+    setNewUsername('');
+    
+    toast.success('Username changed successfully!');
+  };
+  
+  return (
+    <div className='space-y-6'>
+      {/* Header */}
+      <div className='bg-white rounded-2xl border border-slate-200 p-6 shadow-sm'>
+        <h1 className='text-3xl font-bold text-slate-900'>Account Settings</h1>
+        <p className='text-slate-600 mt-2'>Manage your admin credentials and security</p>
+      </div>
+      
+      {/* Current Credentials Display */}
+      <div className='bg-gradient-to-r from-teal-50 to-blue-50 rounded-2xl border border-teal-200 p-6'>
+        <h2 className='text-lg font-bold text-slate-900 mb-4 flex items-center gap-2'>
+          <User className='w-5 h-5 text-teal-600' />
+          Current Credentials
+        </h2>
+        <div className='grid md:grid-cols-2 gap-4'>
+          <div className='bg-white rounded-lg p-4 border border-slate-200'>
+            <p className='text-xs text-slate-600 mb-1'>Username</p>
+            <p className='text-lg font-bold text-slate-900'>{adminId}</p>
+          </div>
+          <div className='bg-white rounded-lg p-4 border border-slate-200'>
+            <p className='text-xs text-slate-600 mb-1'>Password</p>
+            <p className='text-lg font-bold text-slate-900'>••••••••</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Change Password Section */}
+      <div className='bg-white rounded-2xl border border-slate-200 p-6 shadow-sm'>
+        <h2 className='text-2xl font-bold text-slate-900 mb-6'>Change Password</h2>
+        <div className='space-y-4 max-w-md'>
+          {/* Current Password */}
+          <div>
+            <label className='block text-sm font-semibold text-slate-700 mb-2'>Current Password</label>
+            <div className='relative'>
+              <input
+                type={showCurrentPassword ? 'text' : 'password'}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder='Enter current password'
+                className='w-full px-4 py-3 pr-12 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              />
+              <button
+                type='button'
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600'
+              >
+                {showCurrentPassword ? <EyeOff className='w-5 h-5' /> : <Eye className='w-5 h-5' />}
+              </button>
+            </div>
+          </div>
+          
+          {/* New Password */}
+          <div>
+            <label className='block text-sm font-semibold text-slate-700 mb-2'>New Password</label>
+            <div className='relative'>
+              <input
+                type={showNewPassword ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder='Enter new password (min 8 characters)'
+                className='w-full px-4 py-3 pr-12 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              />
+              <button
+                type='button'
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600'
+              >
+                {showNewPassword ? <EyeOff className='w-5 h-5' /> : <Eye className='w-5 h-5' />}
+              </button>
+            </div>
+            {newPassword && newPassword.length < 8 && (
+              <p className='text-xs text-red-600 mt-1'>Password must be at least 8 characters</p>
+            )}
+          </div>
+          
+          {/* Confirm Password */}
+          <div>
+            <label className='block text-sm font-semibold text-slate-700 mb-2'>Confirm New Password</label>
+            <input
+              type='password'
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder='Confirm new password'
+              className='w-full px-4 py-3 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+            />
+            {confirmPassword && newPassword !== confirmPassword && (
+              <p className='text-xs text-red-600 mt-1'>Passwords do not match</p>
+            )}
+          </div>
+          
+          <button
+            onClick={handleChangePassword}
+            className='w-full px-6 py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center gap-2'
+          >
+            <Save className='w-5 h-5' />
+            Update Password
+          </button>
+        </div>
+      </div>
+      
+      {/* Change Username Section */}
+      <div className='bg-white rounded-2xl border border-slate-200 p-6 shadow-sm'>
+        <h2 className='text-2xl font-bold text-slate-900 mb-6'>Change Username</h2>
+        <div className='space-y-4 max-w-md'>
+          {/* Verify Password */}
+          <div>
+            <label className='block text-sm font-semibold text-slate-700 mb-2'>Verify Password</label>
+            <div className='relative'>
+              <input
+                type={showVerifyPassword ? 'text' : 'password'}
+                value={verifyPassword}
+                onChange={(e) => setVerifyPassword(e.target.value)}
+                placeholder='Enter your password to verify'
+                className='w-full px-4 py-3 pr-12 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+              />
+              <button
+                type='button'
+                onClick={() => setShowVerifyPassword(!showVerifyPassword)}
+                className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600'
+              >
+                {showVerifyPassword ? <EyeOff className='w-5 h-5' /> : <Eye className='w-5 h-5' />}
+              </button>
+            </div>
+          </div>
+          
+          {/* New Username */}
+          <div>
+            <label className='block text-sm font-semibold text-slate-700 mb-2'>New Username</label>
+            <input
+              type='text'
+              value={newUsername}
+              onChange={(e) => setNewUsername(e.target.value)}
+              placeholder='Enter new username (min 3 characters)'
+              className='w-full px-4 py-3 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+            />
+            {newUsername && newUsername.length < 3 && (
+              <p className='text-xs text-red-600 mt-1'>Username must be at least 3 characters</p>
+            )}
+          </div>
+          
+          <button
+            onClick={handleChangeUsername}
+            className='w-full px-6 py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center gap-2'
+          >
+            <Save className='w-5 h-5' />
+            Update Username
+          </button>
+        </div>
+      </div>
+      
+      {/* Info Notice */}
+      <div className='bg-amber-50 border border-amber-200 rounded-2xl p-6'>
+        <div className='flex gap-3'>
+          <AlertCircle className='w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5' />
+          <div>
+            <h3 className='font-semibold text-amber-900 mb-1'>Important Security Note</h3>
+            <p className='text-sm text-amber-800'>
+              Currently using temporary localStorage storage. Once backend is ready, credentials will be securely stored with BCrypt hashing and proper authentication endpoints.
+            </p>
+          </div>
         </div>
       </div>
     </div>
