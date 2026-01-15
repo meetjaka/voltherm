@@ -220,7 +220,7 @@ export default function AdminDashboard() {
 
               {/* Quick Actions Footer */}
               <div className="mt-4 border-t border-slate-100 pt-4">
-                <button onClick={() => window.open('/', '_blank')} className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900">
+                <button onClick={() => window.open('/store', '_blank')} className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900">
                   View Live Store <ArrowUpRight className="h-3 w-3" />
                 </button>
               </div>
