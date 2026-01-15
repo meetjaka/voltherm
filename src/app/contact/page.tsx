@@ -19,7 +19,23 @@ export default function ContactPage() {
     const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
 
     useEffect(() => {
-        setContactInfo(getContactInfo());
+        const loadContactInfo = () => {
+            const data = getContactInfo();
+            console.log('Contact Info Loaded:', data); // Debug log
+            console.log('Branches:', data?.branches); // Debug log
+            setContactInfo(data);
+        };
+        loadContactInfo();
+        
+        // Listen for storage changes (when admin updates contact info)
+        const handleStorageChange = () => {
+            loadContactInfo();
+        };
+        window.addEventListener('storage', handleStorageChange);
+        
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
     }, []);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -128,66 +144,76 @@ export default function ContactPage() {
                             <h2 className='text-2xl font-bold text-slate-900 sm:text-3xl'>Our Locations</h2>
 
                             {/* Main Office */}
-                            <div className='overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg'>
-                                <div className='bg-slate-900 p-4 sm:p-6'>
-                                    <h3 className='flex items-center gap-2 text-xl font-bold text-white sm:text-2xl'>
-                                        <MapPin className='h-5 w-5 sm:h-6 sm:w-6' />
-                                        Main Office
-                                    </h3>
-                                </div>
-                                <div className='p-4 sm:p-6'>
-                                    <div className='mb-4 space-y-2 text-sm sm:text-base'>
-                                        <p className='font-semibold text-slate-900'>
-                                            VOLTHERM INNOVATION PRIVATE LIMITED
-                                        </p>
-                                        <p className='text-slate-700'>Plot No. B-5/2, GIDC, Electronics Estate,</p>
-                                        <p className='text-slate-700'>Sector 25, Gandhinagar, Gujarat-382024</p>
-                                        <p className='mt-3 font-semibold text-slate-900'>
-                                            Mob: +91 7485918169 / +91 7011418631
-                                        </p>
-                                        <p className='text-slate-700'>GST: 24AAJCV4770E1Z9</p>
+                            {contactInfo.mainAddress && (
+                                <div className='overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg'>
+                                    <div className='bg-slate-900 p-4 sm:p-6'>
+                                        <h3 className='flex items-center gap-2 text-xl font-bold text-white sm:text-2xl'>
+                                            <MapPin className='h-5 w-5 sm:h-6 sm:w-6' />
+                                            Main Office
+                                        </h3>
                                     </div>
-                                    <div className='relative h-48 overflow-hidden rounded-xl border border-slate-200 sm:h-64'>
-                                        <iframe
-                                            src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3667.8583!2d72.628678!3d23.249254!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDE0JzU3LjMiTiA3MsKwMzcnNDMuMiJF!5e0!3m2!1sen!2sin!4v1234567890!5m2!1sen!2sin'
-                                            width='100%'
-                                            height='100%'
-                                            style={{ border: 0 }}
-                                            allowFullScreen
-                                            loading='lazy'
-                                            referrerPolicy='no-referrer-when-downgrade'></iframe>
+                                    <div className='p-4 sm:p-6'>
+                                        <div className='mb-4 space-y-2 text-sm sm:text-base'>
+                                            <p className='font-semibold text-slate-900'>
+                                                {contactInfo.mainAddress.companyName}
+                                            </p>
+                                            <p className='text-slate-700'>{contactInfo.mainAddress.addressLine1}</p>
+                                            <p className='text-slate-700'>{contactInfo.mainAddress.addressLine2}</p>
+                                            <p className='text-slate-700'>{contactInfo.mainAddress.city}, {contactInfo.mainAddress.state} - {contactInfo.mainAddress.pincode}</p>
+                                            <p className='mt-3 font-semibold text-slate-900'>
+                                                {contactInfo.mainAddress.phone}
+                                            </p>
+                                            {contactInfo.mainAddress.gst && (
+                                                <p className='text-slate-700'>GST: {contactInfo.mainAddress.gst}</p>
+                                            )}
+                                        </div>
+                                        {contactInfo.mainAddress.mapUrl && (
+                                            <div className='relative h-48 overflow-hidden rounded-xl border border-slate-200 sm:h-64'>
+                                                <iframe
+                                                    src={contactInfo.mainAddress.mapUrl}
+                                                    width='100%'
+                                                    height='100%'
+                                                    style={{ border: 0 }}
+                                                    allowFullScreen
+                                                    loading='lazy'
+                                                    referrerPolicy='no-referrer-when-downgrade'></iframe>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
-                            {/* Branch Office */}
-                            <div className='overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg'>
-                                <div className='bg-slate-900 p-4 sm:p-6'>
-                                    <h3 className='flex items-center gap-2 text-xl font-bold text-white sm:text-2xl'>
-                                        <MapPin className='h-5 w-5 sm:h-6 sm:w-6' />
-                                        Branch Office
-                                    </h3>
-                                </div>
-                                <div className='p-4 sm:p-6'>
-                                    <div className='mb-4 space-y-2 text-sm sm:text-base'>
-                                        <p className='text-slate-700'>Plot No. 103,</p>
-                                        <p className='text-slate-700'>Ruda Transport Nagar,</p>
-                                        <p className='text-slate-700'>Nr. Sat Hanuman, Ahmedabad Highway,</p>
-                                        <p className='text-slate-700'>Navagam, Rajkot, GJ - 360001</p>
-                                        <p className='mt-3 font-semibold text-slate-900'>M: +91-9409421304</p>
+                            {/* Branch Offices - Dynamic */}
+                            {contactInfo.branches && contactInfo.branches.map((branch) => (
+                                <div key={branch.id} className='overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg'>
+                                    <div className='bg-slate-900 p-4 sm:p-6'>
+                                        <h3 className='flex items-center gap-2 text-xl font-bold text-white sm:text-2xl'>
+                                            <MapPin className='h-5 w-5 sm:h-6 sm:w-6' />
+                                            {branch.name}
+                                        </h3>
                                     </div>
-                                    <div className='relative h-48 overflow-hidden rounded-xl border border-slate-200 sm:h-64'>
-                                        <iframe
-                                            src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14779.8583!2d70.851786!3d22.328773!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjLCsDE5JzQzLjYiTiA3MMKwNTEnMDYuNCJF!5e0!3m2!1sen!2sin!4v1234567890!5m2!1sen!2sin'
-                                            width='100%'
-                                            height='100%'
-                                            style={{ border: 0 }}
-                                            allowFullScreen
-                                            loading='lazy'
-                                            referrerPolicy='no-referrer-when-downgrade'></iframe>
+                                    <div className='p-4 sm:p-6'>
+                                        <div className='mb-4 space-y-2 text-sm sm:text-base'>
+                                            <p className='text-slate-700'>{branch.addressLine1}</p>
+                                            <p className='text-slate-700'>{branch.addressLine2}</p>
+                                            <p className='text-slate-700'>{branch.city}, {branch.state} - {branch.pincode}</p>
+                                            <p className='mt-3 font-semibold text-slate-900'>{branch.phone}</p>
+                                        </div>
+                                        {branch.mapUrl && (
+                                            <div className='relative h-48 overflow-hidden rounded-xl border border-slate-200 sm:h-64'>
+                                                <iframe
+                                                    src={branch.mapUrl}
+                                                    width='100%'
+                                                    height='100%'
+                                                    style={{ border: 0 }}
+                                                    allowFullScreen
+                                                    loading='lazy'
+                                                    referrerPolicy='no-referrer-when-downgrade'></iframe>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            </div>
+                            ))}
                         </div>
 
                         {/* Right Column - Inquiry Form */}

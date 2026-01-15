@@ -1,8 +1,19 @@
-import Image from 'next/image';
+'use client';
 
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import { Facebook, Instagram, Linkedin, Twitter } from 'lucide-react';
+import { type ContactInfo, getContactInfo } from '@/lib/adminData';
 
 const Footer = () => {
+    const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
+
+    useEffect(() => {
+        setContactInfo(getContactInfo());
+    }, []);
+
+    const socialMedia = contactInfo?.socialMedia;
+
     return (
         <footer className='border-t border-slate-200 bg-slate-50 pt-20 pb-10'>
             <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
@@ -86,48 +97,56 @@ const Footer = () => {
                     <p>&copy; 2025 Voltherm Innovation Private Limited. All rights reserved.</p>
                     <div className='mt-6 flex flex-col items-center gap-6 md:mt-0 md:flex-row md:gap-8'>
                         <div className='flex items-center gap-4'>
+                            {socialMedia?.facebook && (
+                                <a
+                                    href={socialMedia.facebook}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
+                                    <Facebook
+                                        size={18}
+                                        className='text-slate-600 transition-colors group-hover:text-white'
+                                    />
+                                </a>
+                            )}
+                            {socialMedia?.instagram && (
+                                <a
+                                    href={socialMedia.instagram}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
+                                    <Instagram
+                                        size={18}
+                                        className='text-slate-600 transition-colors group-hover:text-white'
+                                    />
+                                </a>
+                            )}
+                            {socialMedia?.twitter && (
+                                <a
+                                    href={socialMedia.twitter}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
+                                    <Twitter
+                                        size={18}
+                                        className='text-slate-600 transition-colors group-hover:text-white'
+                                    />
+                                </a>
+                            )}
+                            {socialMedia?.linkedin && (
+                                <a
+                                    href={socialMedia.linkedin}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
+                                    <Linkedin
+                                        size={18}
+                                        className='text-slate-600 transition-colors group-hover:text-white'
+                                    />
+                                </a>
+                            )}
                             <a
-                                href='https://www.facebook.com/Voltherm/'
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
-                                <Facebook
-                                    size={18}
-                                    className='text-slate-600 transition-colors group-hover:text-white'
-                                />
-                            </a>
-                            <a
-                                href='https://www.instagram.com/volthermtech/'
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
-                                <Instagram
-                                    size={18}
-                                    className='text-slate-600 transition-colors group-hover:text-white'
-                                />
-                            </a>
-                            <a
-                                href='https://x.com/voltherm'
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
-                                <Twitter
-                                    size={18}
-                                    className='text-slate-600 transition-colors group-hover:text-white'
-                                />
-                            </a>
-                            <a
-                                href='https://www.linkedin.com/company/volthermtechnologies/'
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
-                                <Linkedin
-                                    size={18}
-                                    className='text-slate-600 transition-colors group-hover:text-white'
-                                />
-                            </a>
-                            <a
-                                href='https://www.indiamart.com/voltherm-technologies/'
+                                href={socialMedia?.indiamart || 'https://www.indiamart.com/voltherm-technologies/'}
                                 target='_blank'
                                 rel='noopener noreferrer'
                                 className='transition-opacity hover:opacity-80'>
