@@ -6,17 +6,21 @@ import {
   LayoutDashboard, 
   Package, 
   Mail, 
-  FileText, 
   Image as ImageIcon, 
   LogOut,
   Settings,
   Plus,
   Edit,
   Trash2,
+  X,
+  Filter,
+  User,
+  ArrowUpRight,
+  FileText,
+  AlertCircle,
+  Save,
   Eye,
   EyeOff,
-  Save,
-  X,
   Star
 } from 'lucide-react';
 import CategoryIcon from '@/components/CategoryIcon';
@@ -42,16 +46,61 @@ import {
 } from '@/lib/adminData';
 import { toast } from 'sonner';
 
+// Sidebar Components
+const SidebarItem = ({ id, label, icon: Icon, activeTab, setActiveTab, badge }: any) => {
+  const isActive = activeTab === id;
+  return (
+    <button
+      onClick={() => setActiveTab(id)}
+      className={`group relative flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ease-in-out ${
+        isActive
+          ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/30'
+          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <Icon className={`h-5 w-5 transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} />
+        <span>{label}</span>
+      </div>
+      
+      {badge > 0 && (
+        <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${
+          isActive ? 'bg-white text-teal-600' : 'bg-red-500 text-white'
+        }`}>
+          {badge}
+        </span>
+      )}
+      
+      {isActive && (
+        <div className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-white/20" />
+      )}
+    </button>
+  );
+};
+
+const SidebarSection = ({ title, children }: any) => (
+  <div className="mb-6">
+    <h3 className="mb-2 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+      {title}
+    </h3>
+    <div className="space-y-1">
+      {children}
+    </div>
+  </div>
+);
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'contact' | 'certificates' | 'inquiries' | 'overview'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'inquiries' | 'certificates' | 'contact'>('overview');
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [mainCategories, setMainCategories] = useState<MainCategory[]>([]);
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
+
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingCertificate, setEditingCertificate] = useState<Certificate | null>(null);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
@@ -59,13 +108,10 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     setMounted(true);
-    
     if (!checkAdminSession()) {
       router.push('/voltherm-admin');
       return;
     }
-    
-    // Load data
     setProducts(getProducts());
     setCertificates(getCertificates());
     setContactInfo(getContactInfo());
@@ -80,197 +126,110 @@ export default function AdminDashboard() {
     router.push('/');
   };
 
-  const handleSaveProduct = (product: Product) => {
-    const updatedProducts = editingProduct?.id 
-      ? products.map(p => p.id === product.id ? product : p)
-      : [...products, { ...product, id: Math.floor(Math.random() * 1000000000) }];
-    
-    setProducts(updatedProducts);
-    saveProducts(updatedProducts);
-    setEditingProduct(null);
-    setIsAddingProduct(false);
-    toast.success(editingProduct ? 'Product updated' : 'Product added');
-  };
+  if (!mounted) return null;
 
-  const handleDeleteProduct = (id: number) => {
-    if (confirm('Are you sure you want to delete this product?')) {
-      const updatedProducts = products.filter(p => p.id !== id);
-      setProducts(updatedProducts);
-      saveProducts(updatedProducts);
-      toast.success('Product deleted');
-    }
-  };
-
-  const handleToggleFeatured = (id: number) => {
-    const currentProduct = products.find(p => p.id === id);
-    const featuredCount = products.filter(p => p.featured).length;
-    
-    // Check if trying to feature a product (currently not featured)
-    if (!currentProduct?.featured) {
-      if (featuredCount >= 6) {
-        toast.error('Maximum 6 products can be featured on homepage slider');
-        return;
-      }
-    } else {
-      // Check if trying to unfeature a product (currently featured)
-      if (featuredCount <= 3) {
-        toast.error('Minimum 3 products must be featured on homepage slider');
-        return;
-      }
-    }
-    
-    const updatedProducts = products.map(p => 
-      p.id === id ? { ...p, featured: !p.featured } : p
-    );
-    setProducts(updatedProducts);
-    saveProducts(updatedProducts);
-    toast.success('Product featured status updated');
-  };
-
-  const handleToggleProductAvailability = (id: number) => {
-    const updatedProducts = products.map(p => 
-      p.id === id ? { ...p, available: !p.available } : p
-    );
-    setProducts(updatedProducts);
-    saveProducts(updatedProducts);
-    toast.success('Product availability updated');
-  };
-
-  const handleSaveCertificate = (cert: Certificate) => {
-    const updatedCerts = editingCertificate?.id 
-      ? certificates.map(c => c.id === cert.id ? cert : c)
-      : [...certificates, { ...cert, id: `cert${Math.floor(Math.random() * 1000000000)}` }];
-    
-    setCertificates(updatedCerts);
-    saveCertificates(updatedCerts);
-    setEditingCertificate(null);
-    setIsAddingCertificate(false);
-    toast.success(editingCertificate ? 'Certificate updated' : 'Certificate added');
-  };
-
-  const handleDeleteCertificate = (id: string) => {
-    if (confirm('Are you sure you want to delete this certificate?')) {
-      const updatedCerts = certificates.filter(c => c.id !== id);
-      setCertificates(updatedCerts);
-      saveCertificates(updatedCerts);
-      toast.success('Certificate deleted');
-    }
-  };
-
-  const handleSaveContact = () => {
-    if (contactInfo) {
-      saveContactInfo(contactInfo);
-      toast.success('Contact information updated');
-    }
-  };
-
-  if (!mounted) {
-    return null;
-  }
+  const newInquiriesCount = inquiries.filter(i => i.status === 'new').length;
 
   return (
-    <div className='min-h-screen bg-slate-50'>
-      {/* Header */}
-      <header className='bg-white border-b border-slate-200 sticky top-0 z-50'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex items-center justify-between h-16'>
+    <div className='min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-teal-100 selection:text-teal-900'>
+      
+      {/* Top Header */}
+      <header className='sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-xl'>
+        <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
+          <div className='flex h-16 items-center justify-between'>
             <div className='flex items-center gap-3'>
-              <div className='w-10 h-10 rounded-lg bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center'>
-                <Settings className='w-6 h-6 text-white' />
+              <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 shadow-lg shadow-slate-900/20'>
+                <span className='text-lg font-bold text-teal-400'>V</span>
               </div>
-              <div>
-                <h1 className='text-xl font-bold text-slate-900'>Admin Dashboard</h1>
-                <p className='text-xs text-slate-500'>Voltherm Technologies</p>
+              <div className="hidden sm:block">
+                <h1 className='text-lg font-bold leading-none text-slate-900'>Voltherm</h1>
+                <p className='mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500'>Admin Portal</p>
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className='flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors'
-            >
-              <LogOut className='w-4 h-4' />
-              Logout
-            </button>
+            
+            <div className="flex items-center gap-3">
+              <div className="hidden items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20 md:flex">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+                </span>
+                System Operational
+              </div>
+              <div className="h-6 w-px bg-slate-200 mx-2 hidden md:block"></div>
+              <button
+                onClick={handleLogout}
+                className='flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600'
+              >
+                <LogOut className='h-4 w-4' />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        <div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
+      <div className='mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8'>
+        <div className='grid grid-cols-1 gap-8 lg:grid-cols-12'>
+          
           {/* Sidebar */}
-          <div className='lg:col-span-1'>
-            <nav className='bg-white rounded-xl border border-slate-200 p-2 space-y-1'>
-              <button
-                onClick={() => setActiveTab('overview')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'overview'
-                    ? 'bg-teal-50 text-teal-600'
-                    : 'text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <LayoutDashboard className='w-5 h-5' />
-                Overview
-              </button>
-              <button
-                onClick={() => setActiveTab('products')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'products'
-                    ? 'bg-teal-50 text-teal-600'
-                    : 'text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <Package className='w-5 h-5' />
-                Products
-              </button>
-              <button
-                onClick={() => setActiveTab('contact')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'contact'
-                    ? 'bg-teal-50 text-teal-600'
-                    : 'text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <Mail className='w-5 h-5' />
-                Contact Info
-              </button>
-              <button
-                onClick={() => setActiveTab('certificates')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'certificates'
-                    ? 'bg-teal-50 text-teal-600'
-                    : 'text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <ImageIcon className='w-5 h-5' />
-                Certificates
-              </button>
-              <button
-                onClick={() => setActiveTab('inquiries')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'inquiries'
-                    ? 'bg-teal-50 text-teal-600'
-                    : 'text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <FileText className='w-5 h-5' />
-                Inquiries
-                {inquiries.filter(i => i.status === 'new').length > 0 && (
-                  <span className='ml-auto rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white'>
-                    {inquiries.filter(i => i.status === 'new').length}
-                  </span>
-                )}
-              </button>
-            </nav>
+          <div className='lg:col-span-3'>
+            <div className='sticky top-24 rounded-2xl bg-white p-4 shadow-sm border border-slate-200'>
+              
+              {/* Profile Snippet */}
+              <div className="mb-6 flex items-center gap-3 rounded-xl bg-slate-50 p-3 border border-slate-100">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-100 text-teal-700">
+                  <User className="h-5 w-5" />
+                </div>
+                <div className="overflow-hidden">
+                  <p className="truncate text-sm font-bold text-slate-900">Administrator</p>
+                  <p className="truncate text-xs text-slate-500">admin@voltherm.com</p>
+                </div>
+              </div>
+
+              {/* Navigation */}
+              <nav>
+                <SidebarSection title="Dashboard">
+                  <SidebarItem id="overview" label="Overview" icon={LayoutDashboard} activeTab={activeTab} setActiveTab={setActiveTab} />
+                </SidebarSection>
+
+                <SidebarSection title="Inventory">
+                  <SidebarItem id="products" label="Products" icon={Package} activeTab={activeTab} setActiveTab={setActiveTab} />
+                </SidebarSection>
+
+                <SidebarSection title="Communication">
+                  <SidebarItem 
+                    id="inquiries" 
+                    label="Inbox" 
+                    icon={Mail} 
+                    activeTab={activeTab} 
+                    setActiveTab={setActiveTab} 
+                    badge={newInquiriesCount}
+                  />
+                  <SidebarItem id="contact" label="Contact Info" icon={Settings} activeTab={activeTab} setActiveTab={setActiveTab} />
+                </SidebarSection>
+
+                <SidebarSection title="Site Content">
+                  <SidebarItem id="certificates" label="Certificates" icon={ImageIcon} activeTab={activeTab} setActiveTab={setActiveTab} />
+                </SidebarSection>
+              </nav>
+
+              {/* Quick Actions Footer */}
+              <div className="mt-4 border-t border-slate-100 pt-4">
+                <button onClick={() => window.open('/', '_blank')} className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900">
+                  View Live Store <ArrowUpRight className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* Main Content */}
-          <div className='lg:col-span-3'>
+          {/* Main Content Area */}
+          <div className='lg:col-span-9 space-y-6'>
             {activeTab === 'overview' && (
               <OverviewTab 
-                productsCount={products.length}
-                certificatesCount={certificates.length}
-                featuredProductsCount={products.filter(p => p.featured).length}
-                inquiriesCount={inquiries.length}
-                newInquiriesCount={inquiries.filter(i => i.status === 'new').length}
+                products={products}
+                inquiries={inquiries}
+                certificates={certificates}
+                setActiveTab={setActiveTab}
               />
             )}
             
@@ -283,10 +242,49 @@ export default function AdminDashboard() {
                 isAddingProduct={isAddingProduct}
                 setEditingProduct={setEditingProduct}
                 setIsAddingProduct={setIsAddingProduct}
-                onSave={handleSaveProduct}
-                onDelete={handleDeleteProduct}
-                onToggleFeatured={handleToggleFeatured}
-                onToggleAvailability={handleToggleProductAvailability}
+                onSave={(product: Product) => {
+                  const updated = editingProduct?.id 
+                    ? products.map(p => p.id === product.id ? product : p)
+                    : [...products, { ...product, id: Math.floor(Math.random() * 1000000000) }];
+                  setProducts(updated);
+                  saveProducts(updated);
+                  setEditingProduct(null);
+                  setIsAddingProduct(false);
+                  toast.success(editingProduct ? 'Product updated' : 'Product added');
+                }}
+                onDelete={(id: number) => {
+                  if (confirm('Delete this product?')) {
+                    const updated = products.filter(p => p.id !== id);
+                    setProducts(updated);
+                    saveProducts(updated);
+                    toast.success('Product deleted');
+                  }
+                }}
+                onToggleFeatured={(id: number) => {
+                  const current = products.find(p => p.id === id);
+                  const featuredCount = products.filter(p => p.featured).length;
+                  if (!current?.featured && featuredCount >= 6) {
+                    toast.error('Max 6 featured products');
+                    return;
+                  }
+                  if (current?.featured && featuredCount <= 3) {
+                    toast.error('Min 3 featured products');
+                    return;
+                  }
+                  const updated = products.map(p => 
+                    p.id === id ? { ...p, featured: !p.featured } : p
+                  );
+                  setProducts(updated);
+                  saveProducts(updated);
+                }}
+                onToggleAvailability={(id: number) => {
+                  const updated = products.map(p => 
+                    p.id === id ? { ...p, available: !p.available } : p
+                  );
+                  setProducts(updated);
+                  saveProducts(updated);
+                  toast.success('Product availability updated');
+                }}
               />
             )}
             
@@ -294,7 +292,10 @@ export default function AdminDashboard() {
               <ContactTab
                 contactInfo={contactInfo}
                 setContactInfo={setContactInfo}
-                onSave={handleSaveContact}
+                onSave={() => {
+                  saveContactInfo(contactInfo);
+                  toast.success('Contact info saved');
+                }}
               />
             )}
             
@@ -305,18 +306,34 @@ export default function AdminDashboard() {
                 isAddingCertificate={isAddingCertificate}
                 setEditingCertificate={setEditingCertificate}
                 setIsAddingCertificate={setIsAddingCertificate}
-                onSave={handleSaveCertificate}
-                onDelete={handleDeleteCertificate}
+                onSave={(cert: Certificate) => {
+                  const updated = editingCertificate?.id 
+                    ? certificates.map(c => c.id === cert.id ? cert : c)
+                    : [...certificates, { ...cert, id: `cert${Math.floor(Math.random() * 1000000000)}` }];
+                  setCertificates(updated);
+                  saveCertificates(updated);
+                  setEditingCertificate(null);
+                  setIsAddingCertificate(false);
+                  toast.success(editingCertificate ? 'Certificate updated' : 'Certificate added');
+                }}
+                onDelete={(id: string) => {
+                  if (confirm('Delete this certificate?')) {
+                    const updated = certificates.filter(c => c.id !== id);
+                    setCertificates(updated);
+                    saveCertificates(updated);
+                    toast.success('Certificate deleted');
+                  }
+                }}
               />
             )}
 
             {activeTab === 'inquiries' && (
               <InquiriesTab
                 inquiries={inquiries}
-                onStatusChange={(id: string, status: 'new' | 'in-progress' | 'completed' | 'rejected', notes?: string) => {
-                  updateInquiryStatus(id, status, notes);
+                onStatusChange={(id: string, status: Inquiry['status']) => {
+                  updateInquiryStatus(id, status);
                   setInquiries(getInquiries());
-                  toast.success('Inquiry status updated');
+                  toast.success('Status updated');
                 }}
                 onDelete={(id: string) => {
                   deleteInquiry(id);
@@ -325,7 +342,6 @@ export default function AdminDashboard() {
                 }}
               />
             )}
-
           </div>
         </div>
       </div>
@@ -333,86 +349,47 @@ export default function AdminDashboard() {
   );
 }
 
-// Overview Tab Component
-function OverviewTab({ productsCount, certificatesCount, featuredProductsCount, inquiriesCount, newInquiriesCount }: any) {
+// Overview Tab
+function OverviewTab({ products, inquiries, certificates, setActiveTab }: any) {
   return (
-    <div className='space-y-6'>
-      <div>
-        <h2 className='text-2xl font-bold text-slate-900 mb-2'>Dashboard Overview</h2>
-        <p className='text-slate-600'>Manage your website content and settings</p>
+    <div className="space-y-6 animate-in fade-in">
+      <div className="rounded-2xl bg-slate-900 p-8 text-white shadow-xl shadow-slate-900/10 relative overflow-hidden">
+        <div className="relative z-10">
+          <h2 className="text-2xl font-bold">Welcome back, Admin</h2>
+          <p className="text-slate-400 mt-1 mb-6 max-w-lg">You have {inquiries.length} total inquiries and {products.length} active products listed in your store.</p>
+          <button onClick={() => setActiveTab('products')} className="bg-teal-500 hover:bg-teal-400 text-white font-bold py-2 px-6 rounded-lg transition-colors">Manage Inventory</button>
+        </div>
+        <div className="absolute right-0 top-0 h-full w-1/3 bg-linear-to-l from-teal-500/20 to-transparent"></div>
       </div>
-
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
-        <div className='bg-white rounded-xl border border-slate-200 p-6'>
-          <div className='flex items-center gap-4'>
-            <div className='w-12 h-12 rounded-lg bg-teal-100 flex items-center justify-center'>
-              <Package className='w-6 h-6 text-teal-600' />
-            </div>
-            <div>
-              <p className='text-2xl font-bold text-slate-900'>{productsCount}</p>
-              <p className='text-sm text-slate-600'>Total Products</p>
-            </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div onClick={() => setActiveTab('inquiries')} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group">
+          <div className="flex justify-between items-start mb-4">
+            <div className="p-3 bg-amber-50 rounded-lg group-hover:bg-amber-100 transition-colors"><Mail className="w-6 h-6 text-amber-600"/></div>
           </div>
+          <p className="text-3xl font-bold text-slate-900">{inquiries.length}</p>
+          <p className="text-sm font-medium text-slate-500">Inquiries</p>
         </div>
-
-        <div className='bg-white rounded-xl border border-slate-200 p-6'>
-          <div className='flex items-center gap-4'>
-            <div className='w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center'>
-              <span className='text-2xl'>⭐</span>
-            </div>
-            <div>
-              <p className='text-2xl font-bold text-slate-900'>{featuredProductsCount}</p>
-              <p className='text-sm text-slate-600'>Featured Products</p>
-            </div>
+        <div onClick={() => setActiveTab('products')} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group">
+          <div className="flex justify-between items-start mb-4">
+            <div className="p-3 bg-teal-50 rounded-lg group-hover:bg-teal-100 transition-colors"><Package className="w-6 h-6 text-teal-600"/></div>
           </div>
+          <p className="text-3xl font-bold text-slate-900">{products.length}</p>
+          <p className="text-sm font-medium text-slate-500">Products</p>
         </div>
-
-        <div className='bg-white rounded-xl border border-slate-200 p-6'>
-          <div className='flex items-center gap-4'>
-            <div className='w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center'>
-              <ImageIcon className='w-6 h-6 text-blue-600' />
-            </div>
-            <div>
-              <p className='text-2xl font-bold text-slate-900'>{certificatesCount}</p>
-              <p className='text-sm text-slate-600'>Certificates</p>
-            </div>
+        <div onClick={() => setActiveTab('certificates')} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group">
+          <div className="flex justify-between items-start mb-4">
+            <div className="p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors"><ImageIcon className="w-6 h-6 text-blue-600"/></div>
           </div>
-        </div>
-
-        <div className='bg-white rounded-xl border border-slate-200 p-6'>
-          <div className='flex items-center gap-4'>
-            <div className='w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center'>
-              <Mail className='w-6 h-6 text-amber-600' />
-            </div>
-            <div>
-              <p className='text-2xl font-bold text-slate-900'>
-                {inquiriesCount}
-                {newInquiriesCount > 0 && (
-                  <span className='ml-2 text-base text-red-500'>({newInquiriesCount} new)</span>
-                )}
-              </p>
-              <p className='text-sm text-slate-600'>Customer Inquiries</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className='bg-linear-to-br from-teal-500 to-cyan-500 rounded-xl p-6 text-white'>
-        <h3 className='text-xl font-bold mb-2'>Quick Actions</h3>
-        <p className='text-teal-50 mb-4'>Use the sidebar to navigate to different sections and manage your content.</p>
-        <div className='flex flex-wrap gap-3'>
-          <span className='px-3 py-1 bg-white/20 rounded-full text-sm'>Add Products</span>
-          <span className='px-3 py-1 bg-white/20 rounded-full text-sm'>Update Contact</span>
-          <span className='px-3 py-1 bg-white/20 rounded-full text-sm'>Manage Certificates</span>
-          <span className='px-3 py-1 bg-white/20 rounded-full text-sm'>View Inquiries</span>
-          <span className='px-3 py-1 bg-white/20 rounded-full text-sm'>Manage Certificates</span>
+          <p className="text-3xl font-bold text-slate-900">{certificates.length}</p>
+          <p className="text-sm font-medium text-slate-500">Certificates</p>
         </div>
       </div>
     </div>
   );
 }
 
-// Products Tab Component
+// Products Tab
 function ProductsTab({ products, categories, mainCategories, editingProduct, isAddingProduct, setEditingProduct, setIsAddingProduct, onSave, onDelete, onToggleFeatured, onToggleAvailability }: any) {
   const [formData, setFormData] = useState<Product>({
     id: 0,
@@ -420,7 +397,6 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
     description: '',
     image: '',
     specs: [''],
-    color: 'from-teal-500 to-cyan-400',
     featured: false,
     available: true
   });
@@ -441,112 +417,72 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
     }
   }, [editingProduct, isAddingProduct]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
-
   if (editingProduct || isAddingProduct) {
     return (
-      <div className='bg-white rounded-xl border border-slate-200 p-6'>
+      <div className='bg-white rounded-2xl border border-slate-200 p-6 shadow-sm'>
         <div className='flex items-center justify-between mb-6'>
           <h3 className='text-xl font-bold text-slate-900'>
-            {editingProduct ? 'Edit Product' : 'Add New Product'}
+            {editingProduct ? 'Edit Product' : 'Add Product'}
           </h3>
           <button
             onClick={() => {
               setEditingProduct(null);
               setIsAddingProduct(false);
             }}
-            className='text-slate-600 hover:text-slate-900'
+            className='text-slate-400 hover:text-slate-600'
           >
-            Cancel
+            <X className='w-5 h-5' />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className='space-y-4'>
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>Title</label>
-            <input
-              type='text'
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-              required
-            />
-          </div>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          onSave(formData);
+        }} className='space-y-4'>
+          <input
+            type='text'
+            placeholder='Product Title'
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+            required
+          />
 
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>Description</label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={3}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-              required
-            />
-          </div>
+          <textarea
+            placeholder='Description'
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            rows={3}
+            className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+            required
+          />
 
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>Image URL</label>
-            <input
-              type='url'
-              value={formData.image}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-              required
-            />
-          </div>
+          <input
+            type='url'
+            placeholder='Image URL'
+            value={formData.image}
+            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+            className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+            required
+          />
 
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>Specs (comma-separated)</label>
-            <input
-              type='text'
-              value={formData.specs.join(', ')}
-              onChange={(e) => setFormData({ ...formData, specs: e.target.value.split(',').map(s => s.trim()) })}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-              placeholder='Spec 1, Spec 2, Spec 3'
-            />
-          </div>
+          <input
+            type='text'
+            placeholder='Specs (comma-separated)'
+            value={formData.specs.join(', ')}
+            onChange={(e) => setFormData({ ...formData, specs: e.target.value.split(',').map(s => s.trim()) })}
+            className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
+          />
 
-          {/* Capacity, Voltage, Price */}
           <div className='grid grid-cols-3 gap-4'>
-            <div>
-              <label className='block text-sm font-medium text-slate-700 mb-2'>Capacity (Optional)</label>
-              <input
-                type='text'
-                value={formData.capacity || ''}
-                onChange={(e) => setFormData({ ...formData, capacity: e.target.value || undefined })}
-                className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-                placeholder='e.g., 75 kWh'
-              />
-            </div>
-            <div>
-              <label className='block text-sm font-medium text-slate-700 mb-2'>Voltage (Optional)</label>
-              <input
-                type='text'
-                value={formData.voltage || ''}
-                onChange={(e) => setFormData({ ...formData, voltage: e.target.value || undefined })}
-                className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-                placeholder='e.g., 400V'
-              />
-            </div>
-            <div>
-              <label className='block text-sm font-medium text-slate-700 mb-2'>Price (Optional)</label>
-              <input
-                type='number'
-                value={formData.price || ''}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value ? Number(e.target.value) : undefined })}
-                className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-                placeholder='e.g., 50000'
-              />
-            </div>
+            <input type='text' placeholder='Capacity' value={formData.capacity || ''} onChange={(e) => setFormData({ ...formData, capacity: e.target.value || undefined })} className='px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent' />
+            <input type='text' placeholder='Voltage' value={formData.voltage || ''} onChange={(e) => setFormData({ ...formData, voltage: e.target.value || undefined })} className='px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent' />
+            <input type='number' placeholder='Price' value={formData.price || ''} onChange={(e) => setFormData({ ...formData, price: e.target.value ? Number(e.target.value) : undefined })} className='px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent' />
           </div>
 
-          {/* Technical Specifications */}
           <div>
             <div className='flex items-center justify-between mb-2'>
-              <label className='block text-sm font-medium text-slate-700'>Technical Specifications (Max 6)</label>
+              <label className='text-sm font-medium text-slate-700'>Technical Specs (Max 6)</label>
               <button
                 type='button'
                 onClick={() => {
@@ -558,98 +494,46 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
                     });
                   }
                 }}
-                disabled={(formData.technicalSpecs || []).length >= 6}
-                className='flex items-center gap-1 px-3 py-1 text-sm bg-teal-100 text-teal-600 rounded-lg hover:bg-teal-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                className='text-sm px-3 py-1 bg-teal-100 text-teal-600 rounded hover:bg-teal-200 transition-colors'
               >
-                <span className='text-lg'>+</span> Add
+                + Add
               </button>
             </div>
             <div className='space-y-2'>
               {(formData.technicalSpecs || []).map((spec, idx) => (
                 <div key={idx} className='flex gap-2'>
-                  <input
-                    type='text'
-                    value={spec.key}
-                    onChange={(e) => {
-                      const updated = [...(formData.technicalSpecs || [])];
-                      updated[idx] = { ...updated[idx], key: e.target.value };
-                      setFormData({ ...formData, technicalSpecs: updated });
-                    }}
-                    placeholder='e.g., Energy Density'
-                    className='flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-                  />
-                  <input
-                    type='text'
-                    value={spec.value}
-                    onChange={(e) => {
-                      const updated = [...(formData.technicalSpecs || [])];
-                      updated[idx] = { ...updated[idx], value: e.target.value };
-                      setFormData({ ...formData, technicalSpecs: updated });
-                    }}
-                    placeholder='e.g., 250 Wh/kg'
-                    className='flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-                  />
-                  <button
-                    type='button'
-                    onClick={() => {
-                      const updated = (formData.technicalSpecs || []).filter((_, i) => i !== idx);
-                      setFormData({ ...formData, technicalSpecs: updated });
-                    }}
-                    className='px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors'
-                  >
-                    ×
-                  </button>
+                  <input type='text' placeholder='Key' value={spec.key} onChange={(e) => { const updated = [...(formData.technicalSpecs || [])]; updated[idx] = { ...updated[idx], key: e.target.value }; setFormData({ ...formData, technicalSpecs: updated }); }} className='flex-1 px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
+                  <input type='text' placeholder='Value' value={spec.value} onChange={(e) => { const updated = [...(formData.technicalSpecs || [])]; updated[idx] = { ...updated[idx], value: e.target.value }; setFormData({ ...formData, technicalSpecs: updated }); }} className='flex-1 px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
+                  <button type='button' onClick={() => { const updated = (formData.technicalSpecs || []).filter((_, i) => i !== idx); setFormData({ ...formData, technicalSpecs: updated }); }} className='px-3 py-2 text-red-600 hover:text-red-700'>×</button>
                 </div>
               ))}
-              {(!formData.technicalSpecs || formData.technicalSpecs.length === 0) && (
-                <p className='text-sm text-slate-500 italic'>No technical specifications added yet. Click + Add to create one.</p>
-              )}
             </div>
           </div>
 
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>Sub-Category</label>
-            <select
-              value={formData.subCategoryId || formData.categoryId || ''}
-              onChange={(e) => setFormData({ ...formData, subCategoryId: e.target.value || undefined, categoryId: e.target.value || undefined })}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-            >
-              <option value=''>No Sub-Category</option>
-              {mainCategories.sort((a: MainCategory, b: MainCategory) => a.order - b.order).map((mainCat: MainCategory) => {
-                const subCats = categories.filter((c: SubCategory) => c.mainCategoryId === mainCat.id).sort((a: SubCategory, b: SubCategory) => a.order - b.order);
-                if (subCats.length === 0) return null;
-                return (
-                  <optgroup key={mainCat.id} label={mainCat.name}>
-                    {subCats.map((subCat: SubCategory) => (
-                      <option key={subCat.id} value={subCat.id}>
-                        {subCat.icon} {subCat.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                );
-              })}
-            </select>
-            <p className='text-xs text-slate-500 mt-1'>Select a sub-category to organize this product</p>
-          </div>
-
-          <div className='flex items-center gap-2'>
-            <input
-              type='checkbox'
-              id='featured'
-              checked={formData.featured}
-              onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-              className='w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500'
-            />
-            <label htmlFor='featured' className='text-sm font-medium text-slate-700 flex items-center gap-1'>
-              <span>⭐</span> Featured on homepage slider
-            </label>
-          </div>
-
-          <button
-            type='submit'
-            className='w-full py-3 px-4 bg-linear-to-r from-teal-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all'
+          <select
+            value={formData.subCategoryId || formData.categoryId || ''}
+            onChange={(e) => setFormData({ ...formData, subCategoryId: e.target.value || undefined, categoryId: e.target.value || undefined })}
+            className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-teal-500'
           >
-            <Save className='w-4 h-4 inline mr-2' />
+            <option value=''>No Sub-Category</option>
+            {mainCategories.map((mainCat: MainCategory) => {
+              const subCats = categories.filter((c: SubCategory) => c.mainCategoryId === mainCat.id);
+              return (
+                <optgroup key={mainCat.id} label={mainCat.name}>
+                  {subCats.map((subCat: SubCategory) => (
+                    <option key={subCat.id} value={subCat.id}>{subCat.icon} {subCat.name}</option>
+                  ))}
+                </optgroup>
+              );
+            })}
+          </select>
+
+          <label className='flex items-center gap-2 text-slate-700'>
+            <input type='checkbox' checked={formData.featured} onChange={(e) => setFormData({ ...formData, featured: e.target.checked })} className='w-4 h-4' />
+            <span className='text-sm'>Featured on homepage</span>
+          </label>
+
+          <button type='submit' className='w-full py-3 bg-linear-to-r from-teal-600 to-cyan-600 text-white font-medium rounded-lg hover:from-teal-700 hover:to-cyan-700'>
             Save Product
           </button>
         </form>
@@ -658,15 +542,15 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
   }
 
   return (
-    <div className='space-y-4'>
+    <div className='space-y-6'>
       <div className='flex items-center justify-between'>
         <div>
-          <h2 className='text-2xl font-bold text-slate-900'>Products Management</h2>
-          <p className='text-slate-600'>Manage products displayed on your website</p>
+          <h2 className='text-2xl font-bold text-slate-900'>Products ({products.length})</h2>
+          <p className='text-slate-600 text-sm'>Manage your product catalog</p>
         </div>
         <button
           onClick={() => setIsAddingProduct(true)}
-          className='flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors'
+          className='flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium'
         >
           <Plus className='w-4 h-4' />
           Add Product
@@ -675,13 +559,9 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
 
       <div className='grid gap-4'>
         {products.map((product: Product) => (
-          <div key={product.id} className='bg-white rounded-xl border border-slate-200 p-4'>
+          <div key={product.id} className='bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all'>
             <div className='flex items-start gap-4'>
-              <img 
-                src={product.image} 
-                alt={product.title}
-                className='w-24 h-24 object-cover rounded-lg'
-              />
+              <img src={product.image} alt={product.title} className='w-20 h-20 object-cover rounded-lg' />
               <div className='flex-1'>
                 <div className='flex items-start justify-between'>
                   <div>
@@ -703,8 +583,8 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
                         );
                       })()}
                     </div>
-                    <p className='text-sm text-slate-600 mt-1'>{product.description}</p>
-                    <div className='flex flex-wrap gap-2 mt-2'>
+                    <p className='text-slate-600 text-sm mt-1'>{product.description}</p>
+                    <div className='flex flex-wrap gap-1 mt-2'>
                       {product.specs.map((spec, idx) => (
                         <span key={idx} className='px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded'>
                           {spec}
@@ -713,38 +593,16 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
                     </div>
                   </div>
                   <div className='flex items-center gap-2'>
-                    <button
-                      onClick={() => onToggleFeatured(product.id)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        product.featured
-                          ? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
-                          : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                      }`}
-                      title={product.featured ? 'Featured on homepage slider' : 'Not featured on homepage'}
-                    >
+                    <button onClick={() => onToggleFeatured(product.id)} className={`p-2 rounded transition-colors ${product.featured ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'}`} title={product.featured ? 'Featured on homepage slider' : 'Not featured on homepage'}>
                       <Star className={`w-4 h-4 ${product.featured ? 'fill-amber-600' : ''}`} />
                     </button>
-                    <button
-                      onClick={() => onToggleAvailability(product.id)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        product.available !== false
-                          ? 'bg-teal-100 text-teal-600 hover:bg-teal-200'
-                          : 'bg-amber-100 text-amber-600 hover:bg-amber-200'
-                      }`}
-                      title={product.available !== false ? 'Available in store' : 'Unavailable in store'}
-                    >
-                      <Package className='w-4 h-4' />
+                    <button onClick={() => onToggleAvailability(product.id)} className={`p-2 rounded transition-colors ${product.available !== false ? 'bg-teal-100 text-teal-600 hover:bg-teal-200' : 'bg-amber-100 text-amber-600 hover:bg-amber-200'}`} title={product.available !== false ? 'Available in store' : 'Unavailable in store'}>
+                      {product.available !== false ? <Package className='w-4 h-4' /> : <Package className='w-4 h-4 opacity-50' />}
                     </button>
-                    <button
-                      onClick={() => setEditingProduct(product)}
-                      className='p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors'
-                    >
+                    <button onClick={() => setEditingProduct(product)} className='p-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors'>
                       <Edit className='w-4 h-4' />
                     </button>
-                    <button
-                      onClick={() => onDelete(product.id)}
-                      className='p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors'
-                    >
+                    <button onClick={() => onDelete(product.id)} className='p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors'>
                       <Trash2 className='w-4 h-4' />
                     </button>
                   </div>
@@ -758,82 +616,32 @@ function ProductsTab({ products, categories, mainCategories, editingProduct, isA
   );
 }
 
-// Contact Tab Component
+// Contact Tab
 function ContactTab({ contactInfo, setContactInfo, onSave }: any) {
   return (
-    <div className='bg-white rounded-xl border border-slate-200 p-6'>
-      <div className='mb-6'>
-        <h2 className='text-2xl font-bold text-slate-900'>Contact Information</h2>
-        <p className='text-slate-600'>Update contact details displayed on the contact page</p>
-      </div>
+    <div className='bg-white rounded-2xl border border-slate-200 p-6 shadow-sm'>
+      <h2 className='text-2xl font-bold text-slate-900 mb-6'>Contact Information</h2>
 
       <div className='space-y-6'>
         <div>
-          <h3 className='text-lg font-semibold text-slate-900 mb-4'>Sales Contact</h3>
-          <div className='space-y-3'>
-            <div>
-              <label className='block text-sm font-medium text-slate-700 mb-2'>Email</label>
-              <input
-                type='email'
-                value={contactInfo.sales.email}
-                onChange={(e) => setContactInfo({
-                  ...contactInfo,
-                  sales: { ...contactInfo.sales, email: e.target.value }
-                })}
-                className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-              />
-            </div>
-            <div>
-              <label className='block text-sm font-medium text-slate-700 mb-2'>Phone</label>
-              <input
-                type='tel'
-                value={contactInfo.sales.phone}
-                onChange={(e) => setContactInfo({
-                  ...contactInfo,
-                  sales: { ...contactInfo.sales, phone: e.target.value }
-                })}
-                className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-              />
-            </div>
+          <h3 className='text-lg font-semibold text-slate-900 mb-3'>Sales Contact</h3>
+          <div className='space-y-2'>
+            <input type='email' value={contactInfo.sales.email} onChange={(e) => setContactInfo({ ...contactInfo, sales: { ...contactInfo.sales, email: e.target.value } })} placeholder='Email' className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
+            <input type='tel' value={contactInfo.sales.phone} onChange={(e) => setContactInfo({ ...contactInfo, sales: { ...contactInfo.sales, phone: e.target.value } })} placeholder='Phone' className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
           </div>
         </div>
 
         <div>
-          <h3 className='text-lg font-semibold text-slate-900 mb-4'>Business Contact</h3>
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>Email</label>
-            <input
-              type='email'
-              value={contactInfo.business.email}
-              onChange={(e) => setContactInfo({
-                ...contactInfo,
-                business: { ...contactInfo.business, email: e.target.value }
-              })}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-            />
-          </div>
+          <h3 className='text-lg font-semibold text-slate-900 mb-3'>Business Contact</h3>
+          <input type='email' value={contactInfo.business.email} onChange={(e) => setContactInfo({ ...contactInfo, business: { ...contactInfo.business, email: e.target.value } })} placeholder='Email' className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
         </div>
 
         <div>
-          <h3 className='text-lg font-semibold text-slate-900 mb-4'>Support Contact</h3>
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>Phone</label>
-            <input
-              type='tel'
-              value={contactInfo.support.phone}
-              onChange={(e) => setContactInfo({
-                ...contactInfo,
-                support: { ...contactInfo.support, phone: e.target.value }
-              })}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-            />
-          </div>
+          <h3 className='text-lg font-semibold text-slate-900 mb-3'>Support Contact</h3>
+          <input type='tel' value={contactInfo.support.phone} onChange={(e) => setContactInfo({ ...contactInfo, support: { ...contactInfo.support, phone: e.target.value } })} placeholder='Phone' className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
         </div>
 
-        <button
-          onClick={onSave}
-          className='w-full py-3 px-4 bg-linear-to-r from-teal-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all'
-        >
+        <button onClick={onSave} className='w-full py-3 bg-linear-to-r from-teal-600 to-cyan-600 text-white font-medium rounded-lg hover:from-teal-700 hover:to-cyan-700'>
           <Save className='w-4 h-4 inline mr-2' />
           Save Changes
         </button>
@@ -842,7 +650,7 @@ function ContactTab({ contactInfo, setContactInfo, onSave }: any) {
   );
 }
 
-// Certificates Tab Component
+// Certificates Tab
 function CertificatesTab({ certificates, editingCertificate, isAddingCertificate, setEditingCertificate, setIsAddingCertificate, onSave, onDelete }: any) {
   const [formData, setFormData] = useState<Certificate>({
     id: '',
@@ -855,79 +663,21 @@ function CertificatesTab({ certificates, editingCertificate, isAddingCertificate
     if (editingCertificate) {
       setFormData(editingCertificate);
     } else if (isAddingCertificate) {
-      setFormData({
-        id: '',
-        src: '',
-        alt: '',
-        title: ''
-      });
+      setFormData({ id: '', src: '', alt: '', title: '' });
     }
   }, [editingCertificate, isAddingCertificate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
-
   if (editingCertificate || isAddingCertificate) {
     return (
-      <div className='bg-white rounded-xl border border-slate-200 p-6'>
-        <div className='flex items-center justify-between mb-6'>
-          <h3 className='text-xl font-bold text-slate-900'>
-            {editingCertificate ? 'Edit Certificate' : 'Add New Certificate'}
-          </h3>
-          <button
-            onClick={() => {
-              setEditingCertificate(null);
-              setIsAddingCertificate(false);
-            }}
-            className='text-slate-600 hover:text-slate-900'
-          >
-            Cancel
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className='space-y-4'>
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>Title</label>
-            <input
-              type='text'
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-              required
-            />
-          </div>
-
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>Alt Text</label>
-            <input
-              type='text'
-              value={formData.alt}
-              onChange={(e) => setFormData({ ...formData, alt: e.target.value })}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-              required
-            />
-          </div>
-
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>Image Path</label>
-            <input
-              type='text'
-              value={formData.src}
-              onChange={(e) => setFormData({ ...formData, src: e.target.value })}
-              className='w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent'
-              placeholder='/certificate/filename.png'
-              required
-            />
-            <p className='text-xs text-slate-500 mt-1'>Upload file to /public/certificate/ folder first</p>
-          </div>
-
-          <button
-            type='submit'
-            className='w-full py-3 px-4 bg-linear-to-r from-teal-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all'
-          >
-            <Save className='w-4 h-4 inline mr-2' />
+      <div className='bg-white rounded-2xl border border-slate-200 p-6 shadow-sm'>
+        <h3 className='text-xl font-bold text-slate-900 mb-6'>
+          {editingCertificate ? 'Edit Certificate' : 'Add Certificate'}
+        </h3>
+        <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className='space-y-4'>
+          <input type='text' placeholder='Title' value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' required />
+          <input type='text' placeholder='Alt Text' value={formData.alt} onChange={(e) => setFormData({ ...formData, alt: e.target.value })} className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' required />
+          <input type='text' placeholder='Image Path' value={formData.src} onChange={(e) => setFormData({ ...formData, src: e.target.value })} className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' required />
+          <button type='submit' className='w-full py-3 bg-linear-to-r from-teal-600 to-cyan-600 text-white font-medium rounded-lg'>
             Save Certificate
           </button>
         </form>
@@ -936,46 +686,22 @@ function CertificatesTab({ certificates, editingCertificate, isAddingCertificate
   }
 
   return (
-    <div className='space-y-4'>
+    <div className='space-y-6'>
       <div className='flex items-center justify-between'>
-        <div>
-          <h2 className='text-2xl font-bold text-slate-900'>Certificates Management</h2>
-          <p className='text-slate-600'>Manage certificates displayed on the about page</p>
-        </div>
-        <button
-          onClick={() => setIsAddingCertificate(true)}
-          className='flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors'
-        >
+        <h2 className='text-2xl font-bold text-slate-900'>Certificates</h2>
+        <button onClick={() => setIsAddingCertificate(true)} className='flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium'>
           <Plus className='w-4 h-4' />
-          Add Certificate
+          Add
         </button>
       </div>
-
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
         {certificates.map((cert: Certificate) => (
-          <div key={cert.id} className='bg-white rounded-xl border border-slate-200 p-4'>
-            <img 
-              src={cert.src} 
-              alt={cert.alt}
-              className='w-full h-40 object-cover rounded-lg mb-3'
-            />
-            <h3 className='font-bold text-slate-900'>{cert.title}</h3>
-            <p className='text-sm text-slate-600 mb-3'>{cert.alt}</p>
-            <div className='flex gap-2'>
-              <button
-                onClick={() => setEditingCertificate(cert)}
-                className='flex-1 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium'
-              >
-                <Edit className='w-4 h-4 inline mr-1' />
-                Edit
-              </button>
-              <button
-                onClick={() => onDelete(cert.id)}
-                className='flex-1 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium'
-              >
-                <Trash2 className='w-4 h-4 inline mr-1' />
-                Delete
-              </button>
+          <div key={cert.id} className='bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all'>
+            <img src={cert.src} alt={cert.alt} className='w-full h-32 object-cover rounded-lg mb-3' />
+            <h3 className='font-bold text-slate-900 text-sm'>{cert.title}</h3>
+            <div className='flex gap-2 mt-3'>
+              <button onClick={() => setEditingCertificate(cert)} className='flex-1 py-2 bg-blue-100 text-blue-600 rounded text-xs font-medium'>Edit</button>
+              <button onClick={() => onDelete(cert.id)} className='flex-1 py-2 bg-red-100 text-red-600 rounded text-xs font-medium'>Delete</button>
             </div>
           </div>
         ))}
@@ -984,7 +710,7 @@ function CertificatesTab({ certificates, editingCertificate, isAddingCertificate
   );
 }
 
-// Inquiries Tab Component
+// Inquiries Tab
 function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | Inquiry['status']>('all');
@@ -1004,22 +730,20 @@ function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
   };
 
   return (
-    <div className='space-y-4'>
+    <div className='space-y-6'>
       <div className='flex items-center justify-between'>
         <div>
-          <h2 className='text-2xl font-bold text-slate-900'>Customer Inquiries</h2>
-          <p className='text-slate-600'>Manage customer product inquiries from the store</p>
+          <h2 className='text-2xl font-bold text-slate-900'>Inbox</h2>
+          <p className='text-slate-600 text-sm'>Manage customer inquiries</p>
         </div>
-        
-        {/* Status Filter */}
         <div className='flex gap-2'>
           {['all', 'new', 'in-progress', 'completed', 'rejected'].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status as any)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                 statusFilter === status
-                  ? 'bg-teal-500 text-white'
+                  ? 'bg-teal-600 text-white'
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
@@ -1061,11 +785,11 @@ function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
                       <Mail className='w-4 h-4' />
                       {inquiry.customerEmail}
                     </span>
-                    <span>{inquiry.customerPhone}</span>
+                    {inquiry.customerPhone && <span>{inquiry.customerPhone}</span>}
                     {inquiry.companyName && <span>Company: {inquiry.companyName}</span>}
                   </div>
                   <p className='text-xs text-slate-500 mt-2'>
-                    {new Date(inquiry.createdAt).toLocaleString()}
+                    {inquiry.createdAt ? new Date(inquiry.createdAt).toLocaleString() : 'N/A'}
                   </p>
                 </div>
 
@@ -1090,19 +814,21 @@ function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
               </div>
 
               {/* Products Interested In */}
-              <div className='mb-3'>
-                <h4 className='text-sm font-semibold text-slate-700 mb-2'>Products ({inquiry.products.length}):</h4>
-                <div className='flex flex-wrap gap-2'>
-                  {inquiry.products.map((product) => (
-                    <span
-                      key={product.id}
-                      className='px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium'
-                    >
-                      {product.title}
-                    </span>
-                  ))}
+              {inquiry.products && inquiry.products.length > 0 && (
+                <div className='mb-3'>
+                  <h4 className='text-sm font-semibold text-slate-700 mb-2'>Products ({inquiry.products.length}):</h4>
+                  <div className='flex flex-wrap gap-2'>
+                    {inquiry.products.map((product) => (
+                      <span
+                        key={product.id}
+                        className='px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium'
+                      >
+                        {product.title}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Requirements */}
               <div className='mb-4'>
@@ -1169,10 +895,12 @@ function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
                 <p className='text-slate-900'>{selectedInquiry.customerEmail}</p>
               </div>
               
-              <div>
-                <label className='text-sm font-semibold text-slate-700'>Phone</label>
-                <p className='text-slate-900'>{selectedInquiry.customerPhone}</p>
-              </div>
+              {selectedInquiry.customerPhone && (
+                <div>
+                  <label className='text-sm font-semibold text-slate-700'>Phone</label>
+                  <p className='text-slate-900'>{selectedInquiry.customerPhone}</p>
+                </div>
+              )}
 
               {selectedInquiry.companyName && (
                 <div>
@@ -1181,10 +909,12 @@ function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
                 </div>
               )}
 
-              <div>
-                <label className='text-sm font-semibold text-slate-700'>Inquiry Date</label>
-                <p className='text-slate-900'>{new Date(selectedInquiry.createdAt).toLocaleString()}</p>
-              </div>
+              {selectedInquiry.createdAt && (
+                <div>
+                  <label className='text-sm font-semibold text-slate-700'>Inquiry Date</label>
+                  <p className='text-slate-900'>{new Date(selectedInquiry.createdAt).toLocaleString()}</p>
+                </div>
+              )}
 
               <div>
                 <label className='text-sm font-semibold text-slate-700'>Status</label>
@@ -1193,14 +923,16 @@ function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
                 </p>
               </div>
 
-              <div>
-                <label className='text-sm font-semibold text-slate-700'>Products Interested In</label>
-                <ul className='list-disc list-inside text-slate-900'>
-                  {selectedInquiry.products.map((product) => (
-                    <li key={product.id}>{product.title}</li>
-                  ))}
-                </ul>
-              </div>
+              {selectedInquiry.products && selectedInquiry.products.length > 0 && (
+                <div>
+                  <label className='text-sm font-semibold text-slate-700'>Products Interested In</label>
+                  <ul className='list-disc list-inside text-slate-900'>
+                    {selectedInquiry.products.map((product) => (
+                      <li key={product.id}>{product.title}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div>
                 <label className='text-sm font-semibold text-slate-700'>Requirements</label>
@@ -1217,6 +949,34 @@ function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
                   </p>
                 </div>
               )}
+
+              {/* Status Actions */}
+              <div className='flex gap-2 pt-3 border-t border-slate-100 mt-6'>
+                {selectedInquiry.status !== 'in-progress' && (
+                  <button
+                    onClick={() => { onStatusChange(selectedInquiry.id, 'in-progress'); setSelectedInquiry(null); }}
+                    className='px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700'
+                  >
+                    In Progress
+                  </button>
+                )}
+                {selectedInquiry.status !== 'completed' && (
+                  <button
+                    onClick={() => { onStatusChange(selectedInquiry.id, 'completed'); setSelectedInquiry(null); }}
+                    className='px-4 py-2 bg-green-600 text-white rounded text-sm font-medium hover:bg-green-700'
+                  >
+                    Complete
+                  </button>
+                )}
+                {selectedInquiry.status !== 'rejected' && (
+                  <button
+                    onClick={() => { onStatusChange(selectedInquiry.id, 'rejected'); setSelectedInquiry(null); }}
+                    className='px-4 py-2 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700'
+                  >
+                    Reject
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
