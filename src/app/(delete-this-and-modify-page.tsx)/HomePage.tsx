@@ -1,11 +1,12 @@
 import Image from 'next/image';
-import { Facebook, Instagram, Linkedin, Twitter, Globe } from 'lucide-react';
 
 import AnimatedTestimonialsDemo from '@/components/demos/AnimatedTestimonialsDemo';
 import BentoGridDemo from '@/components/demos/BentoGridDemo';
 import NavbarDemo from '@/components/demos/NavbarDemo';
 import ProductCarouselDemo from '@/components/demos/ProductCarouselDemo';
 import StickyScrollRevealDemo from '@/components/demos/StickyScrollRevealDemo';
+
+import { Facebook, Globe, Instagram, Linkedin, Twitter } from 'lucide-react';
 
 const HomePage: React.FC = () => {
     return (
@@ -14,32 +15,30 @@ const HomePage: React.FC = () => {
             <NavbarDemo />
 
             {/* Hero Section */}
-            <section className='relative flex min-h-screen items-center overflow-hidden bg-slate-50 pt-20'>
+            <section className='relative flex min-h-screen items-center overflow-hidden bg-white pt-20'>
                 <div className='absolute inset-0 z-0'>
-                    <div className='absolute top-0 right-0 h-full w-2/3 bg-linear-to-bl from-slate-100 to-transparent opacity-50'></div>
+                    <div className='pointer-events-none absolute top-0 right-0 h-full w-2/3 bg-[radial-gradient(circle_at_85%_15%,rgba(183,28,28,0.15),transparent_50%)] opacity-[0.08]'></div>
                 </div>
 
                 <div className='relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8'>
                     <div className='grid grid-cols-1 items-center gap-12 lg:grid-cols-2'>
                         <div className='space-y-8'>
-                            <div className='mb-4 inline-flex items-center rounded-full border border-teal-500/30 bg-teal-50/50 px-3 py-1 text-sm font-medium text-teal-600'>
-                                <span className='mr-2 h-2 w-2 animate-pulse rounded-full bg-teal-500'></span>
+                            <div className='border-border text-primary mb-4 inline-flex items-center rounded-full border bg-white px-4 py-2 text-sm font-medium shadow-sm'>
+                                <span className='bg-primary mr-2 h-2 w-2 animate-pulse rounded-full'></span>
                                 Next Gen Energy Storage
                             </div>
-                            <h1 className='text-5xl leading-tight font-bold tracking-tight text-slate-900 md:text-7xl'>
+                            <h1 className='text-foreground text-5xl leading-tight font-bold tracking-tight md:text-7xl'>
                                 Powering the <br />
-                                <span className='bg-linear-to-r from-teal-500 to-cyan-400 bg-clip-text text-transparent'>
-                                    Future of Motion
-                                </span>
+                                <span className='text-primary'>Future of Motion</span>
                             </h1>
-                            <p className='max-w-lg text-lg leading-relaxed text-slate-600 md:text-xl'>
+                            <p className='text-muted-foreground max-w-lg text-lg leading-relaxed md:text-xl'>
                                 Advanced thermal management and high-density battery modules engineered for the next
                                 generation of electric mobility.
                             </p>
                             <div className='flex flex-col gap-4 pt-4 sm:flex-row'>
                                 <a
                                     href='#technology'
-                                    className='group flex items-center justify-center rounded-full bg-slate-900 px-8 py-4 text-lg font-medium text-white transition-all duration-300 hover:bg-teal-500 hover:shadow-xl hover:shadow-teal-500/20'>
+                                    className='group bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center rounded-lg px-8 py-3.5 text-base font-semibold shadow-sm transition-all duration-200 hover:shadow-lg'>
                                     Explore Technology
                                     <svg
                                         className='ml-2 h-5 w-5 transition-transform group-hover:translate-x-1'
@@ -56,7 +55,7 @@ const HomePage: React.FC = () => {
                                 </a>
                                 <a
                                     href='#products'
-                                    className='flex items-center justify-center rounded-full border border-slate-200 bg-white px-8 py-4 text-lg font-medium text-slate-900 shadow-sm transition-all duration-300 hover:border-teal-500 hover:text-teal-500 hover:shadow-md'>
+                                    className='border-border text-foreground hover:border-secondary hover:bg-accent hover:text-accent-foreground flex items-center justify-center rounded-lg border-2 bg-white px-8 py-3.5 text-base font-semibold shadow-sm transition-all duration-200'>
                                     View Products
                                 </a>
                             </div>
@@ -80,10 +79,12 @@ const HomePage: React.FC = () => {
             <section id='products' className='bg-white py-24'>
                 <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
                     <div className='mb-16 text-center'>
-                        <h2 className='mb-4 text-3xl font-bold text-slate-900 md:text-4xl'>
+                        <h2 className='text-foreground mb-4 text-3xl font-bold md:text-4xl'>
                             Integrated Energy Ecosystem
                         </h2>
-                        <p className='text-lg text-slate-600'>Modular solutions designed to work in perfect harmony</p>
+                        <p className='text-muted-foreground text-lg'>
+                            Modular solutions designed to work in perfect harmony
+                        </p>
                     </div>
                     <BentoGridDemo />
                 </div>

@@ -5,120 +5,72 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-    /* Pure white background - Professional SaaS style */
-    --background: oklch(1 0 0); /* #FFFFFF */
-    --foreground: oklch(0.15 0 0); /* Almost black text */
-    
-    /* Brand Purple #5B3A8F - Primary actions only */
-    --primary: oklch(0.38 0.12 295); /* Deep Purple */
-    --primary-foreground: oklch(1 0 0); /* White on purple */
-    
-    /* Brand Red #A32638 - Accent/CTA only */
-    --accent: oklch(0.45 0.15 15); /* Burgundy Red */
-    --accent-foreground: oklch(1 0 0); /* White on red */
-    
-    /* Neutral surfaces - White and light grays */
-    --card: oklch(1 0 0); /* Pure white cards */
-    --card-foreground: oklch(0.15 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.15 0 0);
-    
-    /* Secondary - Subtle gray, not colored */
-    --secondary: oklch(0.97 0 0); /* Very light gray */
-    --secondary-foreground: oklch(0.15 0 0);
-    
-    /* Muted - For less important content */
-    --muted: oklch(0.97 0 0); /* Light gray background */
+    /* === PRIMARY BRAND COLORS === */
+    /* Deep Red - Primary actions, CTAs, important elements */
+    --primary: oklch(0.45 0.2 25); /* #B71C1C Deep burgundy red */
+    --primary-foreground: oklch(1 0 0); /* White text on red */
+
+    /* Deep Purple - Secondary actions, accents */
+    --secondary: oklch(0.35 0.18 290); /* #4A148C Deep indigo purple */
+    --secondary-foreground: oklch(1 0 0); /* White text on purple */
+
+    /* === BACKGROUND COLORS === */
+    --background: oklch(1 0 0); /* Pure white */
+    --foreground: oklch(0.15 0 0); /* Near black text */
+
+    /* === COMPONENT BACKGROUNDS === */
+    --card: oklch(1 0 0); /* White cards */
+    --card-foreground: oklch(0.15 0 0); /* Dark text on cards */
+
+    --popover: oklch(1 0 0); /* White popovers */
+    --popover-foreground: oklch(0.15 0 0); /* Dark text */
+
+    /* === SUBTLE ELEMENTS === */
+    --muted: oklch(0.96 0 0); /* Light gray for muted */
     --muted-foreground: oklch(0.45 0 0); /* Medium gray text */
-    
-    /* Destructive - Red for errors/warnings */
-    --destructive: oklch(0.45 0.15 15); /* Same as accent red */
-    --destructive-foreground: oklch(1 0 0);
-    
-    /* Borders - Subtle gray, not colored */
-    --border: oklch(0.90 0 0); /* Very light gray borders */
-    --input: oklch(0.90 0 0);
-    --ring: oklch(0.38 0.12 295); /* Purple focus ring */
-    
-    /* Charts - Purple base with supporting colors */
-    --chart-1: oklch(0.38 0.12 295); /* Brand purple */
-    --chart-2: oklch(0.45 0.15 15); /* Brand red */
-    --chart-3: oklch(0.55 0.10 220); /* Supporting blue */
-    --chart-4: oklch(0.60 0.12 160); /* Supporting teal */
-    --chart-5: oklch(0.50 0.08 140); /* Supporting green */
-    
-    --radius: 0.625rem;
-    
-    /* Sidebar - White with subtle borders */
-    --sidebar: oklch(1 0 0); /* White sidebar */
-    --sidebar-foreground: oklch(0.15 0 0);
-    --sidebar-primary: oklch(0.38 0.12 295); /* Purple for active */
-    --sidebar-primary-foreground: oklch(1 0 0);
-    --sidebar-accent: oklch(0.97 0 0); /* Light gray hover */
-    --sidebar-accent-foreground: oklch(0.15 0 0);
-    --sidebar-border: oklch(0.90 0 0);
-    --sidebar-ring: oklch(0.38 0.12 295);
+
+    /* === ACCENT & HOVER STATES === */
+    --accent: oklch(0.96 0.005 290); /* Very light purple tint */
+    --accent-foreground: oklch(0.35 0.18 290); /* Deep purple text */
+
+    /* === INTERACTIVE ELEMENTS === */
+    --ring: oklch(0.45 0.2 25); /* Red focus ring */
+    --border: oklch(0.9 0 0); /* Light gray borders */
+    --input: oklch(0.9 0 0); /* Light gray input borders */
+
+    /* === DESTRUCTIVE ACTIONS === */
+    --destructive: oklch(0.5 0.22 25); /* Bright red for errors */
+    --destructive-foreground: oklch(1 0 0); /* White text */
+
+    /* === CHART COLORS === */
+    --chart-1: oklch(0.45 0.2 25); /* Deep red */
+    --chart-2: oklch(0.35 0.18 290); /* Deep purple */
+    --chart-3: oklch(0.55 0.18 340); /* Purple-pink */
+    --chart-4: oklch(0.5 0.15 260); /* Blue-purple */
+    --chart-5: oklch(0.6 0.12 300); /* Light purple */
+
+    /* === SIDEBAR COLORS === */
+    --sidebar: oklch(0.98 0 0); /* Off-white sidebar */
+    --sidebar-foreground: oklch(0.15 0 0); /* Dark text */
+    --sidebar-primary: oklch(0.45 0.2 25); /* Red for active items */
+    --sidebar-primary-foreground: oklch(1 0 0); /* White text */
+    --sidebar-accent: oklch(0.96 0.005 290); /* Light purple hover */
+    --sidebar-accent-foreground: oklch(0.35 0.18 290); /* Purple text */
+    --sidebar-border: oklch(0.9 0 0); /* Gray borders */
+    --sidebar-ring: oklch(0.45 0.2 25); /* Red focus ring */
+
+    /* === BORDER RADIUS === */
+    --radius: 0.5rem; /* Modern, clean rounded corners */
 }
 
-.dark {
-    /* Rich dark background - Not pure black */
-    --background: oklch(0.12 0 0); /* Rich dark */
-    --foreground: oklch(0.95 0 0); /* Off-white text */
-    
-    /* Brand Purple - Lighter for dark mode */
-    --primary: oklch(0.55 0.12 295); /* Lighter purple */
-    --primary-foreground: oklch(0.12 0 0); /* Dark on purple */
-    
-    /* Brand Red - Lighter for dark mode */
-    --accent: oklch(0.60 0.15 15); /* Lighter red */
-    --accent-foreground: oklch(0.12 0 0);
-    
-    /* Dark surfaces */
-    --card: oklch(0.15 0 0); /* Slightly lighter than bg */
-    --card-foreground: oklch(0.95 0 0);
-    --popover: oklch(0.15 0 0);
-    --popover-foreground: oklch(0.95 0 0);
-    
-    /* Secondary - Subtle dark gray */
-    --secondary: oklch(0.20 0 0);
-    --secondary-foreground: oklch(0.95 0 0);
-    
-    /* Muted */
-    --muted: oklch(0.20 0 0);
-    --muted-foreground: oklch(0.60 0 0);
-    
-    /* Destructive */
-    --destructive: oklch(0.60 0.15 15);
-    --destructive-foreground: oklch(0.12 0 0);
-    
-    /* Borders - Subtle in dark mode */
-    --border: oklch(0.25 0 0);
-    --input: oklch(0.25 0 0);
-    --ring: oklch(0.55 0.12 295);
-    
-    /* Charts - Adjusted for dark */
-    --chart-1: oklch(0.55 0.12 295);
-    --chart-2: oklch(0.60 0.15 15);
-    --chart-3: oklch(0.65 0.10 220);
-    --chart-4: oklch(0.70 0.12 160);
-    --chart-5: oklch(0.60 0.08 140);
-    
-    /* Sidebar */
-    --sidebar: oklch(0.15 0 0);
-    --sidebar-foreground: oklch(0.95 0 0);
-    --sidebar-primary: oklch(0.55 0.12 295);
-    --sidebar-primary-foreground: oklch(0.12 0 0);
-    --sidebar-accent: oklch(0.20 0 0);
-    --sidebar-accent-foreground: oklch(0.95 0 0);
-    --sidebar-border: oklch(0.25 0 0);
-    --sidebar-ring: oklch(0.55 0.12 295);
-}
+/* === DARK MODE REMOVED - Light theme only === */
+/* Project uses light mode exclusively to match Voltherm brand */
 
 .theme-login-one {
-    --primary: #ce2a2d;
-    --primary-foreground: #fff;
-    --ring: #ce2a2d9c;
-    --radius: 0rem;
+    --primary: oklch(0.45 0.2 25);
+    --primary-foreground: oklch(1 0 0);
+    --ring: oklch(0.45 0.2 25);
+    --radius: 0.5rem;
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
@@ -136,9 +88,9 @@
 }
 
 .theme-login-two {
-    --primary: #035fa8;
-    --primary-foreground: #fff;
-    --ring: #035fa89c;
+    --primary: oklch(0.35 0.18 290);
+    --primary-foreground: oklch(1 0 0);
+    --ring: oklch(0.35 0.18 290);
     font-family: var(--font-serif);
 
     a {
@@ -147,7 +99,7 @@
 }
 
 .theme-login-three {
-    --primary: #22c55e;
+    --primary: oklch(0.45 0.2 25);
     --primary-foreground: #000;
     --ring: #22c55e;
     --radius: 1.5rem;
