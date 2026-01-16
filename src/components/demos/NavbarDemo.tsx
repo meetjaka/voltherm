@@ -39,7 +39,7 @@ function Navbar({ className }: { className?: string }) {
                 <div className='flex w-full items-center justify-between'>
                     <Link href='/' className='flex items-center gap-2 md:gap-3'>
                         <Image
-                            src='/images/logo.png'
+                            src='/images/logon.png'
                             alt='Voltherm Logo'
                             width={32}
                             height={32}
