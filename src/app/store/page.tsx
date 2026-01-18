@@ -363,20 +363,24 @@ export default function StorePage() {
                 {product.description}
               </p>
 
-              {/* Info Blocks - Capacity, Voltage, Price */}
+              {/* Info Blocks - Technical Specs, Price */}
               <div className='grid grid-cols-3 gap-2 mb-4'>
-                <div className='rounded-lg border border-slate-200 bg-slate-50 p-2 text-center'>
-                  <div className='text-xs text-slate-500'>Capacity</div>
-                  <div className='mt-1 text-sm font-semibold text-slate-900'>
-                    {product.capacity || 'N/A'}
+                {product.technicalSpecs && product.technicalSpecs[0] && (
+                  <div className='rounded-lg border border-slate-200 bg-slate-50 p-2 text-center'>
+                    <div className='text-xs text-slate-500'>{product.technicalSpecs[0].key}</div>
+                    <div className='mt-1 text-sm font-semibold text-slate-900'>
+                      {product.technicalSpecs[0].value || 'N/A'}
+                    </div>
                   </div>
-                </div>
-                <div className='rounded-lg border border-slate-200 bg-slate-50 p-2 text-center'>
-                  <div className='text-xs text-slate-500'>Voltage</div>
-                  <div className='mt-1 text-sm font-semibold text-slate-900'>
-                    {product.voltage || 'N/A'}
+                )}
+                {product.technicalSpecs && product.technicalSpecs[1] && (
+                  <div className='rounded-lg border border-slate-200 bg-slate-50 p-2 text-center'>
+                    <div className='text-xs text-slate-500'>{product.technicalSpecs[1].key}</div>
+                    <div className='mt-1 text-sm font-semibold text-slate-900'>
+                      {product.technicalSpecs[1].value || 'N/A'}
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className='rounded-lg border border-slate-200 bg-slate-50 p-2 text-center'>
                   <div className='text-xs text-slate-500'>Price</div>
                   <div className='mt-1 text-sm font-semibold text-teal-600'>
@@ -480,18 +484,22 @@ export default function StorePage() {
 
                 {/* Info Blocks */}
                 <div className='grid grid-cols-3 gap-4 mb-6'>
-                  <div className='rounded-lg border border-slate-200 bg-slate-50 p-4 text-center'>
-                    <div className='text-sm text-slate-500 mb-1'>Capacity</div>
-                    <div className='text-lg font-bold text-slate-900'>
-                      {selectedProduct.capacity || 'N/A'}
+                  {selectedProduct.technicalSpecs && selectedProduct.technicalSpecs[0] && (
+                    <div className='rounded-lg border border-slate-200 bg-slate-50 p-4 text-center'>
+                      <div className='text-sm text-slate-500 mb-1'>{selectedProduct.technicalSpecs[0].key}</div>
+                      <div className='text-lg font-bold text-slate-900'>
+                        {selectedProduct.technicalSpecs[0].value || 'N/A'}
+                      </div>
                     </div>
-                  </div>
-                  <div className='rounded-lg border border-slate-200 bg-slate-50 p-4 text-center'>
-                    <div className='text-sm text-slate-500 mb-1'>Voltage</div>
-                    <div className='text-lg font-bold text-slate-900'>
-                      {selectedProduct.voltage || 'N/A'}
+                  )}
+                  {selectedProduct.technicalSpecs && selectedProduct.technicalSpecs[1] && (
+                    <div className='rounded-lg border border-slate-200 bg-slate-50 p-4 text-center'>
+                      <div className='text-sm text-slate-500 mb-1'>{selectedProduct.technicalSpecs[1].key}</div>
+                      <div className='text-lg font-bold text-slate-900'>
+                        {selectedProduct.technicalSpecs[1].value || 'N/A'}
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div className='rounded-lg border border-slate-200 bg-slate-50 p-4 text-center'>
                     <div className='text-sm text-slate-500 mb-1'>Price</div>
                     <div className='text-lg font-bold text-teal-600'>
