@@ -2,6 +2,7 @@
 
 export interface Product {
     id: number;
+    backendId?: string; // Original backend UUID for updates
     title: string;
     description: string;
     image: string;
@@ -17,6 +18,7 @@ export interface Product {
     capacity?: string; // Battery capacity (e.g., "75 kWh")
     voltage?: string; // Battery voltage (e.g., "400V")
     technicalSpecs?: Array<{ key: string; value: string }>; // Technical specifications (max 6)
+    pdfDownloadUrl?: string; // URL for downloadable product datasheet
 }
 
 export interface MainCategory {

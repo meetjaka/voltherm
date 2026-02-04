@@ -6,8 +6,11 @@ import Link from 'next/link';
 import { ShoppingCart, X, Send, Check, AlertCircle, ArrowLeft, Filter, Download } from 'lucide-react';
 import NavbarDemo from '@/components/demos/NavbarDemo';
 import CategoryIcon from '@/components/CategoryIcon';
-import { getProducts, getSubCategories, getMainCategories, type Product, type SubCategory, type MainCategory } from '@/lib/adminData';
+import { getSubCategories, getMainCategories, type Product, type SubCategory, type MainCategory } from '@/lib/adminData';
 import { getCart, addToCart, removeFromCart, isInCart, getCartCount, clearCart, type CartItem } from '@/lib/cartStore';
+import { hybridDataService } from '@/lib/hybridDataService';
+import { apiService } from '@/lib/apiService';
+import { toast } from 'sonner';
 
 export default function StorePage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -34,25 +37,42 @@ export default function StorePage() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   useEffect(() => {
-    const loadedProducts = getProducts();
-    
-    // Ensure all products have subCategoryId (migration for old data)
-    const migratedProducts = loadedProducts.map(product => {
-      if (!product.subCategoryId && !product.categoryId) {
-        // If no category, assign to first sub-category
-        return { ...product, subCategoryId: 'sub1', categoryId: 'sub1' };
+    const loadData = async () => {
+      try {
+        // Load products from hybrid service (API first, localStorage fallback)
+        const loadedProducts = await hybridDataService.getProducts();
+        
+        // Ensure all products have subCategoryId (migration for old data)
+        const migratedProducts = loadedProducts.map(product => {
+          if (!product.subCategoryId && !product.categoryId) {
+            // If no category, assign to first sub-category
+            return { ...product, subCategoryId: 'sub1', categoryId: 'sub1' };
+          }
+          if (!product.subCategoryId && product.categoryId) {
+            // If only categoryId exists, copy it to subCategoryId
+            return { ...product, subCategoryId: product.categoryId };
+          }
+          return product;
+        });
+        
+        setProducts(migratedProducts);
+        setMainCategories(getMainCategories().filter(c => c.visible)); // Only show visible main categories
+        setSubCategories(getSubCategories().filter(c => c.visible)); // Only show visible sub-categories
+        setCart(getCart());
+        
+        // Log connection status for debugging
+        const status = hybridDataService.getConnectionStatus();
+        console.log('🌐 Data Service Status:', status);
+      } catch (error) {
+        console.error('Failed to load products:', error);
+        // Even if API fails, we still have localStorage fallback
+        setMainCategories(getMainCategories().filter(c => c.visible));
+        setSubCategories(getSubCategories().filter(c => c.visible));
+        setCart(getCart());
       }
-      if (!product.subCategoryId && product.categoryId) {
-        // If only categoryId exists, copy it to subCategoryId
-        return { ...product, subCategoryId: product.categoryId };
-      }
-      return product;
-    });
-    
-    setProducts(migratedProducts);
-    setMainCategories(getMainCategories().filter(c => c.visible)); // Only show visible main categories
-    setSubCategories(getSubCategories().filter(c => c.visible)); // Only show visible sub-categories
-    setCart(getCart());
+    };
+
+    loadData();
   }, []);
 
   const handleAddToCart = (product: Product) => {
@@ -77,44 +97,51 @@ export default function StorePage() {
     e.preventDefault();
     setSubmitting(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      // Create inquiry object
+      const inquiry = {
+        customerName: formData.name,
+        customerEmail: formData.email,
+        customerPhone: formData.phone,
+        companyName: formData.company,
+        requirements: formData.requirements,
+        products: cart.map(item => ({
+          id: item.productId,
+          title: item.title
+        }))
+      };
 
-    // Save inquiry to localStorage (this will be replaced with API call later)
-    const inquiry = {
-      customerName: formData.name,
-      customerEmail: formData.email,
-      customerPhone: formData.phone,
-      companyName: formData.company,
-      requirements: formData.requirements,
-      products: cart.map(item => ({
-        id: item.productId,
-        title: item.title
-      }))
-    };
+      // Submit using hybrid service (API first, localStorage fallback)
+      const result = await hybridDataService.createInquiry(inquiry);
+      
+      if (!result) {
+        throw new Error('Failed to submit inquiry');
+      }
 
-    // Import and use the addInquiry function
-    const { addInquiry } = await import('@/lib/adminData');
-    addInquiry(inquiry);
-
-    setSubmitting(false);
-    setSubmitSuccess(true);
-    
-    // Clear cart and form
-    clearCart();
-    setCart([]);
-    
-    setTimeout(() => {
-      setShowInquiryForm(false);
-      setSubmitSuccess(false);
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        company: '',
-        requirements: ''
-      });
-    }, 3000);
+      setSubmitting(false);
+      setSubmitSuccess(true);
+      
+      // Clear cart and form
+      clearCart();
+      setCart([]);
+      
+      setTimeout(() => {
+        setShowInquiryForm(false);
+        setSubmitSuccess(false);
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          company: '',
+          requirements: ''
+        });
+      }, 3000);
+    } catch (error) {
+      console.error('Failed to submit inquiry:', error);
+      setSubmitting(false);
+      // You could add error state here if needed
+      alert('Failed to submit inquiry. Please try again.');
+    }
   };
 
   // Filter products
@@ -158,6 +185,33 @@ export default function StorePage() {
   const handleMainCategorySelect = (categoryId: string) => {
     setSelectedMainCategoryId(categoryId);
     setSelectedSubCategoryId('all'); // Reset sub-category when main category changes
+  };
+
+  const handleDownloadPdf = async (product: Product) => {
+    try {
+      // Get the backend product ID
+      const backendId = (product as any).backendId || product.id.toString();
+      
+      toast.loading('Downloading PDF...');
+      const blob = await apiService.downloadProductPdf(backendId);
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${product.title.replace(/[^a-z0-9]/gi, '_')}_datasheet.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.dismiss();
+      toast.success('PDF downloaded successfully!');
+    } catch (error) {
+      console.error('Failed to download PDF:', error);
+      toast.dismiss();
+      toast.error('Failed to download PDF. File may not be available.');
+    }
   };
 
   return (
@@ -322,9 +376,9 @@ export default function StorePage() {
         </div>
 
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-          {filteredProducts.map((product) => (
+          {filteredProducts.map((product, index) => (
             <div
-              key={product.id}
+              key={`product-${product.id}-${index}`}
               className='group relative rounded-2xl border border-slate-200 bg-white p-6 shadow-lg transition-all hover:shadow-2xl hover:-translate-y-1'
             >
               {/* Availability Badge */}
@@ -345,7 +399,7 @@ export default function StorePage() {
               {/* Product Image */}
               <div className='relative h-48 w-full overflow-hidden rounded-xl bg-slate-100 mb-4'>
                 <Image
-                  src={product.image}
+                  src={product.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'}${product.image}` : (product.image || '/placeholder-image.jpg')}
                   alt={product.title}
                   fill
                   className='object-cover transition-transform duration-500 group-hover:scale-110'
@@ -466,7 +520,7 @@ export default function StorePage() {
               {/* Left: Image */}
               <div className='rounded-lg overflow-hidden bg-slate-100'>
                 <img
-                  src={selectedProduct.image}
+                  src={selectedProduct.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'}${selectedProduct.image}` : (selectedProduct.image || '/placeholder-image.jpg')}
                   alt={selectedProduct.title}
                   className='w-full h-full object-cover'
                 />
@@ -526,7 +580,7 @@ export default function StorePage() {
                 {/* Technical Specifications */}
                 {selectedProduct.technicalSpecs && selectedProduct.technicalSpecs.length > 0 && (
                   <div className='mb-6'>
-                    <h3 className='text-lg font-semibold text-slate-900 mb-3 uppercase text-slate-500 text-sm'>
+                    <h3 className='mb-3 text-sm font-semibold uppercase text-slate-500'>
                       Technical Specifications
                     </h3>
                     <div className='space-y-3'>
@@ -545,7 +599,9 @@ export default function StorePage() {
 
                 {/* Actions */}
                 <div className='mt-auto space-y-3'>
-                  <button className='w-full flex items-center justify-center gap-2 rounded-lg border border-teal-500 bg-white px-6 py-3 font-semibold text-teal-500 transition-all hover:bg-teal-50'>
+                  <button 
+                    onClick={() => handleDownloadPdf(selectedProduct)}
+                    className='w-full flex items-center justify-center gap-2 rounded-lg border border-teal-500 bg-white px-6 py-3 font-semibold text-teal-500 transition-all hover:bg-teal-50'>
                     <Download className='h-5 w-5' />
                     Download Datasheet
                   </button>
@@ -630,7 +686,7 @@ export default function StorePage() {
                     >
                       <div className='relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-white'>
                         <Image
-                          src={item.image}
+                          src={item.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'}${item.image}` : (item.image || '/placeholder-image.jpg')}
                           alt={item.title}
                           fill
                           className='object-cover'

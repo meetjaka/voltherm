@@ -27,6 +27,7 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env
 
 # vercel
 .vercel
@@ -35,17 +36,26 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Admin documentation (internal use only)
-ADMIN_*.md
-README_ADMIN.md
-FIXES_APPLIED.md
-DEPLOYMENT_*.md
-CATEGORY_*.md
-*_GUIDE.md
-*_IMPLEMENTATION.md
-*_QUICKSTART.md
-*_VISUAL_GUIDE.md
-*_SUMMARY.md
+# Exclude ALL markdown documentation files (except README.md and LICENSE.md)
+*.md
+!README.md
+!LICENSE.md
+
+# Exclude test and debug files
+debug-*.js
+debug-*.ts
+test-*.js
+test-*.ts
+test-*.json
+*.test.js
+*.test.ts
+*.test.tsx
+*.spec.js
+*.spec.ts
+*.spec.tsx
+
+# Exclude PowerShell scripts
+*.ps1
 
 # Editor directories and files
 .vscode/*
@@ -64,6 +74,10 @@ Thumbs.db
 # Logs
 logs
 *.log
+*.cache
+
+# Temporary files
+*.tmp
 
 # Package manager lock files (uncomment if not needed)
 # package-lock.json

@@ -6,29 +6,21 @@ import { useRouter } from 'next/navigation';
 
 import CategoryIcon from '@/components/CategoryIcon';
 import { checkAdminSession, clearAdminSession } from '@/lib/adminAuth';
+import adminDataService from '@/lib/adminDataService';
+import { apiService } from '@/lib/apiService';
 import {
     type Certificate,
     type ContactInfo,
     type Inquiry,
     type MainCategory,
     type Product,
-    type SubCategory,
-    deleteInquiry,
-    getCertificates,
-    getContactInfo,
-    getInquiries,
-    getMainCategories,
-    getProducts,
-    getSubCategories,
-    saveCertificates,
-    saveContactInfo,
-    saveProducts,
-    updateInquiryStatus
+    type SubCategory
 } from '@/lib/adminData';
 
 import {
     AlertCircle,
     ArrowUpRight,
+    Download,
     Edit,
     Eye,
     EyeOff,
@@ -46,6 +38,7 @@ import {
     Settings,
     Star,
     Trash2,
+    Upload,
     User,
     X
 } from 'lucide-react';
@@ -107,22 +100,52 @@ export default function AdminDashboard() {
     const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
 
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-    const [editingCertificate, setEditingCertificate] = useState<Certificate | null>(null);
     const [isAddingProduct, setIsAddingProduct] = useState(false);
     const [isAddingCertificate, setIsAddingCertificate] = useState(false);
+    const [showTwoStepForm, setShowTwoStepForm] = useState(false);
+    const [adminUsername, setAdminUsername] = useState('Administrator');
 
     useEffect(() => {
-        setMounted(true);
-        if (!checkAdminSession()) {
-            router.push('/voltherm-admin');
-            return;
-        }
-        setProducts(getProducts());
-        setCertificates(getCertificates());
-        setContactInfo(getContactInfo());
-        setInquiries(getInquiries());
-        setMainCategories(getMainCategories());
-        setSubCategories(getSubCategories());
+        const loadData = async () => {
+            setMounted(true);
+            if (!checkAdminSession()) {
+                router.push('/voltherm-admin');
+                return;
+            }
+            
+            try {
+                console.log('🔄 Loading admin dashboard data...');
+                
+                // Force a clean reload by clearing any potentially stale localStorage first
+                if (typeof window !== 'undefined') {
+                    console.log('🧹 Clearing potentially stale localStorage data...');
+                    localStorage.removeItem('voltherm_products');
+                }
+                
+                // Fetch admin profile
+                try {
+                    const profileResponse = await apiService.getAdminProfile();
+                    if (profileResponse.success && profileResponse.data) {
+                        setAdminUsername(profileResponse.data.username);
+                    }
+                } catch (profileError) {
+                    console.error('Failed to fetch admin profile:', profileError);
+                    // Keep default "Administrator"
+                }
+                
+                setProducts(await adminDataService.getProducts());
+                setCertificates(await adminDataService.getCertificates());
+                setContactInfo(await adminDataService.getContactInfo());
+                setInquiries(await adminDataService.getInquiries());
+                setMainCategories(await adminDataService.getMainCategories());
+                setSubCategories(await adminDataService.getSubCategories());
+                console.log('✅ All dashboard data loaded successfully');
+            } catch (error) {
+                console.error('Failed to load data:', error);
+            }
+        };
+        
+        loadData();
     }, [router]);
 
     const handleLogout = () => {
@@ -184,7 +207,7 @@ export default function AdminDashboard() {
                                     <User className='h-5 w-5' />
                                 </div>
                                 <div className='overflow-hidden'>
-                                    <p className='truncate text-sm font-bold text-slate-900'>Administrator</p>
+                                    <p className='truncate text-sm font-bold text-slate-900'>{adminUsername}</p>
                                     <p className='truncate text-xs text-slate-500'>admin@voltherm.com</p>
                                 </div>
                             </div>
@@ -281,25 +304,106 @@ export default function AdminDashboard() {
                                 isAddingProduct={isAddingProduct}
                                 setEditingProduct={setEditingProduct}
                                 setIsAddingProduct={setIsAddingProduct}
-                                onSave={(product: Product) => {
-                                    const updated = editingProduct?.id
-                                        ? products.map((p) => (p.id === product.id ? product : p))
-                                        : [...products, { ...product, id: Math.floor(Math.random() * 1000000000) }];
-                                    setProducts(updated);
-                                    saveProducts(updated);
-                                    setEditingProduct(null);
-                                    setIsAddingProduct(false);
-                                    toast.success(editingProduct ? 'Product updated' : 'Product added');
-                                }}
-                                onDelete={(id: number) => {
-                                    if (confirm('Delete this product?')) {
-                                        const updated = products.filter((p) => p.id !== id);
-                                        setProducts(updated);
-                                        saveProducts(updated);
-                                        toast.success('Product deleted');
+                                onSave={async (product: Product, imageFile?: File, pdfFile?: File) => {
+                                    try {
+                                        if (editingProduct?.id) {
+                                            // Update existing product via backend API
+                                            const updatedProduct = await adminDataService.updateProduct(product.id, product, imageFile, pdfFile);
+                                            if (updatedProduct) {
+                                                const updated = products.map((p) => (p.id === product.id ? updatedProduct : p));
+                                                setProducts(updated);
+                                                toast.success('Product updated via backend API');
+                                            } else {
+                                                throw new Error('Failed to update product');
+                                            }
+                                        } else {
+                                            // Create new product via backend API
+                                            if (imageFile || pdfFile) {
+                                                const createdProduct = await adminDataService.createProduct(product, imageFile, pdfFile);
+                                                if (createdProduct) {
+                                                    const updatedProducts = [...products, createdProduct];
+                                                    setProducts(updatedProducts);
+                                                    toast.success('Product created via backend API');
+                                                } else {
+                                                    throw new Error('Failed to create product');
+                                                }
+                                            } else {
+                                                // Fallback to localStorage if no files
+                                                const newProduct = { ...product, id: Math.floor(Math.random() * 1000000000) };
+                                                const updated = [...products, newProduct];
+                                                setProducts(updated);
+                                                await adminDataService.saveProducts(updated);
+                                                toast.success('Product added to localStorage (no files)');
+                                            }
+                                        }
+                                        setEditingProduct(null);
+                                        setIsAddingProduct(false);
+                                    } catch (error) {
+                                        console.error('Failed to save product:', error);
+                                        toast.error('Failed to save product: ' + (error as Error).message);
                                     }
                                 }}
-                                onToggleFeatured={(id: number) => {
+                                onDelete={async (id: number) => {
+                                    if (confirm('Delete this product?')) {
+                                        try {
+                                            console.log('🗑️ Starting product deletion for ID:', id);
+                                            
+                                            // Find the product to get the backend ID
+                                            const productToDelete = products.find(p => p.id === id);
+                                            if (!productToDelete) {
+                                                toast.error('Product not found');
+                                                return;
+                                            }
+
+                                            console.log('🗑️ Deleting product:', productToDelete.title, 'ID:', id);
+                                            const backendId = (productToDelete as any).backendId || id.toString();
+                                            console.log('🔍 Using backend ID:', backendId);
+                                            
+                                            let backendDeleted = false;
+                                            
+                                            // Try to delete from backend
+                                            if (await apiService.testConnection()) {
+                                                try {
+                                                    const response = await apiService.deleteProduct(backendId);
+                                                    if (response.success) {
+                                                        console.log('✅ Backend deletion successful');
+                                                        backendDeleted = true;
+                                                    } else {
+                                                        console.log('⚠️ Backend deletion response not successful:', response);
+                                                    }
+                                                } catch (apiError) {
+                                                    console.error('❌ Backend deletion API error:', apiError);
+                                                    // Continue to check if it's a 404 (already deleted)
+                                                    if (apiError instanceof Error && apiError.message.includes('404')) {
+                                                        console.log('✅ Product was already deleted from backend (404)');
+                                                        backendDeleted = true;
+                                                    }
+                                                }
+                                            } else {
+                                                console.log('⚠️ Backend not available, proceeding with local deletion');
+                                            }
+                                            
+                                            // Update frontend state and localStorage
+                                            const updated = products.filter((p) => p.id !== id);
+                                            setProducts(updated);
+                                            
+                                            // Sync localStorage with current state
+                                            const { saveProducts } = await import('@/lib/adminData');
+                                            saveProducts(updated);
+                                            
+                                            if (backendDeleted) {
+                                                toast.success('Product deleted from backend successfully');
+                                            } else {
+                                                toast.success('Product deleted locally (backend deletion may have failed)');
+                                            }
+                                            
+                                        } catch (error) {
+                                            console.error('Product deletion error:', error);
+                                            toast.error('Failed to delete product: ' + (error as Error).message);
+                                        }
+                                    }
+                                }}
+                                onToggleFeatured={async (id: number) => {
                                     const current = products.find((p) => p.id === id);
                                     const featuredCount = products.filter((p) => p.featured).length;
                                     if (!current?.featured && featuredCount >= 6) {
@@ -314,75 +418,81 @@ export default function AdminDashboard() {
                                         p.id === id ? { ...p, featured: !p.featured } : p
                                     );
                                     setProducts(updated);
-                                    saveProducts(updated);
+                                    await adminDataService.saveProducts(updated);
                                 }}
-                                onToggleAvailability={(id: number) => {
+                                onToggleAvailability={async (id: number) => {
                                     const updated = products.map((p) =>
                                         p.id === id ? { ...p, available: !p.available } : p
                                     );
                                     setProducts(updated);
-                                    saveProducts(updated);
+                                    await adminDataService.saveProducts(updated);
                                     toast.success('Product availability updated');
                                 }}
                             />
                         )}
 
-                        {activeTab === 'contact' && contactInfo && (
-                            <ContactTab
-                                contactInfo={contactInfo}
-                                setContactInfo={setContactInfo}
-                                onSave={() => {
-                                    saveContactInfo(contactInfo);
-                                    toast.success('Contact info saved');
-                                }}
-                            />
-                        )}
+                {activeTab === 'contact' && contactInfo && (
+                    <ContactTab
+                        contactInfo={contactInfo}
+                        setContactInfo={setContactInfo}
+                        onSave={async () => {
+                            await adminDataService.saveContactInfo(contactInfo);
+                            toast.success('Contact info saved');
+                        }}
+                    />
+                )}
 
-                        {activeTab === 'settings' && <SettingsTab />}
+                {activeTab === 'settings' && <SettingsTab />}
 
-                        {activeTab === 'certificates' && (
-                            <CertificatesTab
-                                certificates={certificates}
-                                editingCertificate={editingCertificate}
-                                isAddingCertificate={isAddingCertificate}
-                                setEditingCertificate={setEditingCertificate}
-                                setIsAddingCertificate={setIsAddingCertificate}
-                                onSave={(cert: Certificate) => {
-                                    const updated = editingCertificate?.id
-                                        ? certificates.map((c) => (c.id === cert.id ? cert : c))
-                                        : [
-                                              ...certificates,
-                                              { ...cert, id: `cert${Math.floor(Math.random() * 1000000000)}` }
-                                          ];
-                                    setCertificates(updated);
-                                    saveCertificates(updated);
-                                    setEditingCertificate(null);
-                                    setIsAddingCertificate(false);
-                                    toast.success(editingCertificate ? 'Certificate updated' : 'Certificate added');
-                                }}
-                                onDelete={(id: string) => {
-                                    if (confirm('Delete this certificate?')) {
-                                        const updated = certificates.filter((c) => c.id !== id);
-                                        setCertificates(updated);
-                                        saveCertificates(updated);
-                                        toast.success('Certificate deleted');
-                                    }
-                                }}
-                            />
-                        )}
+                {activeTab === 'certificates' && (
+                    <CertificatesTab
+                        certificates={certificates}
+                        isAddingCertificate={isAddingCertificate}
+                        setIsAddingCertificate={setIsAddingCertificate}
+                        onSave={async (cert: Certificate) => {
+                            try {
+                                await adminDataService.createCertificate(cert.title, cert.src);
+                                // Reload certificates from backend
+                                setCertificates(await adminDataService.getCertificates());
+                                setIsAddingCertificate(false);
+                                toast.success('Certificate added successfully');
+                            } catch (error) {
+                                console.error('Failed to add certificate:', error);
+                                toast.error('Failed to add certificate: ' + (error as Error).message);
+                            }
+                        }}
+                        onDelete={async (id: string) => {
+                            if (confirm('Delete this certificate?')) {
+                                try {
+                                    await adminDataService.deleteCertificate(id);
+                                    // Reload certificates from backend
+                                    setCertificates(await adminDataService.getCertificates());
+                                    toast.success('Certificate deleted successfully');
+                                } catch (error) {
+                                    console.error('Failed to delete certificate:', error);
+                                    toast.error('Failed to delete certificate: ' + (error as Error).message);
+                                }
+                            }
+                        }}
+                    />
+                )}
 
                         {activeTab === 'inquiries' && (
                             <InquiriesTab
                                 inquiries={inquiries}
-                                onStatusChange={(id: string, status: Inquiry['status']) => {
-                                    updateInquiryStatus(id, status);
-                                    setInquiries(getInquiries());
-                                    toast.success('Status updated');
+                                onStatusChange={async (id: string, status: Inquiry['status']) => {
+                                    try {
+                                        await adminDataService.updateInquiryStatus(id, status);
+                                        // Reload inquiries from backend
+                                        setInquiries(await adminDataService.getInquiries());
+                                        toast.success('Status updated successfully');
+                                    } catch (error) {
+                                        console.error('Failed to update inquiry status:', error);
+                                        toast.error('Failed to update status');
+                                    }
                                 }}
-                                onDelete={(id: string) => {
-                                    deleteInquiry(id);
-                                    setInquiries(getInquiries());
-                                    toast.success('Inquiry deleted');
+                                onDelete={async (id: string) => {
+                                    toast.error('Delete operation not supported by backend');
                                 }}
                             />
                         )}
@@ -463,29 +573,51 @@ function SettingsTab() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [otpSent, setOtpSent] = useState(false);
 
     // Change Username States
     const [verifyPassword, setVerifyPassword] = useState('');
     const [newUsername, setNewUsername] = useState('');
     const [showVerifyPassword, setShowVerifyPassword] = useState(false);
 
+    // Email Settings States
+    const [receiverEmail, setReceiverEmail] = useState('');
+    const [senderEmail, setSenderEmail] = useState('');
+    const [appPassword, setAppPassword] = useState('');
+
     // Load current credentials from localStorage (temporary mock)
     useEffect(() => {
-        const storedId = localStorage.getItem('admin_id') || 'admin123';
-        const storedPass = localStorage.getItem('admin_password') || '123456789';
-        setAdminId(storedId);
-        setAdminPass(storedPass);
+        const loadAdminData = async () => {
+            try {
+                // Try to fetch from backend first
+                const response = await apiService.getAdminProfile();
+                if (response.success && response.data) {
+                    setAdminId(response.data.username);
+                    localStorage.setItem('admin_id', response.data.username);
+                } else {
+                    // Fallback to localStorage
+                    const storedId = localStorage.getItem('admin_id') || 'admin';
+                    setAdminId(storedId);
+                }
+            } catch (error) {
+                console.error('Failed to fetch admin profile:', error);
+                // Fallback to localStorage
+                const storedId = localStorage.getItem('admin_id') || 'admin';
+                setAdminId(storedId);
+            }
+            
+            const storedPass = localStorage.getItem('admin_password') || 'admin123';
+            setAdminPass(storedPass);
+        };
+        
+        loadAdminData();
     }, []);
 
-    const handleChangePassword = () => {
+    const handleChangePassword = async () => {
         // Validation
         if (!currentPassword || !newPassword || !confirmPassword) {
             toast.error('All fields are required');
-            return;
-        }
-
-        if (currentPassword !== adminPass) {
-            toast.error('Current password is incorrect');
             return;
         }
 
@@ -499,27 +631,44 @@ function SettingsTab() {
             return;
         }
 
-        // Save new password (temporary localStorage - will be replaced with API)
-        localStorage.setItem('admin_password', newPassword);
-        setAdminPass(newPassword);
+        try {
+            if (!otpSent) {
+                // Step 1: Initiate password change
+                await apiService.initiatePasswordChange(currentPassword, newPassword);
+                setOtpSent(true);
+                toast.success('OTP sent to your email. Check your inbox!');
+            } else {
+                // Step 2: Verify OTP and change password
+                if (!otp) {
+                    toast.error('Please enter the OTP');
+                    return;
+                }
+                await apiService.verifyPasswordChange(otp, newPassword);
+                
+                // Update local state
+                localStorage.setItem('admin_password', newPassword);
+                setAdminPass(newPassword);
 
-        // Clear form
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
+                // Clear form
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+                setOtp('');
+                setOtpSent(false);
 
-        toast.success('Password changed successfully!');
+                toast.success('Password changed successfully!');
+            }
+        } catch (error) {
+            console.error('Password change error:', error);
+            toast.error('Failed to change password. Please try again.');
+            setOtpSent(false);
+        }
     };
 
-    const handleChangeUsername = () => {
+    const handleChangeUsername = async () => {
         // Validation
         if (!verifyPassword || !newUsername) {
             toast.error('All fields are required');
-            return;
-        }
-
-        if (verifyPassword !== adminPass) {
-            toast.error('Password is incorrect');
             return;
         }
 
@@ -533,15 +682,55 @@ function SettingsTab() {
             return;
         }
 
-        // Save new username (temporary localStorage - will be replaced with API)
-        localStorage.setItem('admin_id', newUsername);
-        setAdminId(newUsername);
+        try {
+            await apiService.changeUsername(verifyPassword, newUsername);
+            
+            // Update local state
+            localStorage.setItem('admin_id', newUsername);
+            setAdminId(newUsername);
 
-        // Clear form
-        setVerifyPassword('');
-        setNewUsername('');
+            // Clear form
+            setVerifyPassword('');
+            setNewUsername('');
 
-        toast.success('Username changed successfully!');
+            toast.success('Username changed successfully!');
+        } catch (error) {
+            console.error('Username change error:', error);
+            toast.error('Failed to change username. Check your password.');
+        }
+    };
+
+    const handleUpdateReceiverEmail = async () => {
+        if (!receiverEmail) {
+            toast.error('Receiver email is required');
+            return;
+        }
+
+        try {
+            await apiService.changeReceiverEmail(receiverEmail);
+            setReceiverEmail('');
+            toast.success('Receiver email updated successfully!');
+        } catch (error) {
+            console.error('Receiver email update error:', error);
+            toast.error('Failed to update receiver email');
+        }
+    };
+
+    const handleUpdateSenderEmail = async () => {
+        if (!senderEmail || !appPassword) {
+            toast.error('Both sender email and app password are required');
+            return;
+        }
+
+        try {
+            await apiService.changeSenderEmail(senderEmail, appPassword);
+            setSenderEmail('');
+            setAppPassword('');
+            toast.success('Sender email updated successfully!');
+        } catch (error) {
+            console.error('Sender email update error:', error);
+            toast.error('Failed to update sender email. Check your credentials.');
+        }
     };
 
     return (
@@ -549,7 +738,7 @@ function SettingsTab() {
             {/* Header */}
             <div className='rounded-2xl border border-slate-200 bg-white p-6 shadow-sm'>
                 <h1 className='text-3xl font-bold text-slate-900'>Account Settings</h1>
-                <p className='mt-2 text-slate-600'>Manage your admin credentials and security</p>
+                <p className='mt-2 text-slate-600'>Manage your admin credentials, security, and email settings</p>
             </div>
 
             {/* Current Credentials Display */}
@@ -583,7 +772,8 @@ function SettingsTab() {
                                 value={currentPassword}
                                 onChange={(e) => setCurrentPassword(e.target.value)}
                                 placeholder='Enter current password'
-                                className='w-full rounded-lg border border-slate-300 px-4 py-3 pr-12 text-slate-900 focus:border-transparent focus:ring-2 focus:ring-teal-500'
+                                disabled={otpSent}
+                                className='w-full rounded-lg border border-slate-300 px-4 py-3 pr-12 text-slate-900 focus:border-transparent focus:ring-2 focus:ring-teal-500 disabled:bg-slate-100'
                             />
                             <button
                                 type='button'
@@ -603,7 +793,8 @@ function SettingsTab() {
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
                                 placeholder='Enter new password (min 8 characters)'
-                                className='w-full rounded-lg border border-slate-300 px-4 py-3 pr-12 text-slate-900 focus:border-transparent focus:ring-2 focus:ring-teal-500'
+                                disabled={otpSent}
+                                className='w-full rounded-lg border border-slate-300 px-4 py-3 pr-12 text-slate-900 focus:border-transparent focus:ring-2 focus:ring-teal-500 disabled:bg-slate-100'
                             />
                             <button
                                 type='button'
@@ -625,19 +816,47 @@ function SettingsTab() {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             placeholder='Confirm new password'
-                            className='w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 focus:border-transparent focus:ring-2 focus:ring-teal-500'
+                            disabled={otpSent}
+                            className='w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 focus:border-transparent focus:ring-2 focus:ring-teal-500 disabled:bg-slate-100'
                         />
                         {confirmPassword && newPassword !== confirmPassword && (
                             <p className='mt-1 text-xs text-red-600'>Passwords do not match</p>
                         )}
                     </div>
 
+                    {/* OTP Field (shown after initiating) */}
+                    {otpSent && (
+                        <div>
+                            <label className='mb-2 block text-sm font-semibold text-slate-700'>Enter OTP</label>
+                            <input
+                                type='text'
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                                placeholder='Enter 6-digit OTP from email'
+                                maxLength={6}
+                                className='w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 focus:border-transparent focus:ring-2 focus:ring-teal-500'
+                            />
+                            <p className='mt-1 text-xs text-blue-600'>Check your email for the OTP code</p>
+                        </div>
+                    )}
+
                     <button
                         onClick={handleChangePassword}
                         className='flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-teal-700'>
                         <Save className='h-5 w-5' />
-                        Update Password
+                        {otpSent ? 'Verify OTP & Update Password' : 'Send OTP'}
                     </button>
+                    
+                    {otpSent && (
+                        <button
+                            onClick={() => {
+                                setOtpSent(false);
+                                setOtp('');
+                            }}
+                            className='w-full text-sm text-slate-600 hover:text-slate-900'>
+                            Cancel and start over
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -689,15 +908,79 @@ function SettingsTab() {
                 </div>
             </div>
 
-            {/* Info Notice */}
-            <div className='rounded-2xl border border-amber-200 bg-amber-50 p-6'>
-                <div className='flex gap-3'>
-                    <AlertCircle className='mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600' />
+            {/* Email Settings Section */}
+            <div className='rounded-2xl border border-slate-200 bg-white p-6 shadow-sm'>
+                <h2 className='mb-6 text-2xl font-bold text-slate-900'>Email Settings</h2>
+                
+                {/* Receiver Email */}
+                <div className='mb-6 max-w-md space-y-4'>
+                    <h3 className='text-lg font-semibold text-slate-900'>Receiver Email</h3>
+                    <p className='text-sm text-slate-600'>Email address that receives inquiry notifications and OTP codes</p>
                     <div>
-                        <h3 className='mb-1 font-semibold text-amber-900'>Important Security Note</h3>
-                        <p className='text-sm text-amber-800'>
-                            Currently using temporary localStorage storage. Once backend is ready, credentials will be
-                            securely stored with BCrypt hashing and proper authentication endpoints.
+                        <label className='mb-2 block text-sm font-semibold text-slate-700'>New Receiver Email</label>
+                        <input
+                            type='email'
+                            value={receiverEmail}
+                            onChange={(e) => setReceiverEmail(e.target.value)}
+                            placeholder='company@voltherm.com'
+                            className='w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 focus:border-transparent focus:ring-2 focus:ring-teal-500'
+                        />
+                    </div>
+                    <button
+                        onClick={handleUpdateReceiverEmail}
+                        className='flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-700'>
+                        <Save className='h-5 w-5' />
+                        Update Receiver Email
+                    </button>
+                </div>
+
+                <div className='mb-6 border-t border-slate-200'></div>
+
+                {/* Sender Email */}
+                <div className='max-w-md space-y-4'>
+                    <h3 className='text-lg font-semibold text-slate-900'>Sender Email (SMTP)</h3>
+                    <p className='text-sm text-slate-600'>Email address used to send emails from the system</p>
+                    <div>
+                        <label className='mb-2 block text-sm font-semibold text-slate-700'>Sender Email</label>
+                        <input
+                            type='email'
+                            value={senderEmail}
+                            onChange={(e) => setSenderEmail(e.target.value)}
+                            placeholder='sender@gmail.com'
+                            className='w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 focus:border-transparent focus:ring-2 focus:ring-teal-500'
+                        />
+                    </div>
+                    <div>
+                        <label className='mb-2 block text-sm font-semibold text-slate-700'>App Password</label>
+                        <input
+                            type='password'
+                            value={appPassword}
+                            onChange={(e) => setAppPassword(e.target.value)}
+                            placeholder='abcd efgh ijkl mnop'
+                            className='w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 focus:border-transparent focus:ring-2 focus:ring-teal-500'
+                        />
+                        <p className='mt-1 text-xs text-slate-500'>
+                            For Gmail: Enable 2FA, then generate an App Password in Google Account Settings
+                        </p>
+                    </div>
+                    <button
+                        onClick={handleUpdateSenderEmail}
+                        className='flex w-full items-center justify-center gap-2 rounded-lg bg-purple-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-purple-700'>
+                        <Save className='h-5 w-5' />
+                        Update Sender Email & Credentials
+                    </button>
+                </div>
+            </div>
+
+            {/* Info Notice */}
+            <div className='rounded-2xl border border-blue-200 bg-blue-50 p-6'>
+                <div className='flex gap-3'>
+                    <AlertCircle className='mt-0.5 h-5 w-5 shrink-0 text-blue-600' />
+                    <div>
+                        <h3 className='mb-1 font-semibold text-blue-900'>Backend Integration Active</h3>
+                        <p className='text-sm text-blue-800'>
+                            All settings are now connected to backend APIs. Password changes require OTP verification sent to your email.
+                            Category management has been removed as the backend doesn't support it yet.
                         </p>
                     </div>
                 </div>
@@ -722,6 +1005,7 @@ function ProductsTab({
 }: any) {
     const [formData, setFormData] = useState<Product>({
         id: 0,
+        backendId: undefined, // Preserve backend ID for updates
         title: '',
         description: '',
         image: '',
@@ -729,6 +1013,8 @@ function ProductsTab({
         featured: false,
         available: true
     });
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [pdfFile, setPdfFile] = useState<File | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [showSpecInfo, setShowSpecInfo] = useState<number | null>(null);
 
@@ -738,6 +1024,7 @@ function ProductsTab({
         } else if (isAddingProduct) {
             setFormData({
                 id: 0,
+                backendId: undefined,
                 title: '',
                 description: '',
                 image: '',
@@ -752,6 +1039,8 @@ function ProductsTab({
                     { key: '', value: '' }
                 ]
             });
+            setImageFile(null);
+            setPdfFile(null);
         }
     }, [editingProduct, isAddingProduct]);
 
@@ -760,6 +1049,31 @@ function ProductsTab({
             p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    const handleDownloadPdf = async (product: Product) => {
+        try {
+            const backendId = (product as any).backendId || product.id.toString();
+            const toastId = toast.loading('Downloading PDF...');
+            
+            const blob = await apiService.downloadProductPdf(backendId);
+            
+            // Create a download link
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${product.title.replace(/[^a-zA-Z0-9]/g, '_')}_datasheet.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            toast.dismiss(toastId);
+            toast.success('PDF downloaded successfully!');
+        } catch (error) {
+            console.error('PDF download error:', error);
+            toast.error('Failed to download PDF. File may not be available.');
+        }
+    };
 
     if (editingProduct || isAddingProduct) {
         return (
@@ -783,12 +1097,10 @@ function ProductsTab({
                     </button>
                 </div>
 
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        onSave(formData);
-                    }}
-                    className='space-y-6'>
+                <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    await onSave(formData, imageFile || undefined, pdfFile || undefined);
+                }} className='space-y-6'>
                     {/* Basic Information */}
                     <div className='border-b border-slate-200 pb-6'>
                         <h4 className='mb-4 text-sm font-bold tracking-wider text-slate-700 uppercase'>
@@ -828,6 +1140,7 @@ function ProductsTab({
                                         onChange={(e) => {
                                             const file = e.target.files?.[0];
                                             if (file) {
+                                                setImageFile(file);
                                                 const reader = new FileReader();
                                                 reader.onload = (event) => {
                                                     setFormData({ ...formData, image: event.target?.result as string });
@@ -846,8 +1159,44 @@ function ProductsTab({
                                             />
                                             <button
                                                 type='button'
-                                                onClick={() => setFormData({ ...formData, image: '' })}
+                                                onClick={() => {
+                                                    setFormData({ ...formData, image: '' });
+                                                    setImageFile(null);
+                                                }}
                                                 className='absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white transition-colors hover:bg-red-600'>
+                                                <X className='h-4 w-4' />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className='mb-2 block text-sm font-medium text-slate-700'>Product Datasheet (PDF/DOC)</label>
+                                <div className='space-y-3'>
+                                    <input
+                                        type='file'
+                                        accept='.pdf,.doc,.docx'
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                setPdfFile(file);
+                                            }
+                                        }}
+                                        className='w-full cursor-pointer rounded-lg border border-slate-300 px-4 py-3 text-slate-900 file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-amber-600 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white file:transition-colors hover:file:bg-amber-700 focus:border-transparent focus:ring-2 focus:ring-amber-500'
+                                    />
+                                    {pdfFile && (
+                                        <div className='flex items-center space-x-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2'>
+                                            <div className='text-amber-600'>
+                                                <svg className='h-5 w-5' fill='currentColor' viewBox='0 0 20 20'>
+                                                    <path fillRule='evenodd' d='M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z' clipRule='evenodd' />
+                                                </svg>
+                                            </div>
+                                            <span className='flex-1 text-sm text-slate-700 truncate'>{pdfFile.name}</span>
+                                            <button
+                                                type='button'
+                                                onClick={() => setPdfFile(null)}
+                                                className='text-amber-600 hover:text-amber-800'>
                                                 <X className='h-4 w-4' />
                                             </button>
                                         </div>
@@ -1077,9 +1426,9 @@ function ProductsTab({
                     <div className='flex gap-3 pt-6'>
                         <button
                             type='submit'
-                            className='flex flex-1 items-center justify-center gap-2 rounded-lg bg-linear-to-r from-teal-600 to-cyan-600 px-4 py-3 font-medium text-white transition-all hover:shadow-lg'>
+                            className='flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 px-4 py-3 font-medium text-white transition-all hover:shadow-lg'>
                             <Save className='h-4 w-4' />
-                            Save Product
+                            {editingProduct ? 'Update Product' : 'Create Product'}
                         </button>
                         <button
                             type='button'
@@ -1105,12 +1454,14 @@ function ProductsTab({
                         {filteredProducts.length} of {products.length} products
                     </p>
                 </div>
-                <button
-                    onClick={() => setIsAddingProduct(true)}
-                    className='flex items-center gap-2 rounded-lg bg-linear-to-r from-teal-600 to-cyan-600 px-5 py-2.5 font-medium text-white transition-all hover:shadow-lg'>
-                    <Plus className='h-4 w-4' />
-                    Add Product
-                </button>
+                <div className='flex items-center gap-3'>
+                    <button
+                        onClick={() => setIsAddingProduct(true)}
+                        className='flex items-center gap-2 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 px-4 py-2.5 font-medium text-white transition-all hover:shadow-lg'>
+                        <Plus className='h-4 w-4' />
+                        Add Product
+                    </button>
+                </div>
             </div>
 
             {/* Search Bar */}
@@ -1144,9 +1495,13 @@ function ProductsTab({
                                 <div className='relative shrink-0'>
                                     <div className='h-24 w-24 overflow-hidden rounded-lg border-3 border-cyan-400 bg-slate-50 shadow-md'>
                                         <img
-                                            src={product.image}
+                                            src={product.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'}${product.image}` : (product.image || '/placeholder-image.jpg')}
                                             alt={product.title}
                                             className='h-full w-full object-cover'
+                                            onError={(e) => {
+                                                const target = e.target as HTMLImageElement;
+                                                target.src = '/placeholder-image.jpg';
+                                            }}
                                         />
                                     </div>
                                     {product.featured && (
@@ -1233,6 +1588,12 @@ function ProductsTab({
                                         }`}
                                         title={product.available !== false ? 'Mark unavailable' : 'Mark available'}>
                                         <Package className='h-4 w-4' />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDownloadPdf(product)}
+                                        className='flex h-9 w-9 transform items-center justify-center rounded-lg bg-green-100 text-green-600 shadow-sm transition-all hover:scale-110 hover:bg-green-200'
+                                        title='Download datasheet'>
+                                        <Download className='h-4 w-4' />
                                     </button>
                                     <button
                                         onClick={() => setEditingProduct(product)}
@@ -1698,55 +2059,108 @@ function ContactTab({ contactInfo, setContactInfo, onSave }: any) {
                 </div>
             </div>
 
-            {/* Mdiv>
-            <label className='block text-sm font-semibold text-slate-700 mb-2'>Google Maps Embed URL</label>
-            <input type='text' value={contactInfo.mainAddress?.mapUrl || ''} onChange={(e) => setContactInfo({ ...contactInfo, mainAddress: { ...contactInfo.mainAddress, mapUrl: e.target.value } })} placeholder='Paste embed URL here...' className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
-            <div className='mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg'>
-              <p className='text-xs text-blue-900 font-semibold mb-2'>📍 How to get the embed URL:</p>
-              <ol className='text-xs text-blue-800 space-y-1 ml-4 list-decimal'>
-                <li>Open <a href='https://www.google.com/maps' target='_blank' className='underline'>Google Maps</a></li>
-                <li>Search for your location</li>
-                <li>Click <strong>Share</strong> → <strong>Embed a map</strong> tab</li>
-                <li>Copy the src="..." URL from the HTML code</li>
-              </ol>
+            {/* Main Office Address */}
+            <div className='bg-white rounded-2xl border border-slate-200 p-6 shadow-sm'>
+                <h2 className='text-2xl font-bold text-slate-900 mb-6'>Main Office Address</h2>
+                <div className='space-y-4'>
+                    <input 
+                        type='text' 
+                        value={contactInfo.mainAddress?.companyName || ''} 
+                        onChange={(e) => setContactInfo({ 
+                            ...contactInfo, 
+                            mainAddress: { ...contactInfo.mainAddress, companyName: e.target.value } 
+                        })} 
+                        placeholder='Company Name' 
+                        className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' 
+                    />
+                    <input 
+                        type='text' 
+                        value={contactInfo.mainAddress?.addressLine1 || ''} 
+                        onChange={(e) => setContactInfo({ 
+                            ...contactInfo, 
+                            mainAddress: { ...contactInfo.mainAddress, addressLine1: e.target.value } 
+                        })} 
+                        placeholder='Address Line 1' 
+                        className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' 
+                    />
+                    <input 
+                        type='text' 
+                        value={contactInfo.mainAddress?.addressLine2 || ''} 
+                        onChange={(e) => setContactInfo({ 
+                            ...contactInfo, 
+                            mainAddress: { ...contactInfo.mainAddress, addressLine2: e.target.value } 
+                        })} 
+                        placeholder='Address Line 2' 
+                        className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' 
+                    />
+                    <div className='grid grid-cols-3 gap-4'>
+                        <input 
+                            type='text' 
+                            value={contactInfo.mainAddress?.city || ''} 
+                            onChange={(e) => setContactInfo({ 
+                                ...contactInfo, 
+                                mainAddress: { ...(contactInfo.mainAddress || {}), city: e.target.value } 
+                            })} 
+                            placeholder='City' 
+                            className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' 
+                        />
+                        <input 
+                            type='text' 
+                            value={contactInfo.mainAddress?.state || ''} 
+                            onChange={(e) => setContactInfo({ 
+                                ...contactInfo, 
+                                mainAddress: { ...(contactInfo.mainAddress || {}), state: e.target.value } 
+                            })} 
+                            placeholder='State' 
+                            className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' 
+                        />
+                        <input 
+                            type='text' 
+                            value={contactInfo.mainAddress?.pincode || ''} 
+                            onChange={(e) => setContactInfo({ 
+                                ...contactInfo, 
+                                mainAddress: { ...(contactInfo.mainAddress || {}), pincode: e.target.value } 
+                            })} 
+                            placeholder='Pincode' 
+                            className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' 
+                        />
+                    </div>
+                    <input 
+                        type='tel' 
+                        value={contactInfo.mainAddress?.phone || ''} 
+                        onChange={(e) => setContactInfo({ 
+                            ...contactInfo, 
+                            mainAddress: { ...(contactInfo.mainAddress || {}), phone: e.target.value } 
+                        })} 
+                        placeholder='Phone' 
+                        className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' 
+                    />
+                    <div>
+                        <label className='block text-sm font-semibold text-slate-700 mb-2'>Google Maps Embed</label>
+                        <textarea 
+                            value={contactInfo.mainAddress?.mapUrl || ''} 
+                            onChange={(e) => {
+                                const url = e.target.value;
+                                const srcMatch = url.match(/src=["']([^"']+)["']/);
+                                const extractedUrl = srcMatch ? srcMatch[1] : url;
+                                setContactInfo({ 
+                                    ...contactInfo, 
+                                    mainAddress: { ...(contactInfo.mainAddress || {}), mapUrl: extractedUrl } 
+                                });
+                            }} 
+                            placeholder='Paste the entire iframe code here...' 
+                            className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg font-mono text-xs'
+                            rows={3}
+                        />
+                        <div className='mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg'>
+                            <p className='text-xs text-blue-900 font-semibold mb-2'>📍 Paste the entire iframe HTML code above</p>
+                            <p className='text-xs text-blue-800'>The URL will be extracted automatically from the code.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div
-      <div className='bg-white rounded-2xl border border-slate-200 p-6 shadow-sm'>
-        <h2 className='text-2xl font-bold text-slate-900 mb-6'>Main Office Address</h2>
-        <div className='space-y-4'>
-          <input type='text' value={contactInfo.mainAddress?.companyName || ''} onChange={(e) => setContactInfo({ ...contactInfo, mainAddress: { ...contactInfo.mainAddress, companyName: e.target.value } })} placeholder='Company Name' className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
-          <input type='text' value={contactInfo.mainAddress?.addressLine1 || ''} onChange={(e) => setContactInfo({ ...contactInfo, mainAddress: { ...contactInfo.mainAddress, addressLine1: e.target.value } })} placeholder='Address Line 1' className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
-          <input type='text' value={contactInfo.mainAddress?.addressLine2 || ''} onChange={(e) => setContactInfo({ ...contactInfo, mainAddress: { ...contactInfo.mainAddress, addressLine2: e.target.value } })} placeholder='Address Line 2' className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
-          <div className='grid grid-cols-3 gap-4'>
-            <input type='text' value={contactInfo.mainAddress?.city || ''} onChange={(e) => setContactInfo({ ...contactInfo, mainAddress: { ...contactInfo.mainAddress, city: e.target.value } })} placeholder='City' className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
-            <input type='text' value={contactInfo.mainAddress?.state || ''} onChange={(e) => setContactInfo({ ...contactInfo, mainAddress: { ...contactInfo.mainAddress, state: e.target.value } })} placeholder='State' className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
-            <input type='text' value={contactInfo.mainAddress?.pincode || ''} onChange={(e) => setContactInfo({ ...contactInfo, mainAddress: { ...contactInfo.mainAddress, pincode: e.target.value } })} placeholder='Pincode' className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
-          </div>
-          <input type='tel' value={contactInfo.mainAddress?.phone || ''} onChange={(e) => setContactInfo({ ...contactInfo, mainAddress: { ...contactInfo.mainAddress, phone: e.target.value } })} placeholder='Phone' className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
-          <input type='text' value={contactInfo.mainAddress?.gst || ''} onChange={(e) => setContactInfo({ ...contactInfo, mainAddress: { ...contactInfo.mainAddress, gst: e.target.value } })} placeholder='GST Number' className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' />
-          
-          <div>
-            <label className='block text-sm font-semibold text-slate-700 mb-2'>Google Maps Embed</label>
-            <textarea 
-              value={contactInfo.mainAddress?.mapUrl || ''} 
-              onChange={(e) => {
-                const url = e.target.value;
-                const extractedUrl = url.match(/src=["']([^"']+)["']/)?.[1] || url;
-                setContactInfo({ ...contactInfo, mainAddress: { ...contactInfo.mainAddress, mapUrl: extractedUrl } });
-              }} 
-              placeholder='Paste the entire iframe code here...' 
-              className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg font-mono text-xs'
-              rows={3}
-            />
-            <div className='mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg'>
-              <p className='text-xs text-blue-900 font-semibold mb-2'>📍 Paste the entire iframe HTML code above</p>
-              <p className='text-xs text-blue-800'>The URL will be extracted automatically from the code.</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Branch Offices */}
+            {/* Branch Offices */}
             <div className='rounded-2xl border border-slate-200 bg-white p-6 shadow-sm'>
                 <div className='mb-6 flex items-center justify-between'>
                     <h2 className='text-2xl font-bold text-slate-900'>Branch Offices</h2>
@@ -1798,13 +2212,15 @@ function ContactTab({ contactInfo, setContactInfo, onSave }: any) {
                 )}
             </div>
 
-            {/* Save Button */}
-            <button
-                onClick={onSave}
-                className='w-full rounded-lg bg-linear-to-r from-teal-600 to-cyan-600 py-3 font-medium text-white hover:from-teal-700 hover:to-cyan-700'>
-                <Save className='mr-2 inline h-4 w-4' />
-                Save All Changes
-            </button>
+            <div>
+                <button
+                    onClick={onSave}
+                    className='w-full rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 py-3 font-medium text-white hover:from-teal-700 hover:to-cyan-700'
+                >
+                    <Save className='mr-2 inline h-4 w-4' />
+                    Save All Changes
+                </button>
+            </div>
         </div>
     );
 }
@@ -1812,9 +2228,7 @@ function ContactTab({ contactInfo, setContactInfo, onSave }: any) {
 // Certificates Tab
 function CertificatesTab({
     certificates,
-    editingCertificate,
     isAddingCertificate,
-    setEditingCertificate,
     setIsAddingCertificate,
     onSave,
     onDelete
@@ -1827,23 +2241,18 @@ function CertificatesTab({
     });
 
     useEffect(() => {
-        if (editingCertificate) {
-            setFormData(editingCertificate);
-        } else if (isAddingCertificate) {
+        if (isAddingCertificate) {
             setFormData({ id: '', src: '', alt: '', title: '' });
         }
-    }, [editingCertificate, isAddingCertificate]);
+    }, [isAddingCertificate]);
 
-    if (editingCertificate || isAddingCertificate) {
+    if (isAddingCertificate) {
         return (
             <div className='rounded-2xl border border-slate-200 bg-white p-6 shadow-sm'>
                 <div className='mb-6 flex items-center justify-between'>
-                    <h3 className='text-xl font-bold text-slate-900'>
-                        {editingCertificate ? 'Edit Certificate' : 'Add Certificate'}
-                    </h3>
+                    <h3 className='text-xl font-bold text-slate-900'>Add Certificate</h3>
                     <button
                         onClick={() => {
-                            setEditingCertificate(null);
                             setIsAddingCertificate(false);
                         }}
                         className='text-slate-600 hover:text-slate-900'>
@@ -1910,7 +2319,7 @@ function CertificatesTab({
                     </div>
                     <button
                         type='submit'
-                        className='w-full rounded-lg bg-linear-to-r from-teal-600 to-cyan-600 py-3 font-medium text-white'>
+                        className='w-full rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 py-3 font-medium text-white hover:from-teal-700 hover:to-cyan-700'>
                         Save Certificate
                     </button>
                 </form>
@@ -1926,8 +2335,19 @@ function CertificatesTab({
                     onClick={() => setIsAddingCertificate(true)}
                     className='flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 font-medium text-white hover:bg-teal-700'>
                     <Plus className='h-4 w-4' />
-                    Add
+                    Add Certificate
                 </button>
+            </div>
+            <div className='rounded-xl border border-amber-200 bg-amber-50 p-4 mb-4'>
+                <div className='flex gap-2'>
+                    <AlertCircle className='h-5 w-5 text-amber-600 shrink-0 mt-0.5' />
+                    <div>
+                        <p className='text-sm font-semibold text-amber-900'>Backend Note</p>
+                        <p className='text-sm text-amber-800'>
+                            Certificate editing is not available - backend only supports create and delete operations.
+                        </p>
+                    </div>
+                </div>
             </div>
             <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
                 {certificates.map((cert: Certificate) => (
@@ -1936,15 +2356,10 @@ function CertificatesTab({
                         className='rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md'>
                         <img src={cert.src} alt={cert.alt} className='mb-3 h-32 w-full rounded-lg object-cover' />
                         <h3 className='text-sm font-bold text-slate-900'>{cert.title}</h3>
-                        <div className='mt-3 flex gap-2'>
-                            <button
-                                onClick={() => setEditingCertificate(cert)}
-                                className='flex-1 rounded bg-blue-100 py-2 text-xs font-medium text-blue-600'>
-                                Edit
-                            </button>
+                        <div className='mt-3'>
                             <button
                                 onClick={() => onDelete(cert.id)}
-                                className='flex-1 rounded bg-red-100 py-2 text-xs font-medium text-red-600'>
+                                className='w-full rounded bg-red-100 py-2 text-xs font-medium text-red-600 hover:bg-red-200'>
                                 Delete
                             </button>
                         </div>

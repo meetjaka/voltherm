@@ -31,26 +31,21 @@ const Footer = () => {
                     </div>
 
                     <div>
-                        <h4 className='mb-6 font-bold text-slate-900'>Products</h4>
+                        <h4 className='mb-6 font-bold text-slate-900'>Quick Links</h4>
                         <ul className='space-y-4 text-slate-500'>
                             <li>
-                                <a href='/products/automobile' className='transition-colors hover:text-teal-500'>
-                                    Automobile
+                                <a href='/store' className='transition-colors hover:text-teal-500'>
+                                    Browse Products
                                 </a>
                             </li>
                             <li>
-                                <a href='/products/aerospace' className='transition-colors hover:text-teal-500'>
-                                    Aerospace
+                                <a href='/about' className='transition-colors hover:text-teal-500'>
+                                    About Us
                                 </a>
                             </li>
                             <li>
-                                <a href='/products/bess' className='transition-colors hover:text-teal-500'>
-                                    BESS
-                                </a>
-                            </li>
-                            <li>
-                                <a href='/products/telecom' className='transition-colors hover:text-teal-500'>
-                                    Telecom
+                                <a href='/contact' className='transition-colors hover:text-teal-500'>
+                                    Contact Us
                                 </a>
                             </li>
                         </ul>

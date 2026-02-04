@@ -12,6 +12,18 @@ const nextConfig: NextConfig = {
     // Note: 'standalone' output is for Docker. Vercel uses default output.
     // Uncomment below line only for Docker deployments:
     // output: 'standalone',
+    
+    // Proxy API requests to backend to avoid CORS issues
+    async rewrites() {
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com';
+        return [
+            {
+                source: '/api/:path*',
+                destination: `${backendUrl}/api/:path*`,
+            },
+        ];
+    },
+    
     images: {
         // NOTE: Product images added by admin use 'unoptimized' prop
         // so they work with ANY external URL without configuring hostname here.

@@ -18,14 +18,36 @@ export default function AdminLoginPage() {
     setError('');
     setLoading(true);
 
-    // Simulate a small delay for UX
-    await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      // Use backend API for authentication instead of frontend validation
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'}/api/admin/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Important for session handling
+        body: JSON.stringify({
+          username: id,
+          password: password
+        }),
+      });
 
-    if (validateAdmin(id, password)) {
-      setAdminSession();
-      router.push('/voltherm-admin/dashboard');
-    } else {
-      setError('Invalid credentials. Please check your admin ID and password.');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setAdminSession();
+          router.push('/voltherm-admin/dashboard');
+        } else {
+          setError('Login failed. Please check your credentials.');
+          setLoading(false);
+        }
+      } else {
+        setError('Invalid credentials. Please check your admin ID and password.');
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Unable to connect to server. Please try again.');
       setLoading(false);
     }
   };
@@ -131,7 +153,7 @@ export default function AdminLoginPage() {
             <button
               type='submit'
               disabled={loading}
-              className='flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-teal-600 hover:shadow-teal-500/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:opacity-70 disabled:cursor-not-allowed'
+              className='flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-teal-600 hover:shadow-teal-500/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:opacity-70 disabled:cursor-not-allowed'
             >
               {loading ? (
                 <>

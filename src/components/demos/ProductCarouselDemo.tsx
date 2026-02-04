@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { getProducts, type Product } from '@/lib/adminData';
+import { type Product } from '@/lib/adminData';
+import { hybridDataService } from '@/lib/dataService';
 
 export default function ProductCarouselDemo() {
     const [products, setProducts] = useState<Product[]>([]);
@@ -12,10 +13,18 @@ export default function ProductCarouselDemo() {
     const [autoPlay, setAutoPlay] = useState(true);
 
     useEffect(() => {
-        // Load products from admin data and filter featured ones
-        const allProducts = getProducts();
-        const featuredProducts = allProducts.filter(p => p.featured === true);
-        setProducts(featuredProducts);
+        // Load featured products using hybrid service (API first, localStorage fallback)
+        const loadFeaturedProducts = async () => {
+            try {
+                const featuredProducts = await hybridDataService.getFeaturedProducts();
+                setProducts(featuredProducts);
+                console.log('🎯 Featured products loaded:', featuredProducts.length);
+            } catch (error) {
+                console.error('Failed to load featured products:', error);
+            }
+        };
+
+        loadFeaturedProducts();
     }, []);
 
     useEffect(() => {
@@ -76,7 +85,7 @@ export default function ProductCarouselDemo() {
                     <div className='relative'>
                         <div className='relative h-100 md:h-125 rounded-3xl overflow-hidden shadow-2xl'>
                             <Image
-                                src={product.image}
+                                src={product.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'}${product.image}` : (product.image || '/placeholder-image.jpg')}
                                 alt={product.title}
                                 fill
                                 className='object-cover transition-transform duration-500 hover:scale-105'
@@ -107,9 +116,9 @@ export default function ProductCarouselDemo() {
 
                         {/* Dots Indicator */}
                         <div className='absolute top-6 right-6 flex gap-2'>
-                            {products.map((_, idx) => (
+                            {products.map((product, idx) => (
                                 <button
-                                    key={idx}
+                                    key={`carousel-dot-${product.id}-${idx}`}
                                     onClick={() => {
                                         setCurrent(idx);
                                         setAutoPlay(false);

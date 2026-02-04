@@ -1,3 +1,5 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -6,6 +8,8 @@ const productMap: Record<string, {
   description: string;
   image: string;
   specs: { label: string; value: string }[];
+  pdfDownloadUrl?: string;
+  id?: number;
 }> = {
   'li-ion-2w': {
     title: 'Lithium ion Battery Pack (2 Wheeler)',
@@ -103,10 +107,56 @@ export default async function ProductDetailPage({ params }: Params) {
         {/* Hero visual */}
         <div className='mt-8 rounded-3xl border border-slate-200 bg-linear-to-br from-slate-50 to-white p-6 shadow-xl'>
           <div className='relative h-105 overflow-hidden rounded-2xl'>
-            <Image src={product.image} alt={product.title} fill className='object-cover' />
+            <Image 
+              src={product.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'}${product.image}` : (product.image || '/placeholder-image.jpg')}
+              alt={product.title} 
+              fill 
+              className='object-cover' 
+            />
           </div>
           <div className='mt-4 flex flex-col gap-3 sm:flex-row sm:justify-center'>
-            <button className='rounded-full bg-slate-900 px-6 py-3 text-white'>Download Brochure</button>
+            <button 
+              onClick={() => {
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com';
+                if (product.pdfDownloadUrl && !product.pdfDownloadUrl.includes('/null/')) {
+                  const downloadUrl = product.pdfDownloadUrl.startsWith('/') 
+                    ? `${API_URL}${product.pdfDownloadUrl}` 
+                    : product.pdfDownloadUrl;
+                  const link = document.createElement('a');
+                  link.href = downloadUrl;
+                  link.download = `${product.title}-datasheet.pdf`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                } else if (product.pdfDownloadUrl && product.pdfDownloadUrl.includes('/null/')) {
+                  // Try to fix the URL by replacing null with actual product ID
+                  const fixedUrl = product.pdfDownloadUrl.replace('/null/', `/${product.id}/`);
+                  const downloadUrl = `${API_URL}${fixedUrl}`;
+                  
+                  // Test if the URL exists before trying to download
+                  fetch(downloadUrl, { method: 'HEAD' })
+                    .then(response => {
+                      if (response.ok) {
+                        const link = document.createElement('a');
+                        link.href = downloadUrl;
+                        link.download = `${product.title}-datasheet.pdf`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      } else {
+                        alert('Datasheet file not found on server. Please contact support.');
+                      }
+                    })
+                    .catch(() => {
+                      alert('Failed to access datasheet. Please check your connection.');
+                    });
+                } else {
+                  alert('Datasheet not available for this product');
+                }
+              }}
+              className='rounded-full bg-slate-900 px-6 py-3 text-white hover:bg-slate-800'>
+              Download Brochure
+            </button>
             <button className='rounded-full border border-slate-200 bg-white px-6 py-3 text-slate-900 shadow-sm hover:border-teal-500 hover:text-teal-600'>Add to Cart</button>
           </div>
         </div>
@@ -151,10 +201,4 @@ export default async function ProductDetailPage({ params }: Params) {
       </section>
     </main>
   );
-}
-
-// Ensure static generation for known product slugs to avoid sync dynamic API warnings
-export const dynamic = 'force-static';
-export function generateStaticParams() {
-  return Object.keys(productMap).map((slug) => ({ slug }));
 }
