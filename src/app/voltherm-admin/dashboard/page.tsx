@@ -493,7 +493,31 @@ export default function AdminDashboard() {
                                     }
                                 }}
                                 onDelete={async (id: string) => {
-                                    toast.error('Delete operation not supported by backend');
+                                    try {
+                                        await adminDataService.deleteInquiry(id);
+                                        setInquiries(await adminDataService.getInquiries());
+                                        toast.success('Inquiry deleted successfully');
+                                    } catch (error) {
+                                        console.error('Failed to delete inquiry:', error);
+                                        toast.error('Failed to delete inquiry');
+                                    }
+                                }}
+                                onBulkDelete={async (ids: string[]) => {
+                                    try {
+                                        if (await apiService.testConnection()) {
+                                            await apiService.bulkDeleteInquiries(ids);
+                                        } else {
+                                            // Fallback to localStorage for each ID
+                                            for (const id of ids) {
+                                                await adminDataService.deleteInquiry(id);
+                                            }
+                                        }
+                                        setInquiries(await adminDataService.getInquiries());
+                                        toast.success(`${ids.length} inquiries deleted successfully`);
+                                    } catch (error) {
+                                        console.error('Failed to bulk delete inquiries:', error);
+                                        toast.error('Failed to delete inquiries');
+                                    }
                                 }}
                             />
                         )}
@@ -2377,10 +2401,37 @@ function CertificatesTab({
 }
 
 // Inquiries Tab
-function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
+function InquiriesTab({ inquiries, onStatusChange, onDelete, onBulkDelete }: any) {
     const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
     const [statusFilter, setStatusFilter] = useState<'all' | Inquiry['status']>('all');
     const [viewMode, setViewMode] = useState<'compact' | 'large'>('compact');
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+    const toggleSelection = (id: string) => {
+        const newSelected = new Set(selectedIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedIds(newSelected);
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.size === filteredInquiries.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(filteredInquiries.map((inq: Inquiry) => inq.id)));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.size === 0) return;
+        if (confirm(`Delete ${selectedIds.size} selected inquiries?`)) {
+            await onBulkDelete(Array.from(selectedIds));
+            setSelectedIds(new Set());
+        }
+    };
 
     const filteredInquiries =
         statusFilter === 'all' ? inquiries : inquiries.filter((inq: Inquiry) => inq.status === statusFilter);
@@ -2406,8 +2457,23 @@ function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
                 <div>
                     <h2 className='text-2xl font-bold text-slate-900'>Inbox</h2>
                     <p className='text-sm text-slate-600'>Manage customer inquiries</p>
+                    {selectedIds.size > 0 && (
+                        <p className='mt-1 text-xs font-medium text-teal-600'>
+                            {selectedIds.size} selected
+                        </p>
+                    )}
                 </div>
                 <div className='flex items-center gap-3'>
+                    {/* Bulk Actions */}
+                    {selectedIds.size > 0 && (
+                        <button
+                            onClick={handleBulkDelete}
+                            className='flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-red-700'>
+                            <Trash2 className='h-4 w-4' />
+                            Delete Selected ({selectedIds.size})
+                        </button>
+                    )}
+
                     {/* View Toggle */}
                     <button
                         onClick={() => setViewMode(viewMode === 'compact' ? 'large' : 'compact')}
@@ -2448,11 +2514,37 @@ function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
             ) : viewMode === 'compact' ? (
                 // COMPACT VIEW
                 <div className='space-y-2'>
+                    {/* Select All Checkbox */}
+                    {filteredInquiries.length > 0 && (
+                        <div className='flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3'>
+                            <input
+                                type='checkbox'
+                                checked={selectedIds.size === filteredInquiries.length && filteredInquiries.length > 0}
+                                onChange={toggleSelectAll}
+                                className='h-4 w-4 cursor-pointer accent-teal-600'
+                            />
+                            <span className='text-sm font-medium text-slate-700'>
+                                Select All ({filteredInquiries.length})
+                            </span>
+                        </div>
+                    )}
                     {filteredInquiries.map((inquiry: Inquiry) => (
                         <div
                             key={inquiry.id}
-                            className='overflow-hidden rounded-lg border border-slate-200 bg-white transition-all hover:border-teal-300 hover:shadow-md'>
-                            <div className='flex items-center justify-between p-4'>
+                            className={`overflow-hidden rounded-lg border transition-all ${
+                                selectedIds.has(inquiry.id)
+                                    ? 'border-teal-500 bg-teal-50 shadow-md'
+                                    : 'border-slate-200 bg-white hover:border-teal-300 hover:shadow-md'
+                            }`}>
+                            <div className='flex items-center gap-3 p-4'>
+                                {/* Selection Checkbox */}
+                                <input
+                                    type='checkbox'
+                                    checked={selectedIds.has(inquiry.id)}
+                                    onChange={() => toggleSelection(inquiry.id)}
+                                    className='h-4 w-4 cursor-pointer accent-teal-600'
+                                    onClick={(e) => e.stopPropagation()}
+                                />
                                 <div className='min-w-0 flex-1'>
                                     <div className='mb-1 flex items-center gap-2'>
                                         <h3 className='truncate text-sm font-bold text-slate-900'>
@@ -2537,11 +2629,40 @@ function InquiriesTab({ inquiries, onStatusChange, onDelete }: any) {
             ) : (
                 // LARGE VIEW
                 <div className='space-y-4'>
+                    {/* Select All Checkbox */}
+                    {filteredInquiries.length > 0 && (
+                        <div className='flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4'>
+                            <input
+                                type='checkbox'
+                                checked={selectedIds.size === filteredInquiries.length && filteredInquiries.length > 0}
+                                onChange={toggleSelectAll}
+                                className='h-5 w-5 cursor-pointer accent-teal-600'
+                            />
+                            <span className='text-sm font-semibold text-slate-700'>
+                                Select All ({filteredInquiries.length})
+                            </span>
+                        </div>
+                    )}
                     {filteredInquiries.map((inquiry: Inquiry) => (
                         <div
                             key={inquiry.id}
-                            className='overflow-hidden rounded-2xl border-2 border-slate-200 bg-white transition-all hover:border-teal-400 hover:shadow-lg'>
+                            className={`overflow-hidden rounded-2xl border-2 transition-all ${
+                                selectedIds.has(inquiry.id)
+                                    ? 'border-teal-500 bg-teal-50 shadow-lg'
+                                    : 'border-slate-200 bg-white hover:border-teal-400 hover:shadow-lg'
+                            }`}>
                             <div className='p-6'>
+                                {/* Selection Checkbox */}
+                                <div className='mb-4 flex items-center gap-3'>
+                                    <input
+                                        type='checkbox'
+                                        checked={selectedIds.has(inquiry.id)}
+                                        onChange={() => toggleSelection(inquiry.id)}
+                                        className='h-5 w-5 cursor-pointer accent-teal-600'
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <span className='text-sm font-medium text-slate-600'>Select inquiry</span>
+                                </div>
                                 <div className='mb-4 flex items-start justify-between'>
                                     <div className='flex-1'>
                                         <h3 className='mb-1 text-lg font-bold text-slate-900'>

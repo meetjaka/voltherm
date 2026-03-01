@@ -342,6 +342,13 @@ class ApiService {
         });
     }
 
+    async bulkDeleteInquiries(ids: string[]): Promise<ApiResponse<string>> {
+        return await this.apiCall<ApiResponse<string>>('/api/inquiries', {
+            method: 'DELETE',
+            body: JSON.stringify({ ids }),
+        });
+    }
+
     // Contact Info API methods
     async getContactInfo(): Promise<ApiResponse<BackendContactInfo>> {
         return await this.apiCall<ApiResponse<BackendContactInfo>>('/api/contact-info');
