@@ -88,20 +88,29 @@ class HybridDataService {
 
   async submitInquiry(inquiry: Partial<Inquiry>): Promise<Inquiry | null> {
     try {
-      if (await this.checkConnection()) {
-        console.log('✅ Submitting inquiry to backend API');
-        const backendInquiry = ModelMapper.frontendToBackendInquiry(inquiry as Inquiry);
-        const response = await apiService.createInquiry(backendInquiry);
-        if (response.success && response.data) {
-          return ModelMapper.backendToFrontendInquiry(response.data);
-        }
+      console.log('🚀 [INQUIRY] Submitting inquiry to backend API...');
+      console.log('📋 [INQUIRY DATA]', inquiry);
+      
+      // Transform to backend format
+      const backendInquiry = ModelMapper.frontendToBackendInquiry(inquiry as Inquiry);
+      console.log('📤 [BACKEND FORMAT]', backendInquiry);
+      
+      const response = await apiService.createInquiry(backendInquiry);
+      
+      if (response.success && response.data) {
+        console.log('✅ [SUCCESS] Inquiry submitted to backend API');
+        this.isOnline = true;
+        return ModelMapper.backendToFrontendInquiry(response.data);
+      } else {
+        console.error('❌ [ERROR] Backend response was not successful:', response);
       }
     } catch (error) {
-      console.warn('⚠️ Backend API failed, falling back to localStorage:', error);
+      console.error('❌ [API ERROR] Backend API failed:', error);
+      this.isOnline = false;
     }
 
     // Fallback to localStorage
-    console.log('📱 Saving inquiry to localStorage');
+    console.warn('📱 [FALLBACK] Saving inquiry to localStorage');
     const { addInquiry } = await import('./adminData');
     
     // Create a valid inquiry object for localStorage

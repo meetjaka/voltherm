@@ -288,26 +288,29 @@ class AdminDataService {
   
   async getInquiries(): Promise<Inquiry[]> {
     try {
-      if (await this.checkConnection()) {
-        // Ensure admin authentication before accessing inquiries
-        if (await this.ensureAuthentication()) {
-          console.log('✅ Admin: Loading inquiries from backend API');
-          const response = await apiService.getInquiries();
-          if (response.success && response.data) {
-            return response.data.map(ModelMapper.backendToFrontendInquiry);
-          }
+      // Ensure admin authentication before accessing inquiries
+      if (await this.ensureAuthentication()) {
+        console.log('📥 [ADMIN] Loading inquiries from backend API...');
+        const response = await apiService.getInquiries();
+        if (response.success && response.data) {
+          console.log('✅ [ADMIN] Loaded', response.data.length, 'inquiries from backend API');
+          this.isOnline = true;
+          return response.data.map(ModelMapper.backendToFrontendInquiry);
+        } else {
+          console.error('❌ [ADMIN] Backend response was not successful:', response);
         }
       }
     } catch (error: any) {
       if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
         console.warn('⚠️ Admin authentication required for inquiries, falling back to localStorage:', error);
       } else {
-        console.warn('⚠️ Backend API failed, falling back to localStorage:', error);
+        console.error('❌ [ADMIN] Backend API failed:', error);
       }
+      this.isOnline = false;
     }
 
     // Fallback to localStorage
-    console.log('📱 Admin: Loading inquiries from localStorage');
+    console.warn('📱 [ADMIN FALLBACK] Loading inquiries from localStorage');
     const { getInquiries } = await import('./adminData');
     return getInquiries();
   }

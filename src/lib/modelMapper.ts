@@ -151,6 +151,23 @@ export class ModelMapper {
 
   // Convert Frontend Inquiry to Backend Inquiry  
   static frontendToBackendInquiry(inquiry: Inquiry): any {
+    // Extract product IDs from products array (backend expects string[] not object[])
+    let productIds: string[] = [];
+    if (Array.isArray(inquiry.products)) {
+      productIds = inquiry.products.map((p: any) => {
+        // If it's an object with id property, extract id
+        if (typeof p === 'object' && p.id) {
+          return String(p.id);
+        }
+        // If it's already a string, use it
+        return String(p);
+      });
+    }
+    
+    console.log('🔄 [MODEL MAPPER] Converting inquiry to backend format');
+    console.log('📥 Frontend products:', inquiry.products);
+    console.log('📤 Backend productIds:', productIds);
+    
     return {
       id: inquiry.id,
       name: inquiry.customerName,
@@ -159,7 +176,7 @@ export class ModelMapper {
       company: inquiry.companyName,
       requirements: inquiry.requirements,
       status: inquiry.status,
-      interestedProducts: inquiry.products || [],
+      interestedProducts: productIds,
       createdAt: inquiry.createdAt
     };
   }

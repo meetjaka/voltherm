@@ -112,14 +112,19 @@ export default function StorePage() {
       };
 
       // Submit using hybrid service (API first, localStorage fallback)
+      console.log('📧 [STORE] Submitting inquiry...', inquiry);
       const result = await hybridDataService.createInquiry(inquiry);
       
       if (!result) {
         throw new Error('Failed to submit inquiry');
       }
 
+      console.log('✅ [STORE] Inquiry submitted successfully:', result);
       setSubmitting(false);
       setSubmitSuccess(true);
+      
+      // Show success toast
+      toast.success('Inquiry submitted successfully!');
       
       // Clear cart and form
       clearCart();
