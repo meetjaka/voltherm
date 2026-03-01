@@ -5,14 +5,29 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 import NavbarDemo from '@/components/demos/NavbarDemo';
-import { type Certificate, getCertificates } from '@/lib/adminData';
+import { type Certificate } from '@/lib/adminData';
+import hybridDataService from '@/lib/hybridDataService';
 
 export default function AboutPage() {
     const [certificates, setCertificates] = useState<Certificate[]>([]);
     const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        setCertificates(getCertificates());
+        const loadCertificates = async () => {
+            try {
+                console.log('🔄 [ABOUT US] Loading certificates from API...');
+                const certs = await hybridDataService.getCertificates();
+                console.log('✅ [ABOUT US] Loaded', certs.length, 'certificates');
+                setCertificates(certs);
+            } catch (error) {
+                console.error('❌ [ABOUT US] Failed to load certificates:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        loadCertificates();
     }, []);
 
     return (

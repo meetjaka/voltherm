@@ -134,15 +134,13 @@ export class ModelMapper {
   static backendToFrontendCertificate(backendCert: any): Certificate {
     return {
       id: backendCert.id,
-      src: backendCert.url,
+      src: backendCert.imageUrl || backendCert.url, // Backend returns 'imageUrl'
       alt: backendCert.name || 'Certificate',
       title: backendCert.name || 'Certificate'
     };
   }
   
-  // Convert Frontend Certificate to Backend Certificate
-  static frontendToBackendCertificate(cert: Certificate): any {
-    return {
+  // Note: Certificate creation uses FormData, not JSON transformation
       id: cert.id,
       name: cert.title,
       url: cert.src

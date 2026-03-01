@@ -449,9 +449,10 @@ export default function AdminDashboard() {
                         certificates={certificates}
                         isAddingCertificate={isAddingCertificate}
                         setIsAddingCertificate={setIsAddingCertificate}
-                        onSave={async (cert: Certificate) => {
+                        onSave={async (name: string, file: File) => {
                             try {
-                                await adminDataService.createCertificate(cert.title, cert.src);
+                                console.log('📤 Submitting certificate:', name, file.name);
+                                await adminDataService.createCertificate(name, file);
                                 // Reload certificates from backend
                                 setCertificates(await adminDataService.getCertificates());
                                 setIsAddingCertificate(false);
@@ -2233,16 +2234,21 @@ function CertificatesTab({
     onSave,
     onDelete
 }: any) {
-    const [formData, setFormData] = useState<Certificate>({
-        id: '',
-        src: '',
+    const [formData, setFormData] = useState<{
+        title: string;
+        alt: string;
+        previewUrl: string;
+        file: File | null;
+    }>({
+        title: '',
         alt: '',
-        title: ''
+        previewUrl: '',
+        file: null
     });
 
     useEffect(() => {
         if (isAddingCertificate) {
-            setFormData({ id: '', src: '', alt: '', title: '' });
+            setFormData({ title: '', alt: '', previewUrl: '', file: null });
         }
     }, [isAddingCertificate]);
 
@@ -2262,22 +2268,16 @@ function CertificatesTab({
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
-                        onSave(formData);
+                        if (formData.file) {
+                            onSave(formData.title, formData.file);
+                        }
                     }}
                     className='space-y-4'>
                     <input
                         type='text'
-                        placeholder='Title'
+                        placeholder='Certificate Name/Title'
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        className='w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900'
-                        required
-                    />
-                    <input
-                        type='text'
-                        placeholder='Alt Text'
-                        value={formData.alt}
-                        onChange={(e) => setFormData({ ...formData, alt: e.target.value })}
                         className='w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900'
                         required
                     />
@@ -2287,13 +2287,18 @@ function CertificatesTab({
                         </label>
                         <input
                             type='file'
-                            accept='image/png,image/jpeg'
+                            accept='image/png,image/jpeg,image/jpg'
                             onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
                                     const reader = new FileReader();
                                     reader.onload = (event) => {
-                                        setFormData({ ...formData, src: event.target?.result as string });
+                                        setFormData({ 
+                                            ...formData, 
+                                            previewUrl: event.target?.result as string,
+                                            file: file,
+                                            alt: formData.alt || file.name
+                                        });
                                     };
                                     reader.readAsDataURL(file);
                                 }
@@ -2301,16 +2306,16 @@ function CertificatesTab({
                             className='w-full cursor-pointer rounded-lg border border-slate-300 px-4 py-3 text-slate-900 file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-teal-600 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white file:transition-colors hover:file:bg-teal-700 focus:border-transparent focus:ring-2 focus:ring-teal-500'
                             required
                         />
-                        {formData.src && (
+                        {formData.previewUrl && (
                             <div className='relative inline-block'>
                                 <img
-                                    src={formData.src}
+                                    src={formData.previewUrl}
                                     alt='Preview'
                                     className='h-auto max-w-48 rounded-lg border border-slate-200 shadow-sm'
                                 />
                                 <button
                                     type='button'
-                                    onClick={() => setFormData({ ...formData, src: '' })}
+                                    onClick={() => setFormData({ ...formData, previewUrl: '', file: null })}
                                     className='absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white transition-colors hover:bg-red-600'>
                                     <X className='h-4 w-4' />
                                 </button>
@@ -2319,7 +2324,8 @@ function CertificatesTab({
                     </div>
                     <button
                         type='submit'
-                        className='w-full rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 py-3 font-medium text-white hover:from-teal-700 hover:to-cyan-700'>
+                        disabled={!formData.file}
+                        className='w-full rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 py-3 font-medium text-white hover:from-teal-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed'>
                         Save Certificate
                     </button>
                 </form>

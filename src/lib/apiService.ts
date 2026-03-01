@@ -81,8 +81,13 @@ class ApiService {
     private async apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
         const url = `${API_BASE_URL}${endpoint}`;
         
+        // Don't set Content-Type for FormData (browser will set it with boundary)
+        const isFormData = options.body instanceof FormData;
+        
         const defaultOptions: RequestInit = {
-            headers: {
+            headers: isFormData ? {
+                ...options.headers,
+            } : {
                 'Content-Type': 'application/json',
                 ...options.headers,
             },
@@ -91,9 +96,10 @@ class ApiService {
         };
 
         try {
-            // Add timeout to the fetch request
+            // Add timeout to the fetch request (longer for file uploads)
+            const timeout = isFormData ? 60000 : 30000; // 60s for uploads, 30s for normal requests
             const timeoutPromise = new Promise<never>((_, reject) => {
-                setTimeout(() => reject(new Error('Request timeout')), 10000);
+                setTimeout(() => reject(new Error('Request timeout')), timeout);
             });
 
             const response = await Promise.race([
@@ -304,10 +310,10 @@ class ApiService {
         return await this.apiCall<ApiResponse<BackendCertificate[]>>('/api/certificates');
     }
 
-    async createCertificate(certificate: BackendCertificate): Promise<ApiResponse<BackendCertificate>> {
+    async createCertificate(formData: FormData): Promise<ApiResponse<BackendCertificate>> {
         return await this.apiCall<ApiResponse<BackendCertificate>>('/api/certificates', {
             method: 'POST',
-            body: JSON.stringify(certificate),
+            body: formData,
         });
     }
 

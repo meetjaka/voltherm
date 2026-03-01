@@ -236,47 +236,57 @@ class AdminDataService {
     saveCertificates(certificates);
   }
 
-  async createCertificate(name: string, url: string): Promise<boolean> {
-    if (await this.checkConnection()) {
-      try {
-        console.log('✅ Admin: Creating certificate via backend API');
-        const response = await apiService.createCertificate({ id: '', name, url });
-        if (response.success) {
-          console.log('🎉 Certificate created successfully');
-          return true;
-        }
-      } catch (error) {
-        console.error('❌ Backend certificate creation failed:', error);
-        throw error;
-      }
+  async createCertificate(name: string, imageFile: File): Promise<boolean> {
+    // Check authentication first
+    if (!this.isAuthenticated()) {
+      throw new Error('Not authenticated');
     }
 
-    // Fallback to localStorage
-    console.log('📱 Admin: Creating certificate in localStorage');
-    const { getCertificates, saveCertificates } = await import('./adminData');
-    const certificates = getCertificates();
-    certificates.push({ id: Date.now().toString(), src: url, alt: name, title: name });
-    saveCertificates(certificates);
-    return true;
+    try {
+      console.log('🚀 [ADMIN] Creating certificate via backend API');
+      console.log('📝 Certificate name:', name);
+      console.log('📁 Image file:', imageFile.name, imageFile.type, imageFile.size, 'bytes');
+      
+      // Create FormData for multipart upload
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('image', imageFile);
+      
+      const response = await apiService.createCertificate(formData);
+      if (response.success) {
+        console.log('✅ [SUCCESS] Certificate created successfully');
+        return true;
+      }
+      
+      throw new Error('Backend returned success=false');
+    } catch (error) {
+      console.error('❌ [API ERROR] Backend certificate creation failed:', error);
+      throw error;
+    }
   }
 
   async deleteCertificate(certificateId: string): Promise<boolean> {
-    if (await this.checkConnection()) {
-      try {
-        console.log('✅ Admin: Deleting certificate via backend API');
-        const response = await apiService.deleteCertificate(certificateId);
-        if (response.success) {
-          console.log('🎉 Certificate deleted successfully');
-          return true;
-        }
-      } catch (error) {
-        console.error('❌ Backend certificate deletion failed:', error);
-        throw error;
-      }
+    // Check authentication first
+    if (!this.isAuthenticated()) {
+      throw new Error('Not authenticated');
     }
 
-    // Fallback to localStorage
-    console.log('📱 Admin: Deleting certificate from localStorage');
+    try {
+      console.log('🚀 [ADMIN] Deleting certificate via backend API');
+      console.log('🗑️ Certificate ID:', certificateId);
+      
+      const response = await apiService.deleteCertificate(certificateId);
+      if (response.success) {
+        console.log('✅ [SUCCESS] Certificate deleted successfully');
+        return true;
+      }
+      
+      throw new Error('Backend returned success=false');
+    } catch (error) {
+      console.error('❌ [API ERROR] Backend certificate deletion failed:', error);
+      throw error;
+    }
+  }
     const { getCertificates, saveCertificates } = await import('./adminData');
     const certificates = getCertificates();
     const filtered = certificates.filter(c => c.id !== certificateId);

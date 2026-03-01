@@ -69,19 +69,18 @@ class HybridDataService {
 
   async getCertificates(): Promise<Certificate[]> {
     try {
-      if (await this.checkConnection()) {
-        console.log('✅ Loading certificates from backend API');
-        const response = await apiService.getCertificates();
-        if (response.success && response.data) {
-          return response.data.map(ModelMapper.backendToFrontendCertificate);
-        }
+      console.log('🚀 [HYBRID SERVICE] Loading certificates from backend API');
+      const response = await apiService.getCertificates();
+      if (response.success && response.data) {
+        console.log('✅ [SUCCESS] Loaded', response.data.length, 'certificates from backend API');
+        return response.data.map(ModelMapper.backendToFrontendCertificate);
       }
     } catch (error) {
-      console.warn('⚠️ Backend API failed, falling back to localStorage:', error);
+      console.warn('⚠️ [API ERROR] Backend API failed, falling back to localStorage:', error);
     }
 
     // Fallback to localStorage
-    console.log('📱 Loading certificates from localStorage');
+    console.log('📱 [FALLBACK] Loading certificates from localStorage');
     const { getCertificates } = await import('./adminData');
     return getCertificates();
   }
