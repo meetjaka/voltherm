@@ -141,11 +141,6 @@ export class ModelMapper {
   }
   
   // Note: Certificate creation uses FormData, not JSON transformation
-      id: cert.id,
-      name: cert.title,
-      url: cert.src
-    };
-  }
 
   // Convert Frontend Inquiry to Backend Inquiry  
   static frontendToBackendInquiry(inquiry: Inquiry): any {
