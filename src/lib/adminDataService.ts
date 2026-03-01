@@ -238,7 +238,7 @@ class AdminDataService {
 
   async createCertificate(name: string, imageFile: File): Promise<boolean> {
     // Check authentication first
-    if (!this.isAuthenticated()) {
+    if (!await this.ensureAuthentication()) {
       throw new Error('Not authenticated');
     }
 
@@ -267,7 +267,7 @@ class AdminDataService {
 
   async deleteCertificate(certificateId: string): Promise<boolean> {
     // Check authentication first
-    if (!this.isAuthenticated()) {
+    if (!await this.ensureAuthentication()) {
       throw new Error('Not authenticated');
     }
 
@@ -286,12 +286,6 @@ class AdminDataService {
       console.error('❌ [API ERROR] Backend certificate deletion failed:', error);
       throw error;
     }
-  }
-    const { getCertificates, saveCertificates } = await import('./adminData');
-    const certificates = getCertificates();
-    const filtered = certificates.filter(c => c.id !== certificateId);
-    saveCertificates(filtered);
-    return true;
   }
 
   // ============ INQUIRY MANAGEMENT ============
