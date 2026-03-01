@@ -95,8 +95,8 @@ export default async function ProductDetailPage({ params }: Params) {
       {/* Centered vertical layout */}
       <section className='mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10'>
         {/* Header badge */}
-        <div className='inline-flex items-center rounded-full border border-teal-500/30 bg-teal-50/50 px-4 py-2 text-sm font-medium text-teal-600'>
-          <span className='mr-2 h-2 w-2 rounded-full bg-teal-500'></span>
+        <div className='inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary'>
+          <span className='mr-2 h-2 w-2 rounded-full bg-primary'></span>
           Product Details
         </div>
 
@@ -157,7 +157,7 @@ export default async function ProductDetailPage({ params }: Params) {
               className='rounded-full bg-slate-900 px-6 py-3 text-white hover:bg-slate-800'>
               Download Brochure
             </button>
-            <button className='rounded-full border border-slate-200 bg-white px-6 py-3 text-slate-900 shadow-sm hover:border-teal-500 hover:text-teal-600'>Add to Cart</button>
+            <button className='rounded-full border border-slate-200 bg-white px-6 py-3 text-slate-900 shadow-sm hover:border-primary hover:text-primary'>Add to Cart</button>
           </div>
         </div>
 
@@ -196,7 +196,7 @@ export default async function ProductDetailPage({ params }: Params) {
 
         {/* Back link */}
         <div className='mt-10 text-center'>
-          <Link href='/store' className='text-teal-600 hover:text-teal-700'>← Back to Store</Link>
+          <Link href='/store' className='text-primary hover:text-primary/80'>← Back to Store</Link>
         </div>
       </section>
     </main>
