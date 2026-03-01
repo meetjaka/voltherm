@@ -1042,10 +1042,12 @@ function ProductsTab({
     const [pdfFile, setPdfFile] = useState<File | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [showSpecInfo, setShowSpecInfo] = useState<number | null>(null);
+    const [quickSpecsInput, setQuickSpecsInput] = useState<string>('');
 
     useEffect(() => {
         if (editingProduct) {
             setFormData(editingProduct);
+            setQuickSpecsInput(editingProduct.specs?.join(', ') || '');
         } else if (isAddingProduct) {
             setFormData({
                 id: 0,
@@ -1066,6 +1068,7 @@ function ProductsTab({
             });
             setImageFile(null);
             setPdfFile(null);
+            setQuickSpecsInput('');
         }
     }, [editingProduct, isAddingProduct]);
 
@@ -1124,7 +1127,15 @@ function ProductsTab({
 
                 <form onSubmit={async (e) => {
                     e.preventDefault();
-                    await onSave(formData, imageFile || undefined, pdfFile || undefined);
+                    // Convert quickSpecsInput to specs array before saving
+                    const updatedFormData = {
+                        ...formData,
+                        specs: quickSpecsInput
+                            .split(',')
+                            .map((s) => s.trim())
+                            .filter((s) => s)
+                    };
+                    await onSave(updatedFormData, imageFile || undefined, pdfFile || undefined);
                 }} className='space-y-6'>
                     {/* Basic Information */}
                     <div className='border-b border-slate-200 pb-6'>
@@ -1244,16 +1255,8 @@ function ProductsTab({
                                 <input
                                     type='text'
                                     placeholder='e.g., Portable, Compact, Lightweight'
-                                    value={formData.specs.join(', ')}
-                                    onChange={(e) =>
-                                        setFormData({
-                                            ...formData,
-                                            specs: e.target.value
-                                                .split(',')
-                                                .map((s) => s.trim())
-                                                .filter((s) => s)
-                                        })
-                                    }
+                                    value={quickSpecsInput}
+                                    onChange={(e) => setQuickSpecsInput(e.target.value)}
                                     className='w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:border-transparent focus:ring-2 focus:ring-teal-500'
                                 />
                             </div>
