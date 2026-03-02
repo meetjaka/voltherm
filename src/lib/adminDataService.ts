@@ -19,7 +19,7 @@ class AdminDataService {
   private async ensureAuthentication(): Promise<boolean> {
     try {
       // Check if we can access an admin endpoint
-      const testResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'}/api/inquiries`, {
+      const testResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/inquiries`, {
         method: 'GET',
         credentials: 'include'
       });

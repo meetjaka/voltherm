@@ -31,7 +31,7 @@ export default function TwoStepProductForm({ onComplete, onCancel }: TwoStepProd
     try {
       const productData: Partial<Product> = {
         title: productName,
-        description,
+        description: description,
         price: price ? parseFloat(price) : undefined,
         specs: category ? [category] : [],
         featured: false,

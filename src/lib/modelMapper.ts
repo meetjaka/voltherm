@@ -42,10 +42,10 @@ export class ModelMapper {
       productName: product.title?.trim() || (product as any).productName?.trim() || '',
       price: Math.max(0, Number(product.price) || 0),
       featured: Boolean(product.featured),
-      isAvailable: product.available !== false, // Backend expects "isAvailable", not "available"
+      available: product.available !== false, // Jackson strips 'is' prefix: isAvailable() getter → JSON key 'available'
       category: product.category?.trim() || '',
       subCategory: (product as any).subCategoryId?.trim() || (product as any).subCategory?.trim() || '',
-      description: product.description?.trim() || '',
+      productDescription: product.description?.trim() || '', // Backend field is 'productDescription', not 'description'
       specificationFields: specFields, // Backend expects array with this field name
       specificationValues: specValues, // Backend expects array with this field name
       quickSpecs: Array.isArray(product.specs) ? product.specs.filter(s => s.trim()) : [], // Backend expects "quickSpecs" array, not "tags"
@@ -112,11 +112,11 @@ export class ModelMapper {
       id: backendProduct.id || backendProduct.productId || Math.floor(Math.random() * 1000000),
       backendId: backendProduct.id || backendProduct.productId, // Store backend ID for updates
       title: backendProduct.productName || backendProduct.title || '',
-      description: backendProduct.description || '',
+      description: backendProduct.productDescription || backendProduct.description || '', // Backend uses 'productDescription'
       image: backendProduct.imageUrl || backendProduct.image || '',
       price: backendProduct.price || 0,
       featured: Boolean(backendProduct.featured),
-      available: backendProduct.isAvailable !== false, // Frontend expects "available", backend has "isAvailable"
+      available: backendProduct.available !== false, // Jackson strips 'is' from isAvailable() getter → JSON key is 'available'
       specs: quickSpecsArray,
       technicalSpecs: technicalSpecs,
       category: backendProduct.category || '',
@@ -132,9 +132,16 @@ export class ModelMapper {
 
   // Convert Backend Certificate to Frontend Certificate
   static backendToFrontendCertificate(backendCert: any): Certificate {
+    const rawUrl: string = backendCert.imageUrl || backendCert.url || '';
+    // Relative paths (e.g. /images/uuid.jpg) must be prefixed with the backend
+    // base URL so they resolve against Spring Boot, not the Next.js origin.
+    const API_BASE = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
+      ? process.env.NEXT_PUBLIC_API_URL
+      : 'http://localhost:8080';
+    const resolvedUrl = rawUrl.startsWith('/') ? `${API_BASE}${rawUrl}` : rawUrl;
     return {
       id: backendCert.id,
-      src: backendCert.imageUrl || backendCert.url, // Backend returns 'imageUrl'
+      src: resolvedUrl,
       alt: backendCert.name || 'Certificate',
       title: backendCert.name || 'Certificate'
     };
@@ -170,6 +177,12 @@ export class ModelMapper {
       requirements: inquiry.requirements,
       status: inquiry.status,
       interestedProducts: productIds,
+      cartItems: Array.isArray(inquiry.products)
+        ? inquiry.products.map((p: any) => ({
+            title: typeof p === 'object' ? (p.title || String(p.id)) : String(p),
+            quantity: typeof p === 'object' ? (p.quantity ?? 1) : 1
+          }))
+        : [],
       createdAt: inquiry.createdAt
     };
   }
@@ -192,45 +205,95 @@ export class ModelMapper {
 
   // Convert Backend ContactInfo to Frontend ContactInfo
   static backendToFrontendContactInfo(backendContact: any): ContactInfo {
+    const branches = (backendContact.branches || []).map((b: any) => ({
+      id: b.branchId || b.id || '',
+      name: b.branchName || b.name || '',
+      addressLine1: b.addressLine1 || '',
+      addressLine2: b.addressLine2 || '',
+      city: b.city || '',
+      state: b.state || '',
+      pincode: String(b.pincode || ''),
+      phone: b.phoneNumber || b.phone || '',
+      mapUrl: b.mapUrl || ''
+    }));
+
+    const mainAddress = backendContact.mainAddress
+      ? {
+          companyName: backendContact.mainAddress.companyName || '',
+          addressLine1: backendContact.mainAddress.addressLine1 || '',
+          addressLine2: backendContact.mainAddress.addressLine2 || '',
+          city: backendContact.mainAddress.city || '',
+          state: backendContact.mainAddress.state || '',
+          pincode: String(backendContact.mainAddress.pincode || ''),
+          phoneNumber: backendContact.mainAddress.phoneNumber || '',
+          gst: backendContact.mainAddress.gst || '',
+          mapUrl: backendContact.mainAddress.mapUrl || ''
+        }
+      : undefined;
+
     return {
-      sales: backendContact.sales || { email: '', phone: '' },
-      business: backendContact.business || { email: '' },
-      support: backendContact.support || { phone: '' },
-      socialMedia: backendContact.socialMedia || {},
-      mainAddress: backendContact.mainAddress || {
-        companyName: '',
-        addressLine1: '',
-        addressLine2: '',
-        city: '',
-        state: '',
-        pincode: '',
-        phone: '',
-        gst: '',
-        mapUrl: ''
+      sales: {
+        email: backendContact.salesEmail || '',
+        phone: backendContact.salesPhoneNumber || ''
       },
-      branches: backendContact.branches || []
+      business: {
+        email: backendContact.businessEmail || ''
+      },
+      support: {
+        phone: backendContact.supportPhoneNumber || ''
+      },
+      socialMedia: {
+        facebook: backendContact.facebookUrl || '',
+        instagram: backendContact.instagramUrl || '',
+        linkedin: backendContact.linkedinUrl || '',
+        twitter: backendContact.xUrl || '',
+        indiamart: backendContact.indiamartUrl || ''
+      },
+      mainAddress,
+      branches
     };
   }
 
   // Convert Frontend ContactInfo to Backend ContactInfo
   static frontendToBackendContactInfo(frontendContact: ContactInfo): any {
+    const branches = (frontendContact.branches || []).map((b: any) => ({
+      branchId: b.id || '',
+      branchName: b.name || '',
+      addressLine1: b.addressLine1 || '',
+      addressLine2: b.addressLine2 || '',
+      city: b.city || '',
+      state: b.state || '',
+      pincode: parseInt(b.pincode) || 0,
+      phoneNumber: b.phone || b.phoneNumber || '',
+      mapUrl: b.mapUrl || ''
+    }));
+
+    const mainAddress = frontendContact.mainAddress
+      ? {
+          companyName: frontendContact.mainAddress.companyName || '',
+          addressLine1: frontendContact.mainAddress.addressLine1 || '',
+          addressLine2: frontendContact.mainAddress.addressLine2 || '',
+          city: frontendContact.mainAddress.city || '',
+          state: frontendContact.mainAddress.state || '',
+          pincode: frontendContact.mainAddress.pincode || '',
+          phoneNumber: frontendContact.mainAddress.phoneNumber || '',
+          gst: frontendContact.mainAddress.gst || '',
+          mapUrl: frontendContact.mainAddress.mapUrl || ''
+        }
+      : null;
+
     return {
-      sales: frontendContact.sales || { email: '', phone: '' },
-      business: frontendContact.business || { email: '' },
-      support: frontendContact.support || { phone: '' },
-      socialMedia: frontendContact.socialMedia || {},
-      mainAddress: frontendContact.mainAddress || {
-        companyName: '',
-        addressLine1: '',
-        addressLine2: '',
-        city: '',
-        state: '',
-        pincode: '',
-        phone: '',
-        gst: '',
-        mapUrl: ''
-      },
-      branches: frontendContact.branches || []
+      salesEmail: frontendContact.sales?.email || '',
+      salesPhoneNumber: frontendContact.sales?.phone || '',
+      businessEmail: frontendContact.business?.email || '',
+      supportPhoneNumber: frontendContact.support?.phone || '',
+      facebookUrl: frontendContact.socialMedia?.facebook || '',
+      instagramUrl: frontendContact.socialMedia?.instagram || '',
+      linkedinUrl: frontendContact.socialMedia?.linkedin || '',
+      xUrl: frontendContact.socialMedia?.twitter || '',
+      indiamartUrl: frontendContact.socialMedia?.indiamart || '',
+      mainAddress,
+      branches
     };
   }
 }

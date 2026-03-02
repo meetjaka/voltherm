@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
     
     // Proxy API requests to backend to avoid CORS issues
     async rewrites() {
-        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com';
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
         return [
             {
                 source: '/api/:path*',

@@ -158,7 +158,7 @@ class HybridDataService {
   getConnectionStatus(): { online: boolean; apiUrl: string } {
     return {
       online: this.isOnline,
-      apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'
+      apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
     };
   }
 }

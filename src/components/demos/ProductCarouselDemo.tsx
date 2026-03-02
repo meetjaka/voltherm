@@ -90,7 +90,7 @@ export default function ProductCarouselDemo() {
                             {/* Decorative backing */}
                             <div className='absolute inset-0 bg-gradient-to-r from-slate-50 to-white/50 z-0'></div>
                             <Image
-                                src={product.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'}${product.image}` : (product.image || '/placeholder-image.jpg')}
+                                src={product.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${product.image}` : (product.image || '/placeholder-image.jpg')}
                                 alt={product.title}
                                 fill
                                 className='object-cover z-10 transition-transform duration-700 ease-in-out group-hover:scale-[1.03]'

@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, X, Send, Check, AlertCircle, ArrowLeft, Filter, Download, Search } from 'lucide-react';
+import { ShoppingCart, X, Send, Check, AlertCircle, ArrowLeft, Filter, Download, Search, Minus, Plus } from 'lucide-react';
 import NavbarDemo from '@/components/demos/NavbarDemo';
 import CategoryIcon from '@/components/CategoryIcon';
 import { getSubCategories, getMainCategories, type Product, type SubCategory, type MainCategory } from '@/lib/adminData';
-import { getCart, addToCart, removeFromCart, isInCart, getCartCount, clearCart, type CartItem } from '@/lib/cartStore';
+import { getCart, addToCart, removeFromCart, updateCartItemQuantity, isInCart, getCartCount, clearCart, type CartItem } from '@/lib/cartStore';
 import { hybridDataService } from '@/lib/hybridDataService';
 import { apiService } from '@/lib/apiService';
 import { toast } from 'sonner';
@@ -93,6 +93,14 @@ export default function StorePage() {
     setCart(getCart());
   };
 
+  const handleUpdateQuantity = (productId: number, delta: number) => {
+    const item = cart.find(i => i.productId === productId);
+    if (!item) return;
+    const newQty = item.quantity + delta;
+    updateCartItemQuantity(productId, newQty); // auto-removes if newQty <= 0
+    setCart(getCart());
+  };
+
   const handleSubmitInquiry = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -107,7 +115,8 @@ export default function StorePage() {
         requirements: formData.requirements,
         products: cart.map(item => ({
           id: item.productId,
-          title: item.title
+          title: item.title,
+          quantity: item.quantity
         }))
       };
 
@@ -165,7 +174,7 @@ export default function StorePage() {
     }
     
     // Filter by availability
-    if (filterAvailable === 'available' && !product.available) return false;
+    if (filterAvailable === 'available' && product.available === false) return false;
     if (filterAvailable === 'unavailable' && product.available !== false) return false;
     
     // Filter by search query
@@ -185,6 +194,16 @@ export default function StorePage() {
   const filteredSubCategories = selectedMainCategoryId === 'all' 
     ? [] 
     : subCategories.filter(sc => sc.mainCategoryId === selectedMainCategoryId).sort((a, b) => a.order - b.order);
+
+  // Compute product counts per category (visible products only)
+  const visibleProducts = products.filter(p => p.visible !== false);
+  const getProductCountForMainCategory = (mainCategoryId: string) =>
+    visibleProducts.filter(p => {
+      const sc = subCategories.find(sc => sc.id === (p.subCategoryId || p.categoryId));
+      return sc?.mainCategoryId === mainCategoryId;
+    }).length;
+  const getProductCountForSubCategory = (subCategoryId: string) =>
+    visibleProducts.filter(p => (p.subCategoryId || p.categoryId) === subCategoryId).length;
 
   // Handle main category selection
   const handleMainCategorySelect = (categoryId: string) => {
@@ -303,7 +322,6 @@ export default function StorePage() {
                       {mainCategories
                         .sort((a, b) => a.order - b.order)
                         .map((mainCategory) => {
-                          const categorySubCount = subCategories.filter(sc => sc.mainCategoryId === mainCategory.id).length;
                           return (
                             <button
                               key={mainCategory.id}
@@ -315,11 +333,9 @@ export default function StorePage() {
                               }`}
                             >
                               {mainCategory.name}
-                              {categorySubCount > 0 && (
-                                <span className={`ml-2 text-xs opacity-75 ${selectedMainCategoryId === mainCategory.id ? 'text-white' : 'text-slate-400'}`}>
-                                  ({categorySubCount})
-                                </span>
-                              )}
+                              <span className={`ml-2 text-xs opacity-75 ${selectedMainCategoryId === mainCategory.id ? 'text-white' : 'text-slate-400'}`}>
+                                ({getProductCountForMainCategory(mainCategory.id)})
+                              </span>
                             </button>
                           );
                         })}
@@ -358,6 +374,9 @@ export default function StorePage() {
                             <CategoryIcon name={subCategory.icon} className={`w-4 h-4 ${selectedSubCategoryId === subCategory.id ? 'text-white' : 'text-purple-600'}`} />
                           )}
                           <span>{subCategory.name}</span>
+                          <span className={`text-xs opacity-75 ${selectedSubCategoryId === subCategory.id ? 'text-white' : 'text-slate-400'}`}>
+                            ({getProductCountForSubCategory(subCategory.id)})
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -424,10 +443,16 @@ export default function StorePage() {
         </div>
 
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-          {filteredProducts.map((product, index) => (
+          {filteredProducts.map((product, index) => {
+            const isUnavailable = product.available === false;
+            return (
             <div
               key={`product-${product.id}-${index}`}
-              className='group relative flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/40 transition-all duration-300 hover:-translate-y-2 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10'
+              className={`group relative flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/40 transition-all duration-300 ${
+                isUnavailable
+                  ? 'opacity-50 grayscale select-none'
+                  : 'hover:-translate-y-2 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10'
+              }`}
             >
               <div className='absolute inset-0 bg-gradient-to-br from-primary/5 to-purple-500/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none'></div>
               
@@ -449,7 +474,7 @@ export default function StorePage() {
               {/* Product Image */}
               <div className='relative mb-6 h-56 w-full overflow-hidden rounded-2xl bg-slate-50 border border-slate-100'>
                 <Image
-                  src={product.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'}${product.image}` : (product.image || '/placeholder-image.jpg')}
+                  src={product.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${product.image}` : (product.image || '/placeholder-image.jpg')}
                   alt={product.title}
                   fill
                   className='object-cover transition-transform duration-700 group-hover:scale-105'
@@ -510,22 +535,27 @@ export default function StorePage() {
               {/* Actions */}
               <div className='flex gap-3 relative z-10 mt-auto'>
                 <button
-                  onClick={() => setSelectedProduct(product)}
-                  className='flex-1 rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900'
+                  onClick={() => !isUnavailable && setSelectedProduct(product)}
+                  disabled={isUnavailable}
+                  className={`flex-1 rounded-xl border-2 px-4 py-3 text-sm font-bold transition-all ${
+                    isUnavailable
+                      ? 'border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
                 >
                   Details
                 </button>
                 {!isInCart(product.id) ? (
                   <button
-                    onClick={() => handleAddToCart(product)}
-                    disabled={product.available === false}
+                    onClick={() => !isUnavailable && handleAddToCart(product)}
+                    disabled={isUnavailable}
                     className={`flex-1 rounded-xl px-4 py-3 text-sm font-bold transition-all ${
-                      product.available === false
-                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                      isUnavailable
+                        ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
                         : 'bg-primary text-white hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30'
                     }`}
                   >
-                    {product.available === false ? 'Unavailable' : 'Add to Cart'}
+                    {isUnavailable ? 'Unavailable' : 'Add to Cart'}
                   </button>
                 ) : (
                   <button
@@ -537,7 +567,8 @@ export default function StorePage() {
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {filteredProducts.length === 0 && (
@@ -574,7 +605,7 @@ export default function StorePage() {
               {/* Left: Image */}
               <div className='rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center p-4'>
                 <img
-                  src={selectedProduct.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'}${selectedProduct.image}` : (selectedProduct.image || '/placeholder-image.jpg')}
+                  src={selectedProduct.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${selectedProduct.image}` : (selectedProduct.image || '/placeholder-image.jpg')}
                   alt={selectedProduct.title}
                   className='max-w-full max-h-[60vh] object-contain drop-shadow-lg'
                 />
@@ -740,36 +771,62 @@ export default function StorePage() {
                   {cart.map((item) => (
                     <div
                       key={item.productId}
-                      className='group flex gap-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-slate-300 hover:shadow-md'
+                      className='relative group flex gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-slate-300 hover:shadow-md'
                     >
-                      <div className='relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-slate-50 border border-slate-100 p-2 flex items-center justify-center'>
+                      {/* Remove button — top-right of the card */}
+                      <button
+                        onClick={() => handleRemoveFromCart(item.productId)}
+                        className='absolute top-3 right-3 z-10 rounded-full p-1 text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors'
+                        aria-label='Remove from cart'
+                      >
+                        <X className='h-4 w-4' />
+                      </button>
+
+                      {/* Product image */}
+                      <div className='relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center'>
                         <Image
-                          src={item.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'}${item.image}` : (item.image || '/placeholder-image.jpg')}
+                          src={item.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${item.image}` : (item.image || '/placeholder-image.jpg')}
                           alt={item.title}
                           fill
                           className='object-contain p-2'
-                          sizes='96px'
+                          sizes='80px'
                           unoptimized
                         />
                       </div>
-                      
-                      <div className='flex flex-1 flex-col py-1'>
-                        <h4 className='font-bold text-slate-900 line-clamp-2 mb-1.5 pr-6 leading-snug'>
+
+                      {/* Info + qty */}
+                      <div className='flex flex-1 flex-col gap-2 pr-5'>
+                        <h4 className='font-bold text-slate-900 line-clamp-2 leading-snug text-sm'>
                           {item.title}
                         </h4>
                         {item.category && (
-                          <span className='inline-block rounded-md bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-500 w-fit'>
+                          <span className='inline-block rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-500 w-fit'>
                             {item.category}
                           </span>
                         )}
-                      </div>
 
-                      <button
-                        onClick={() => handleRemoveFromCart(item.productId)}
-                        className='absolute top-6 right-6 text-slate-300 hover:text-red-500 transition-colors'
-                      >
-                        <X className='h-5 w-5' />
-                      </button>
+                        {/* Quantity controls */}
+                        <div className='flex items-center gap-2 mt-auto'>
+                          <button
+                            onClick={() => handleUpdateQuantity(item.productId, -1)}
+                            className='flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors'
+                            aria-label='Decrease quantity'
+                          >
+                            <Minus className='h-3 w-3' />
+                          </button>
+                          <span className='w-6 text-center text-sm font-bold text-slate-800'>
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => handleUpdateQuantity(item.productId, 1)}
+                            className='flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-600 transition-colors'
+                            aria-label='Increase quantity'
+                          >
+                            <Plus className='h-3 w-3' />
+                          </button>
+                          <span className='text-xs text-slate-400 ml-1'>qty</span>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>

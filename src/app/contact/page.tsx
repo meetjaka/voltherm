@@ -5,8 +5,11 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 import NavbarDemo from '@/components/demos/NavbarDemo';
-import { type ContactInfo, getContactInfo } from '@/lib/adminData';
+import { type ContactInfo, defaultContactInfo } from '@/lib/adminData';
+import { apiService } from '@/lib/apiService';
+import { ModelMapper } from '@/lib/modelMapper';
 
+import { toast } from 'sonner';
 import { Mail, MapPin, Phone, Send } from 'lucide-react';
 
 export default function ContactPage() {
@@ -16,32 +19,48 @@ export default function ContactPage() {
         phone: '',
         requirements: ''
     });
-    const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
+    const [contactInfo, setContactInfo] = useState<ContactInfo>(defaultContactInfo);
+    const [submitting, setSubmitting] = useState(false);
+    const [submitSuccess, setSubmitSuccess] = useState(false);
 
     useEffect(() => {
-        const loadContactInfo = () => {
-            const data = getContactInfo();
-            console.log('Contact Info Loaded:', data); // Debug log
-            console.log('Branches:', data?.branches); // Debug log
-            setContactInfo(data);
+        const loadContactInfo = async () => {
+            try {
+                const response = await apiService.getContactInfo();
+                if (response.success && response.data) {
+                    setContactInfo(ModelMapper.backendToFrontendContactInfo(response.data));
+                    return;
+                }
+            } catch {
+                // API unreachable – fall through to defaults
+            }
+            setContactInfo(defaultContactInfo);
         };
         loadContactInfo();
-        
-        // Listen for storage changes (when admin updates contact info)
-        const handleStorageChange = () => {
-            loadContactInfo();
-        };
-        window.addEventListener('storage', handleStorageChange);
-        
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-        };
     }, []);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle form submission
-        console.log('Form submitted:', formData);
+        setSubmitting(true);
+        try {
+            await apiService.createInquiry({
+                name: formData.name,
+                email: formData.email,
+                phoneNumber: formData.phone || '',
+                requirements: formData.requirements,
+                interestedProducts: [],
+                cartItems: []
+            });
+            setSubmitSuccess(true);
+            toast.success('Message sent successfully!');
+            setFormData({ email: '', name: '', phone: '', requirements: '' });
+            setTimeout(() => setSubmitSuccess(false), 4000);
+        } catch (error) {
+            console.error('Failed to send inquiry:', error);
+            toast.error('Failed to send message. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -50,8 +69,6 @@ export default function ContactPage() {
             [e.target.name]: e.target.value
         });
     };
-
-    if (!contactInfo) return null;
 
     return (
         <main className='min-h-screen w-full bg-slate-50 font-sans text-slate-900 overflow-hidden relative'>
@@ -176,7 +193,7 @@ export default function ContactPage() {
                                             <p>{contactInfo.mainAddress.addressLine2}</p>
                                             <p>{contactInfo.mainAddress.city}, {contactInfo.mainAddress.state} - {contactInfo.mainAddress.pincode}</p>
                                             <p className='mt-4 font-bold text-slate-900'>
-                                                {contactInfo.mainAddress.phone}
+                                                {contactInfo.mainAddress.phoneNumber}
                                             </p>
                                             {contactInfo.mainAddress.gst && (
                                                 <p className='text-sm mt-2'>GST: {contactInfo.mainAddress.gst}</p>
@@ -297,12 +314,13 @@ export default function ContactPage() {
                                         <label
                                             htmlFor='phone'
                                             className='mb-2 block text-sm font-bold text-slate-900 uppercase tracking-wide'>
-                                            Phone Number
+                                            Phone Number <span className='text-primary'>*</span>
                                         </label>
                                         <input
                                             type='tel'
                                             id='phone'
                                             name='phone'
+                                            required
                                             pattern='[0-9]{10}'
                                             minLength={10}
                                             maxLength={10}
@@ -324,11 +342,12 @@ export default function ContactPage() {
                                         <label
                                             htmlFor='requirements'
                                             className='mb-2 block text-sm font-bold text-slate-900 uppercase tracking-wide'>
-                                            Project Requirements
+                                            Project Requirements <span className='text-primary'>*</span>
                                         </label>
                                         <textarea
                                             id='requirements'
                                             name='requirements'
+                                            required
                                             rows={5}
                                             value={formData.requirements}
                                             onChange={handleChange}
@@ -340,12 +359,30 @@ export default function ContactPage() {
                                     {/* Submit Button */}
                                     <button
                                         type='submit'
-                                        className='group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-primary py-4 text-lg font-bold text-white transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30'>
+                                        disabled={submitting || submitSuccess}
+                                        className='group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-primary py-4 text-lg font-bold text-white transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 disabled:opacity-70 disabled:cursor-not-allowed'>
                                         <div className='absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-150%)] group-hover:duration-1000 group-hover:[transform:skew(-12deg)_translateX(150%)]'>
                                             <div className='relative h-full w-8 bg-white/20' />
                                         </div>
-                                        <Send className='h-5 w-5' />
-                                        Send Message
+                                        {submitting ? (
+                                            <>
+                                                <svg className='h-5 w-5 animate-spin' viewBox='0 0 24 24' fill='none'>
+                                                    <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                                                    <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v8z' />
+                                                </svg>
+                                                Sending...
+                                            </>
+                                        ) : submitSuccess ? (
+                                            <>
+                                                <svg className='h-5 w-5' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5'><path strokeLinecap='round' strokeLinejoin='round' d='M5 13l4 4L19 7'/></svg>
+                                                Message Sent!
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Send className='h-5 w-5' />
+                                                Send Message
+                                            </>
+                                        )}
                                     </button>
 
                                     <p className='text-center text-xs font-medium text-slate-500'>

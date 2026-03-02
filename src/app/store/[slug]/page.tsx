@@ -108,7 +108,7 @@ export default async function ProductDetailPage({ params }: Params) {
         <div className='mt-8 rounded-3xl border border-slate-200 bg-linear-to-br from-slate-50 to-white p-6 shadow-xl'>
           <div className='relative h-105 overflow-hidden rounded-2xl'>
             <Image 
-              src={product.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'}${product.image}` : (product.image || '/placeholder-image.jpg')}
+              src={product.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${product.image}` : (product.image || '/placeholder-image.jpg')}
               alt={product.title} 
               fill 
               className='object-cover' 
@@ -117,7 +117,7 @@ export default async function ProductDetailPage({ params }: Params) {
           <div className='mt-4 flex flex-col gap-3 sm:flex-row sm:justify-center'>
             <button 
               onClick={() => {
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com';
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
                 if (product.pdfDownloadUrl && !product.pdfDownloadUrl.includes('/null/')) {
                   const downloadUrl = product.pdfDownloadUrl.startsWith('/') 
                     ? `${API_URL}${product.pdfDownloadUrl}` 

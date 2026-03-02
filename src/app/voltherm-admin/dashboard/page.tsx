@@ -418,15 +418,32 @@ export default function AdminDashboard() {
                                         p.id === id ? { ...p, featured: !p.featured } : p
                                     );
                                     setProducts(updated);
-                                    await adminDataService.saveProducts(updated);
                                 }}
-                                onToggleAvailability={async (id: number) => {
+                                onToggleAvailability={(id: number) => {
                                     const updated = products.map((p) =>
                                         p.id === id ? { ...p, available: !p.available } : p
                                     );
                                     setProducts(updated);
-                                    await adminDataService.saveProducts(updated);
-                                    toast.success('Product availability updated');
+                                }}
+                                onBatchSave={async (pendingIds: Set<number>, currentProducts: Product[]) => {
+                                    let savedCount = 0;
+                                    let errorCount = 0;
+                                    for (const id of pendingIds) {
+                                        const product = currentProducts.find((p: Product) => p.id === id);
+                                        if (!product) continue;
+                                        try {
+                                            await adminDataService.updateProduct(product.id, product, undefined, undefined);
+                                            savedCount++;
+                                        } catch (error) {
+                                            console.error(`Failed to save product ${product.title}:`, error);
+                                            errorCount++;
+                                        }
+                                    }
+                                    if (errorCount === 0) {
+                                        toast.success(`${savedCount} product(s) saved successfully`);
+                                    } else {
+                                        toast.error(`${errorCount} failed, ${savedCount} saved successfully`);
+                                    }
                                 }}
                             />
                         )}
@@ -651,6 +668,26 @@ function SettingsTab() {
             return;
         }
 
+        if (!/[A-Z]/.test(newPassword)) {
+            toast.error('New password must contain at least one uppercase letter');
+            return;
+        }
+
+        if (!/[a-z]/.test(newPassword)) {
+            toast.error('New password must contain at least one lowercase letter');
+            return;
+        }
+
+        if (!/[0-9]/.test(newPassword)) {
+            toast.error('New password must contain at least one digit');
+            return;
+        }
+
+        if (!/[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(newPassword)) {
+            toast.error('New password must contain at least one special character (!@#$%^&*...)');
+            return;
+        }
+
         if (newPassword !== confirmPassword) {
             toast.error('New passwords do not match');
             return;
@@ -684,8 +721,9 @@ function SettingsTab() {
                 toast.success('Password changed successfully!');
             }
         } catch (error) {
-            console.error('Password change error:', error);
-            toast.error('Failed to change password. Please try again.');
+            const message = error instanceof Error ? error.message : 'Failed to change password. Please try again.';
+            console.warn('Password change error:', error);
+            toast.error(message);
             setOtpSent(false);
         }
     };
@@ -1026,7 +1064,8 @@ function ProductsTab({
     onSave,
     onDelete,
     onToggleFeatured,
-    onToggleAvailability
+    onToggleAvailability,
+    onBatchSave
 }: any) {
     const [formData, setFormData] = useState<Product>({
         id: 0,
@@ -1043,11 +1082,31 @@ function ProductsTab({
     const [searchQuery, setSearchQuery] = useState('');
     const [showSpecInfo, setShowSpecInfo] = useState<number | null>(null);
     const [quickSpecsInput, setQuickSpecsInput] = useState<string>('');
+    const [pendingChanges, setPendingChanges] = useState<Set<number>>(new Set());
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         if (editingProduct) {
-            setFormData(editingProduct);
-            setQuickSpecsInput(editingProduct.specs?.join(', ') || '');
+            setFormData({
+                id: editingProduct.id ?? 0,
+                backendId: editingProduct.backendId,
+                title: editingProduct.title ?? '',
+                description: editingProduct.description ?? '',
+                image: editingProduct.image ?? '',
+                specs: editingProduct.specs ?? [''],
+                featured: editingProduct.featured ?? false,
+                available: editingProduct.available ?? true,
+                price: editingProduct.price,
+                capacity: editingProduct.capacity ?? '',
+                voltage: editingProduct.voltage ?? '',
+                category: editingProduct.category ?? '',
+                subCategoryId: editingProduct.subCategoryId ?? '',
+                technicalSpecs: editingProduct.technicalSpecs ?? [],
+                pdfDownloadUrl: editingProduct.pdfDownloadUrl ?? ''
+            });
+            setImageFile(null);
+            setPdfFile(null);
+            setQuickSpecsInput(editingProduct.specs?.join(', ') ?? '');
         } else if (isAddingProduct) {
             setFormData({
                 id: 0,
@@ -1189,7 +1248,7 @@ function ProductsTab({
                                     {formData.image && (
                                         <div className='relative inline-block'>
                                             <img
-                                                src={formData.image}
+                                                src={formData.image.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${formData.image}` : formData.image}
                                                 alt='Preview'
                                                 className='h-auto max-w-48 rounded-lg border border-slate-200 shadow-sm'
                                             />
@@ -1483,6 +1542,22 @@ function ProductsTab({
                     </p>
                 </div>
                 <div className='flex items-center gap-3'>
+                    {pendingChanges.size > 0 && (
+                        <button
+                            onClick={async () => {
+                                setIsSaving(true);
+                                try {
+                                    await onBatchSave(pendingChanges, products);
+                                    setPendingChanges(new Set());
+                                } finally {
+                                    setIsSaving(false);
+                                }
+                            }}
+                            disabled={isSaving}
+                            className='flex items-center gap-2 rounded-lg bg-teal-700 px-4 py-2.5 font-medium text-white transition-all hover:bg-teal-800 disabled:opacity-60'>
+                            {isSaving ? 'Saving...' : 'Save Changes'}
+                        </button>
+                    )}
                     <button
                         onClick={() => setIsAddingProduct(true)}
                         className='flex items-center gap-2 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 px-4 py-2.5 font-medium text-white transition-all hover:shadow-lg'>
@@ -1523,7 +1598,7 @@ function ProductsTab({
                                 <div className='relative shrink-0'>
                                     <div className='h-24 w-24 overflow-hidden rounded-lg border-3 border-cyan-400 bg-slate-50 shadow-md'>
                                         <img
-                                            src={product.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com'}${product.image}` : (product.image || '/placeholder-image.jpg')}
+                                            src={product.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${product.image}` : (product.image || '/placeholder-image.jpg')}
                                             alt={product.title}
                                             className='h-full w-full object-cover'
                                             onError={(e) => {
@@ -1598,7 +1673,7 @@ function ProductsTab({
                                 {/* Action Buttons - Compact */}
                                 <div className='flex shrink-0 gap-1.5'>
                                     <button
-                                        onClick={() => onToggleFeatured(product.id)}
+                                        onClick={() => { onToggleFeatured(product.id); setPendingChanges(prev => new Set(prev).add(product.id)); }}
                                         className={`flex h-9 w-9 transform items-center justify-center rounded-lg text-sm shadow-sm transition-all hover:scale-110 ${
                                             product.featured
                                                 ? 'bg-amber-400 text-white hover:bg-amber-500'
@@ -1608,7 +1683,7 @@ function ProductsTab({
                                         ⭐
                                     </button>
                                     <button
-                                        onClick={() => onToggleAvailability(product.id)}
+                                        onClick={() => { onToggleAvailability(product.id); setPendingChanges(prev => new Set(prev).add(product.id)); }}
                                         className={`flex h-9 w-9 transform items-center justify-center rounded-lg shadow-sm transition-all hover:scale-110 ${
                                             product.available !== false
                                                 ? 'bg-teal-100 text-teal-600 hover:bg-teal-200'
@@ -2155,10 +2230,10 @@ function ContactTab({ contactInfo, setContactInfo, onSave }: any) {
                     </div>
                     <input 
                         type='tel' 
-                        value={contactInfo.mainAddress?.phone || ''} 
+                        value={contactInfo.mainAddress?.phoneNumber || ''} 
                         onChange={(e) => setContactInfo({ 
                             ...contactInfo, 
-                            mainAddress: { ...(contactInfo.mainAddress || {}), phone: e.target.value } 
+                            mainAddress: { ...(contactInfo.mainAddress || {}), phoneNumber: e.target.value } 
                         })} 
                         placeholder='Phone' 
                         className='w-full px-4 py-2 border border-slate-300 text-slate-900 rounded-lg' 

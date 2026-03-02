@@ -237,6 +237,7 @@ export default function AboutPage() {
                                         src={cert.src}
                                         alt={cert.alt}
                                         fill
+                                        unoptimized
                                         className='object-contain p-6 transition-transform duration-700 group-hover:scale-[1.15]'
                                     />
                                 </div>
@@ -302,6 +303,7 @@ export default function AboutPage() {
                                 alt={selectedCertificate.alt}
                                 width={1400}
                                 height={1000}
+                                unoptimized
                                 className='h-full w-full object-contain p-8'
                                 priority
                             />

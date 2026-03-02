@@ -63,6 +63,7 @@ export interface Inquiry {
     products: {
         id: number;
         title: string;
+        quantity: number;
     }[];
     status: 'new' | 'in-progress' | 'completed' | 'rejected';
     createdAt: number;
@@ -101,7 +102,7 @@ export interface ContactInfo {
         city: string;
         state: string;
         pincode: string;
-        phone: string;
+        phoneNumber: string;
         gst?: string;
         mapUrl?: string;
     };
@@ -404,46 +405,24 @@ export const defaultCertificates: Certificate[] = [
 
 export const defaultContactInfo: ContactInfo = {
     sales: {
-        email: 'Volthermtechnologies@gmail.com',
-        phone: '+91 7485918169'
+        email: '',
+        phone: ''
     },
     business: {
-        email: 'Voltherminnovationacc@gmail.com'
+        email: ''
     },
     support: {
-        phone: '+91 7011418631'
+        phone: ''
     },
     socialMedia: {
-        facebook: 'https://www.facebook.com/Voltherm/',
-        instagram: 'https://www.instagram.com/volthermtech/',
-        linkedin: 'https://www.linkedin.com/company/voltherm-innovation/',
+        facebook: '',
+        instagram: '',
+        linkedin: '',
         twitter: '',
-        indiamart: 'https://www.indiamart.com/voltherm-technologies/'
+        indiamart: ''
     },
-    mainAddress: {
-        companyName: 'VOLTHERM INNOVATION PRIVATE LIMITED',
-        addressLine1: 'Plot No. B-5/2, GIDC, Electronics Estate,',
-        addressLine2: 'Sector 25, Gandhinagar',
-        city: 'Gandhinagar',
-        state: 'Gujarat',
-        pincode: '382024',
-        phone: '+91 7485918169 / +91 7011418631',
-        gst: '24AAJCV4770E1Z9',
-        mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3667.8583!2d72.628678!3d23.249254!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDE0JzU3LjMiTiA3MsKwMzcnNDMuMiJF!5e0!3m2!1sen!2sin!4v1234567890!5m2!1sen!2sin'
-    },
-    branches: [
-        {
-            id: 'branch1',
-            name: 'Branch Office - Rajkot',
-            addressLine1: 'Plot No. 103, Ruda Transport Nagar,',
-            addressLine2: 'Nr. Sat Hanuman, Ahmedabad Highway, Navagam',
-            city: 'Rajkot',
-            state: 'Gujarat',
-            pincode: '360001',
-            phone: '+91-9409421304',
-            mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14779.8583!2d70.851786!3d22.328773!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjLCsDE5JzQzLjYiTiA3MMKwNTEnMDYuNCJF!5e0!3m2!1sen!2sin!4v1234567890!5m2!1sen!2sin'
-        }
-    ]
+    mainAddress: undefined,
+    branches: []
 };
 
 // Storage keys

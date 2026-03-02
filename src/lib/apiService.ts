@@ -1,7 +1,7 @@
 // API Service for connecting to Voltherm Backend
 // This replaces localStorage with actual backend API calls
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://voltherm-backend-2pw5.onrender.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 // API response interface to match backend
 interface ApiResponse<T> {
@@ -28,6 +28,7 @@ export interface BackendProduct {
     quickSpecs: string[];
     imageUrl: string;
     pdfDownloadUrl?: string;
+    productDescription?: string;
 }
 
 export interface BackendCertificate {
@@ -45,6 +46,7 @@ export interface BackendInquiry {
     requirements: string;
     company?: string;
     interestedProducts: string[];
+    cartItems?: { title: string; quantity: number }[];
     status?: string;
 }
 
@@ -67,7 +69,16 @@ export interface BackendContactInfo {
     salesPhoneNumber: string;
     businessEmail: string;
     supportPhoneNumber: string;
-    mainAddress: string;
+    mainAddress?: {
+        companyName?: string;
+        addressLine1?: string;
+        addressLine2?: string;
+        city?: string;
+        state?: string;
+        pincode?: string;
+        phoneNumber?: string;
+        mapUrl?: string;
+    };
     branches: BackendOffice[];
     facebookUrl?: string;
     xUrl?: string;
@@ -108,13 +119,20 @@ class ApiService {
             ]);
             
             if (!response.ok) {
-                throw new Error(`API call failed: ${response.status} ${response.statusText}`);
+                let message = `API call failed: ${response.status} ${response.statusText}`;
+                try {
+                    const errBody = await response.json();
+                    if (errBody?.error?.message) {
+                        message = errBody.error.message;
+                    }
+                } catch { /* ignore parse errors */ }
+                throw new Error(message);
             }
 
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error(`API Error for ${endpoint}:`, error);
+            console.warn(`API Error for ${endpoint}:`, error);
             throw error;
         }
     }
