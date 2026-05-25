@@ -1,192 +1,676 @@
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import AnimatedTestimonialsDemo from '@/components/demos/AnimatedTestimonialsDemo';
 import BentoGridDemo from '@/components/demos/BentoGridDemo';
-import NavbarDemo from '@/components/demos/NavbarDemo';
 import ProductCarouselDemo from '@/components/demos/ProductCarouselDemo';
 import StickyScrollRevealDemo from '@/components/demos/StickyScrollRevealDemo';
 
-import { ArrowRight, CheckCircle2, ShieldCheck, Sparkles, Zap, BatteryCharging } from 'lucide-react';
+import {
+    ArrowRight,
+    CheckCircle2,
+    Sparkles,
+    Car,
+    Radio,
+    Database,
+    BatteryCharging,
+    Menu,
+    X,
+    Shield,
+    Sun,
+    Zap
+} from 'lucide-react';
 
 const HomePage: React.FC = () => {
+    const [activeTab, setActiveTab] = useState(0);
+    const [progress, setProgress] = useState(0);
+    const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+    const [scrollProgress, setScrollProgress] = useState(0);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    
+    const verticalsRef = useRef<HTMLDivElement>(null);
+
+    const categories = ['Automotive', 'Telecom', 'BESS', 'Lead Replacement'];
+
+    // Dynamic Hero Content based on selected tab
+    const heroContent = [
+        {
+            badge: 'Automotive Energy',
+            title: 'Powering the Future of Motion',
+            desc: 'Advanced thermal management, intelligent BMS, and high-density battery modules engineered for electric mobility, aerospace, and performance vehicles.',
+            image: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=1200&auto=format&fit=crop',
+            specs: ['ISO 9001', 'UL 1973', 'IEC 62619']
+        },
+        {
+            badge: 'Telecom Backup',
+            title: 'Uninterrupted Grid & Telecom Power',
+            desc: 'Highly resilient energy storage systems with intelligent BMS, active fault isolation, and optimized backup capability for critical network infrastructures.',
+            image: 'https://images.unsplash.com/photo-1544669146-6c4d76717a6a?q=80&w=1200&auto=format&fit=crop',
+            specs: ['IP65 Rated', 'Remote Telemetry', 'Long Standby']
+        },
+        {
+            badge: 'Commercial Storage',
+            title: 'Smart Grid-Scale Energy Storage',
+            desc: 'Modular, containerized Battery Energy Storage Systems (BESS) designed for grid stability, peak shaving, and clean industrial energy backup.',
+            image: 'https://images.unsplash.com/photo-1620714223084-8fcacc6dfd8d?q=80&w=1200&auto=format&fit=crop',
+            specs: ['MW-scale Systems', 'Active Thermal', 'Peak Shaving']
+        },
+        {
+            badge: 'Industrial Power',
+            title: 'High-Density Lead Acid Replacement',
+            desc: 'Lightweight, zero-maintenance lithium battery packs engineered as a drop-in replacement for forklift, marine, and industrial deep-cycle applications.',
+            image: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=1200&auto=format&fit=crop',
+            specs: ['Drop-in Fit', '3x Cycle Life', 'Zero Maintenance']
+        }
+    ];
+
+    const verticalCards = [
+        {
+            title: 'Automotive',
+            image: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=800&auto=format&fit=crop',
+            icon: Car,
+            desc: 'High-performance electric mobility battery packs engineered for automotive, marine, and aerospace transport.'
+        },
+        {
+            title: 'Telecom Backup',
+            image: 'https://images.unsplash.com/photo-1544669146-6c4d76717a6a?q=80&w=800&auto=format&fit=crop',
+            icon: Radio,
+            desc: 'Resilient energy storage backup systems optimized for critical cellular networks and fiber backbones.'
+        },
+        {
+            title: 'Grid BESS',
+            image: 'https://images.unsplash.com/photo-1620714223084-8fcacc6dfd8d?q=80&w=800&auto=format&fit=crop',
+            icon: Database,
+            desc: 'Grid-scale, containerized Battery Energy Storage Systems designed for power stabilization and peak shaving.'
+        },
+        {
+            title: 'Lead Replacement',
+            image: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=800&auto=format&fit=crop',
+            icon: BatteryCharging,
+            desc: 'Maintenance-free, high-density lithium replacement packs for heavy duty industrial deep-cycle systems.'
+        },
+        {
+            title: 'Solar Products',
+            image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?q=80&w=800&auto=format&fit=crop',
+            icon: Sun,
+            desc: 'High-efficiency solar consumer products, advanced solar lanterns, and modular home microgrid systems.'
+        },
+        {
+            title: 'EV Charging EPC',
+            image: 'https://images.unsplash.com/photo-1563720223185-11003d516935?q=80&w=800&auto=format&fit=crop',
+            icon: Zap,
+            desc: 'End-to-end turnkey EPC services for EV charging parks, smart grid connections, and modular fast-chargers.'
+        },
+        {
+            title: 'Custom Packing',
+            image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=800&auto=format&fit=crop',
+            icon: Sparkles,
+            desc: 'Tailored lithium packs customized for extreme environments, aerospace telemetry, and specialized medical tools.'
+        },
+        {
+            title: 'Aerospace Power',
+            image: 'https://images.unsplash.com/photo-1517976487492-5750f3195933?q=80&w=800&auto=format&fit=crop',
+            icon: Shield,
+            desc: 'Ultra-reliability high-voltage battery modules designed and certified for defense and high-altitude systems.'
+        }
+    ];
+
+    // Scroll listeners
+    useEffect(() => {
+        const handleScroll = () => {
+            // Navbar scroll state
+            setIsScrolled(window.scrollY > 20);
+
+            // Verticals sticky horizontal scroll progress
+            if (verticalsRef.current) {
+                const rect = verticalsRef.current.getBoundingClientRect();
+                const containerHeight = rect.height;
+                const viewportHeight = window.innerHeight;
+                const scrollTop = -rect.top;
+                const scrollableHeight = containerHeight - viewportHeight;
+
+                if (scrollableHeight > 0) {
+                    let progress = scrollTop / scrollableHeight;
+                    progress = Math.max(0, Math.min(1, progress));
+                    setScrollProgress(progress);
+                }
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('resize', handleScroll);
+        
+        // Initial call
+        handleScroll();
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', handleScroll);
+        };
+    }, []);
+
+    // Intersection observer for section fade-in animation
+    const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({});
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        setVisibleSections((prev) => ({ ...prev, [entry.target.id]: true }));
+                    }
+                });
+            },
+            { threshold: 0.15 }
+        );
+
+        const sections = document.querySelectorAll('section[id]');
+        sections.forEach((section) => observer.observe(section));
+
+        return () => observer.disconnect();
+    }, []);
+
+    const activeHero = heroContent[activeTab];
+
+    const slideDuration = 6000; // 6 seconds
+    const intervalTime = 50; // 50ms for buttery-smooth animations
+
+    useEffect(() => {
+        setProgress(0);
+        
+        const startTime = Date.now();
+        const timer = setInterval(() => {
+            const elapsedTime = Date.now() - startTime;
+            const currentProgress = Math.min(100, (elapsedTime / slideDuration) * 100);
+            
+            setProgress(currentProgress);
+
+            if (elapsedTime >= slideDuration) {
+                clearInterval(timer);
+                setActiveTab((prev) => (prev + 1) % categories.length);
+            }
+        }, intervalTime);
+
+        return () => clearInterval(timer);
+    }, [activeTab]);
+
+    const handleTabClick = (idx: number) => {
+        setActiveTab(idx);
+        setProgress(0);
+    };
+
     return (
-        <main className='min-h-screen w-full font-sans bg-slate-50 text-slate-900 overflow-hidden'>
-            {/* Navigation */}
-            <NavbarDemo />
+        <main className='min-h-screen w-full bg-[#f5f5f5] text-neutral-900 overflow-x-clip font-outfit antialiased'>
+            {/* Inject Page Keyframes & Animation Utilities */}
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes fadeInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes contentSwap {
+                    from {
+                        opacity: 0;
+                        transform: translateY(12px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                .animate-fade-in-up {
+                    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+                .animate-content-swap {
+                    animation: contentSwap 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+                .scrollbar-hide::-webkit-scrollbar {
+                    display: none;
+                }
+                .scrollbar-hide {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+                .nav-link::after {
+                    content: '';
+                    position: absolute;
+                    width: 0%;
+                    height: 2px;
+                    bottom: -4px;
+                    left: 50%;
+                    background-color: #E8610A;
+                    transition: all 0.3s ease-in-out;
+                    transform: translateX(-50%);
+                }
+                .nav-link:hover::after {
+                    width: 70%;
+                }
+                .nav-link-active::after {
+                    width: 70%;
+                    background-color: #E8610A;
+                }
+            ` }} />
 
-            {/* Futuristic Hero Section - Light Mode */}
-            <section className='relative flex min-h-screen items-center justify-center pt-32 pb-20 md:pt-40 lg:pt-48'>
-                {/* Background Effects */}
-                <div className='absolute inset-0 z-0 overflow-hidden'>
-                    <div className='absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] opacity-40 pointer-events-none'>
-                        <div className='absolute inset-0 bg-gradient-to-r from-primary/30 via-purple-300/30 to-secondary/20 blur-[100px] rounded-full mix-blend-multiply'></div>
+            {/* FLOATING NAVBAR (Constant padding to prevent jiggle) */}
+            <div className='fixed top-4 md:top-6 inset-x-0 z-50 mx-auto max-w-5xl px-4 w-full select-none'>
+                <header
+                    className={`transition-all duration-300 w-full rounded-full border py-3 px-6 md:px-8 ${
+                        isScrolled 
+                            ? 'bg-white/95 backdrop-blur-md shadow-lg border-neutral-200/60' 
+                            : 'bg-white/90 backdrop-blur-sm shadow-md border-neutral-200/30'
+                    }`}
+                    style={{ animation: 'fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both' }}
+                >
+                    <div className='flex items-center justify-between w-full'>
+                        {/* Logo */}
+                        <Link href='/' className='flex items-center gap-3 select-none group pointer-events-auto'>
+                            <Image
+                                src='/images/logon.png'
+                                alt='Voltherm Logo'
+                                width={28}
+                                height={28}
+                                className='object-contain transition-transform duration-500 group-hover:scale-105'
+                                priority
+                            />
+                            <span className='font-extrabold text-lg tracking-tight text-neutral-900 font-outfit uppercase'>
+                                VOLTHERM
+                            </span>
+                        </Link>
+
+                        {/* Centered Desktop Menu */}
+                        <nav className='hidden md:flex items-center space-x-8 font-outfit pointer-events-auto'>
+                            <Link href='/' className='nav-link nav-link-active relative text-sm font-bold text-neutral-900 hover:text-[#E8610A] transition-colors'>
+                                Home
+                            </Link>
+                            <Link href='/aboutus' className='nav-link relative text-sm font-semibold text-neutral-600 hover:text-neutral-900 transition-colors'>
+                                About Us
+                            </Link>
+                            <Link href='/store' className='nav-link relative text-sm font-semibold text-neutral-600 hover:text-neutral-900 transition-colors'>
+                                Store
+                            </Link>
+                        </nav>
+
+                        {/* Desktop Contact CTA */}
+                        <div className='hidden md:block pointer-events-auto'>
+                            <Link
+                                href='/contact'
+                                className='group bg-[#111] hover:bg-[#E8610A] text-white text-xs font-bold px-6 py-2 rounded-full shadow-md transition-all duration-300 transform hover:scale-105 active:scale-95 inline-flex items-center gap-1.5'
+                            >
+                                Contact Us
+                                <ArrowRight size={12} className='transition-transform duration-300 group-hover:translate-x-0.5' />
+                            </Link>
+                        </div>
+
+                        {/* Mobile Menu Button */}
+                        <button
+                            className='md:hidden p-1.5 text-neutral-900 focus:outline-none pointer-events-auto'
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            aria-label='Toggle menu'
+                        >
+                            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                        </button>
                     </div>
-                    
-                    {/* Grid Pattern */}
-                    <div className='absolute inset-0 bg-[url("https://grainy-gradients.vercel.app/noise.svg")] opacity-[0.03] pointer-events-none'></div>
-                    <div className='absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]'></div>
-                </div>
 
-                <div className='relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8'>
-                    <div className='grid grid-cols-1 items-center gap-16 lg:grid-cols-2'>
-                        
-                        {/* Left Content */}
-                        <div className='space-y-10 flex flex-col justify-center relative'>
-                            {/* Floating decorative elements */}
-                            <div className='absolute -left-10 top-10 w-20 h-20 bg-primary/20 rounded-full blur-2xl animate-pulse'></div>
-                            <div className='absolute right-10 bottom-20 w-32 h-32 bg-secondary/20 rounded-full blur-3xl animate-pulse delay-1000'></div>
+                    {/* Mobile Menu Dropdown */}
+                    {isMobileMenuOpen && (
+                        <div className='md:hidden absolute top-full left-4 right-4 mt-2 bg-white border border-neutral-100/80 px-6 py-5 flex flex-col space-y-4 rounded-3xl shadow-xl animate-fade-in-up font-outfit pointer-events-auto'>
+                            <Link
+                                href='/'
+                                className='text-sm font-bold text-[#E8610A] py-1.5 border-b border-neutral-50'
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                Home
+                            </Link>
+                            <Link
+                                href='/aboutus'
+                                className='text-sm font-semibold text-neutral-600 hover:text-neutral-900 py-1.5 border-b border-neutral-50'
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                About Us
+                            </Link>
+                            <Link
+                                href='/store'
+                                className='text-sm font-semibold text-neutral-600 hover:text-neutral-900 py-1.5 border-b border-neutral-50'
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                Store
+                            </Link>
+                            <Link
+                                href='/contact'
+                                className='bg-[#111] hover:bg-[#E8610A] text-white text-center text-sm font-bold py-2.5 rounded-full mt-1 transition-colors duration-300'
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                Contact Us
+                            </Link>
+                        </div>
+                    )}
+                </header>
+            </div>
 
-                            {/* Top Badge */}
-                            <div className='inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white/60 px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-primary shadow-sm backdrop-blur-md w-fit transition-all hover:bg-white hover:shadow-md hover:scale-105'>
-                                <Sparkles className='h-4 w-4 animate-pulse' />
-                                Next Generation Energy
+            {/* HERO SECTION */}
+            <section className='pt-28 pb-12 px-4 md:px-8 max-w-7xl mx-auto'>
+                <div 
+                    className='relative bg-[#1a1a1a] rounded-[24px] md:rounded-[36px] overflow-hidden p-8 md:p-16 z-10 shadow-xl flex flex-col justify-between min-h-[500px] md:min-h-[75vh]'
+                    style={{ animation: 'fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both' }}
+                >
+                    {/* Glowing subtle gradient background */}
+                    <div className='absolute -right-40 -top-40 h-[500px] w-[500px] rounded-full bg-[#E8610A]/5 blur-[120px] pointer-events-none'></div>
+
+                    <div className='relative z-20 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full flex-1 mb-8'>
+                        {/* Left Column - Text Details */}
+                        <div key={`hero-text-${activeTab}`} className='lg:col-span-6 flex flex-col space-y-6 animate-content-swap text-left'>
+                            {/* Dynamic Sparkle badge */}
+                            <div className='inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#E8610A] w-fit shadow-inner backdrop-blur-md'>
+                                <Sparkles className='h-3.5 w-3.5 animate-pulse' />
+                                {activeHero.badge}
                             </div>
-                            
-                            {/* Main Headings */}
-                            <div className='space-y-4'>
-                                <h1 className='text-5xl leading-[1.1] font-extrabold tracking-tight md:text-6xl lg:text-7xl text-slate-900'>
-                                    Powering the <br />
-                                    <span className='bg-gradient-to-r from-primary via-purple-600 to-secondary bg-clip-text text-transparent drop-shadow-sm'>
-                                        Future of Motion
+
+                            {/* Dynamic Bold Headline */}
+                            <h1 className='text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1] font-outfit select-none'>
+                                {activeHero.title.split(' ').slice(0, -2).join(' ')} <br />
+                                <span className='text-[#E8610A] drop-shadow-sm'>
+                                    {activeHero.title.split(' ').slice(-2).join(' ')}
+                                </span>
+                            </h1>
+
+                            {/* Dynamic Description */}
+                            <p className='text-neutral-300 text-sm md:text-base leading-relaxed font-normal font-outfit'>
+                                {activeHero.desc}
+                            </p>
+
+                            {/* Dynamic Quick Spec list */}
+                            <div className='flex flex-wrap items-center gap-x-6 gap-y-3 pt-1 text-xs md:text-sm font-semibold text-neutral-400'>
+                                {activeHero.specs.map((spec, sidx) => (
+                                    <span key={sidx} className='flex items-center gap-1.5'>
+                                        <CheckCircle2 className='text-[#E8610A] h-4 w-4' /> {spec}
                                     </span>
-                                </h1>
-                                <p className='max-w-xl text-lg leading-relaxed text-slate-600 md:text-xl font-medium'>
-                                    Advanced thermal management, intelligent BMS, and high-density battery modules engineered for electric mobility, aerospace, and grid-scale storage.
-                                </p>
+                                ))}
                             </div>
 
-                            {/* Feature Cards */}
-                            <div className='grid grid-cols-1 gap-5 sm:grid-cols-2'>
-                                <div className='group flex items-start gap-4 rounded-2xl border border-slate-200/60 bg-white/80 hover:bg-white hover:border-primary/40 p-5 shadow-lg shadow-slate-200/50 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl'>
-                                    <div className='rounded-xl bg-primary/10 p-2.5 transition-colors group-hover:bg-primary/20'>
-                                        <ShieldCheck className='text-primary h-6 w-6' />
-                                    </div>
-                                    <div>
-                                        <p className='text-sm font-bold text-slate-900 transition-colors'>Safety Architecture</p>
-                                        <p className='text-xs text-slate-500 mt-1 leading-relaxed'>Redundant thermal control with active fault isolation.</p>
-                                    </div>
-                                </div>
-                                <div className='group flex items-start gap-4 rounded-2xl border border-slate-200/60 bg-white/80 hover:bg-white hover:border-secondary/40 p-5 shadow-lg shadow-slate-200/50 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl'>
-                                    <div className='rounded-xl bg-secondary/10 p-2.5 transition-colors group-hover:bg-secondary/20'>
-                                        <Zap className='text-secondary h-6 w-6' />
-                                    </div>
-                                    <div>
-                                        <p className='text-sm font-bold text-slate-900 transition-colors'>High Power Density</p>
-                                        <p className='text-xs text-slate-500 mt-1 leading-relaxed'>Peak discharge optimized for performance vehicles.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Buttons & Certs */}
-                            <div className='flex flex-col gap-6 pt-4 sm:flex-row sm:items-center'>
-                                <div className='flex flex-col gap-4 sm:flex-row'>
-                                    <a
-                                        href='#technology'
-                                        className='group relative flex items-center justify-center overflow-hidden rounded-xl bg-primary px-8 py-4 text-sm font-bold text-white shadow-lg shadow-primary/30 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-primary/40'>
-                                        <div className='absolute inset-0 z-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-in-out group-hover:translate-x-full' />
-                                        <span className='relative z-10 flex items-center'>
-                                            Explore Technology
-                                            <ArrowRight className='ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1.5' />
-                                        </span>
-                                    </a>
-                                    <a
-                                        href='#products'
-                                        className='group flex items-center justify-center rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 px-8 py-4 text-sm font-bold text-slate-700 transition-all duration-300 hover:scale-105 hover:border-slate-300 hover:shadow-md'>
-                                        View Products
-                                    </a>
-                                </div>
-                                
-                                <div className='flex items-center gap-3 rounded-xl border border-slate-200 bg-white/60 px-5 py-3.5 text-xs font-bold text-slate-600 backdrop-blur-md shadow-sm'>
-                                    <CheckCircle2 className='text-green-500 h-5 w-5 drop-shadow-sm' />
-                                    ISO 9001 &bull; UL 1973 &bull; IEC 62619
-                                </div>
+                            {/* Hero CTAs */}
+                            <div className='flex flex-col sm:flex-row gap-4 pt-2'>
+                                <a
+                                    href='#technology'
+                                    className='group flex items-center justify-center rounded-full bg-[#E8610A] hover:bg-[#d05608] px-8 py-3 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 active:scale-95'
+                                >
+                                    Explore Technology
+                                    <ArrowRight className='ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1' />
+                                </a>
+                                <a
+                                    href='#products'
+                                    className='group flex items-center justify-center rounded-full border border-white/20 bg-white/5 hover:bg-white/10 px-8 py-3 text-sm font-bold text-white transition-all duration-300 hover:scale-105 active:scale-95'
+                                >
+                                    View Products
+                                </a>
                             </div>
                         </div>
 
-                        {/* Right Content - Futuristic Graphic */}
-                        <div className='relative flex h-[500px] items-center justify-center lg:h-[650px] w-full'>
-                            {/* Glowing rings and background */}
-                            <div className='absolute inset-0 flex items-center justify-center'>
-                                <div className='absolute h-[400px] w-[400px] rounded-full border border-primary/10 animate-[spin_20s_linear_infinite]'></div>
-                                <div className='absolute h-[500px] w-[500px] rounded-full border border-secondary/10 animate-[spin_30s_linear_infinite_reverse]'></div>
-                                <div className='absolute h-[600px] w-[600px] rounded-full border border-slate-300 border-dashed animate-[spin_40s_linear_infinite]'></div>
-                            </div>
+                        {/* Right Column - Product Image */}
+                        <div key={`hero-bg-${activeTab}`} className='lg:col-span-6 relative h-[280px] sm:h-[350px] lg:h-[450px] w-full rounded-2xl overflow-hidden select-none animate-content-swap shadow-2xl border border-white/5 bg-neutral-900/40 p-4 flex items-center justify-center'>
+                            <Image
+                                src={activeHero.image}
+                                alt={activeHero.title}
+                                fill
+                                className='object-cover rounded-xl opacity-90 transition-transform duration-1000'
+                                priority
+                                unoptimized
+                            />
+                            <div className='absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none'></div>
+                        </div>
+                    </div>
 
-                            {/* Main Image Container */}
-                            <div className='relative z-10 group'>
-                                <div className='absolute -inset-4 bg-gradient-to-r from-primary to-secondary opacity-10 blur-2xl transition-opacity duration-500 group-hover:opacity-20'></div>
-                                <div className='relative rounded-3xl p-1 bg-white/50 backdrop-blur-md border border-white shadow-2xl'>
-                                    <Image
-                                        src='https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=1000&auto=format&fit=crop'
-                                        alt='Battery Module'
-                                        width={550}
-                                        height={550}
-                                        className='rounded-[22px] object-cover transition-transform duration-700 hover:scale-[1.02]'
-                                        priority
-                                    />
-                                </div>
-                                
-                                {/* Floating Badges */}
-                                <div className='absolute -left-12 top-20 rounded-2xl border border-white bg-white/90 p-4 shadow-xl backdrop-blur-xl animate-bounce [animation-duration:3s]'>
-                                    <div className='flex items-center gap-3'>
-                                        <div className='rounded-full bg-green-100 p-2 border border-green-200'>
-                                            <BatteryCharging className='h-5 w-5 text-green-600' />
-                                        </div>
-                                        <div>
-                                            <p className='text-[10px] text-slate-500 font-bold uppercase tracking-widest'>Efficiency</p>
-                                            <p className='text-sm font-extrabold text-slate-900'>99.8% Peak</p>
-                                        </div>
+                    {/* Bottom Category/Tab Bar */}
+                    <div className='relative z-20 w-full border-t border-white/10 pt-6'>
+                        {/* Tabs Row Container */}
+                        <div className='relative w-full max-w-2xl grid grid-cols-4 select-none gap-4 md:gap-6'>
+                            {categories.map((cat, idx) => (
+                                <button
+                                    key={cat}
+                                    className='group flex flex-col text-left focus:outline-none cursor-pointer w-full'
+                                    onClick={() => handleTabClick(idx)}
+                                >
+                                    <span className={`pb-3 text-xs md:text-sm font-bold tracking-wide transition-colors duration-300 ${
+                                        activeTab === idx ? 'text-white font-extrabold' : 'text-neutral-400 hover:text-white'
+                                    }`}>
+                                        {cat}
+                                    </span>
+                                    {/* Underline Progress Track */}
+                                    <div className='relative w-full h-[2px] bg-white/10 rounded-full overflow-hidden'>
+                                        <div 
+                                            className={`absolute left-0 top-0 h-full bg-white rounded-full transition-all duration-100 ease-linear`}
+                                            style={{ 
+                                                width: activeTab === idx ? `${progress}%` : '0%',
+                                                boxShadow: activeTab === idx ? '0 0 6px rgba(255, 255, 255, 0.8)' : 'none'
+                                            }}
+                                        ></div>
                                     </div>
-                                </div>
-
-                                <div className='absolute -right-8 bottom-10 w-72 rounded-2xl border border-white/80 bg-white/80 p-5 shadow-2xl backdrop-blur-xl transition-all duration-300 hover:border-primary/30'>
-                                    <div className='flex items-center justify-between mb-4'>
-                                        <p className='text-[10px] font-extrabold uppercase tracking-[0.2em] text-primary'>System Core</p>
-                                        <span className='flex h-2.5 w-2.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e] animate-pulse'></span>
-                                    </div>
-                                    <div className='grid grid-cols-2 gap-4 text-sm relative'>
-                                        <div className='absolute top-1/2 left-0 right-0 h-px bg-slate-200 -translate-y-1/2'></div>
-                                        <div className='absolute top-0 bottom-0 left-1/2 w-px bg-slate-200 -translate-x-1/2'></div>
-                                        
-                                        <div className='pb-2 pr-2'>
-                                            <p className='text-slate-500 font-semibold text-[11px] mb-1'>Energy Density</p>
-                                            <p className='text-slate-900 font-bold tracking-tight'>260 Wh/kg</p>
-                                        </div>
-                                        <div className='pb-2 pl-2'>
-                                            <p className='text-slate-500 font-semibold text-[11px] mb-1'>Cycle Life</p>
-                                            <p className='text-slate-900 font-bold tracking-tight'>&gt;4,000</p>
-                                        </div>
-                                        <div className='pt-2 pr-2'>
-                                            <p className='text-slate-500 font-semibold text-[11px] mb-1'>Thermal Band</p>
-                                            <p className='text-slate-900 font-bold tracking-tight'>-20&deg;C to 55&deg;C</p>
-                                        </div>
-                                        <div className='pt-2 pl-2'>
-                                            <p className='text-slate-500 font-semibold text-[11px] mb-1'>Response Time</p>
-                                            <p className='text-slate-900 font-bold tracking-tight'>5 ms BMS</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Bento Grid Section */}
+            {/* OUR COMPANY INTRO SECTION (New) */}
+            <section id='our-company' className='py-20 px-6 max-w-7xl mx-auto' style={{ animation: 'fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
+                <div className='grid grid-cols-1 lg:grid-cols-12 gap-12 items-center bg-white rounded-[32px] p-8 md:p-16 border border-neutral-200/60 shadow-lg relative overflow-hidden'>
+                    <div className='absolute -right-40 -top-40 h-[400px] w-[400px] rounded-full bg-[#E8610A]/5 blur-[100px] pointer-events-none'></div>
+                    
+                    {/* Image Column */}
+                    <div className='lg:col-span-6 relative h-[300px] sm:h-[400px] w-full rounded-3xl overflow-hidden shadow-md border border-neutral-100/50 group'>
+                        <Image
+                            src='https://images.unsplash.com/photo-1466611653911-95081537e5b7?q=80&w=1200&auto=format&fit=crop'
+                            alt='Our Company Sustainable Transition'
+                            fill
+                            className='object-cover opacity-95 transition-transform duration-700 group-hover:scale-105'
+                            unoptimized
+                        />
+                        <div className='absolute inset-0 bg-gradient-to-tr from-[#E8610A]/5 to-transparent mix-blend-overlay'></div>
+                    </div>
 
-            <section id='products' className='bg-white py-24 relative'>
-                {/* Subtle top divider line */}
-                <div className="absolute top-0 left-10 right-10 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
-                
-                <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10'>
-                    <div className='mb-16 text-center'>
-                        <div className="inline-block mb-4 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+                    {/* Text Column */}
+                    <div className='lg:col-span-6 flex flex-col space-y-6 text-left lg:pl-6'>
+                        <div className='flex items-center gap-2 select-none'>
+                            <span className='w-3 h-3 bg-[#E8610A] rounded-sm shadow-sm'></span>
+                            <h2 className='text-sm font-extrabold uppercase tracking-widest text-[#E8610A] font-outfit'>
+                                Our Company
+                            </h2>
+                        </div>
+
+                        <p className='text-neutral-900 font-extrabold text-2xl md:text-3xl leading-tight font-outfit'>
+                            At Voltherm, we're committed to driving a seamless transition to safe and clean energy.
+                        </p>
+                        
+                        <p className='text-neutral-500 text-sm md:text-base leading-relaxed font-normal font-outfit'>
+                            Our singular purpose is to empower a sustainable future, making us a go-to partner for advanced battery solutions. We design, engineer, and deploy high-density energy architectures for global markets.
+                        </p>
+
+                        <div className='pt-2'>
+                            <Link
+                                href='/aboutus'
+                                className='group inline-flex items-center justify-center rounded-full bg-[#E8610A] hover:bg-[#d05608] px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#E8610A]/20 transition-all duration-300 hover:scale-105 active:scale-95'
+                            >
+                                About Us
+                                <ArrowRight className='ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1' />
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* VERTICALS SECTION (8-Card Sticky Horizontal Scroll with Premium Translate-Y Hover Effect) */}
+            <section 
+                id='verticals' 
+                ref={verticalsRef}
+                className='relative w-full bg-[#f5f5f5] pt-8 md:pt-16'
+            >
+                {/* Desktop view with sticky horizontal scroll (increased height to 400vh for a slower, smoother scroll experience across 8 cards) */}
+                <div className='hidden md:block relative w-full h-0 md:h-[400vh] overflow-hidden md:overflow-visible'>
+                    <div className='sticky top-0 h-screen w-full flex flex-col justify-center overflow-hidden px-12 lg:px-24'>
+                        
+                        {/* Section Header */}
+                        <div className='w-full max-w-7xl mx-auto flex items-start justify-between mb-10 select-none'>
+                            <div className='flex items-center gap-2'>
+                                <span className='w-3 h-3 bg-[#E8610A] rounded-sm shadow-sm'></span>
+                                <h2 className='text-sm font-extrabold uppercase tracking-widest text-[#E8610A] font-outfit'>
+                                    Verticals
+                                </h2>
+                            </div>
+                            <p className='text-neutral-500 font-medium text-right max-w-md text-sm font-outfit leading-relaxed'>
+                                As a trusted partner for advanced battery solutions, we offer a comprehensive range of products and services.
+                            </p>
+                        </div>
+
+                        {/* Scrolling Container */}
+                        <div className='relative w-full max-w-7xl mx-auto'>
+                            <div 
+                                className='flex gap-6 w-[280%] transition-transform duration-300 ease-out py-4'
+                                style={{ transform: `translateX(-${scrollProgress * 64.3}%)` }}
+                            >
+                                {verticalCards.map((card, idx) => {
+                                    const IconComponent = card.icon;
+                                    return (
+                                        <div
+                                            key={`desktop-card-${idx}`}
+                                            className='group relative rounded-3xl overflow-hidden aspect-[3/4] h-[55vh] shadow-md border border-neutral-200/20 cursor-pointer bg-white transition-all duration-500 w-full'
+                                        >
+                                            {/* Full bleed image background */}
+                                            <Image
+                                                src={card.image}
+                                                alt={card.title}
+                                                fill
+                                                className='object-cover transition-transform duration-700 ease-out group-hover:scale-105'
+                                                unoptimized
+                                            />
+                                            {/* Dark gradient vignette bottom overlay */}
+                                            <div className='absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent transition-opacity duration-500 group-hover:opacity-0 z-10'></div>
+                                            
+                                            {/* Bottom Default Content Layer */}
+                                            <div className='absolute inset-x-0 bottom-0 p-6 z-20 flex items-center gap-3 transition-all duration-300 ease-in-out group-hover:translate-y-12 group-hover:opacity-0'>
+                                                <span className='rounded-full bg-[#E8610A] p-2.5 shadow-md shadow-[#E8610A]/20 text-white shrink-0'>
+                                                    <IconComponent size={18} />
+                                                </span>
+                                                <h3 className='text-lg font-extrabold text-white tracking-tight font-outfit'>
+                                                    {card.title}
+                                                </h3>
+                                            </div>
+
+                                            {/* Slide-Up Dark Translucent Slip Cover (Lighter bg-black/45, slower duration-700, translate-y-full) */}
+                                            <div className='absolute inset-0 bg-black/45 backdrop-blur-[2px] flex flex-col justify-end p-6 z-30 transition-transform duration-700 ease-in-out translate-y-full group-hover:translate-y-0'>
+                                                <div className='flex items-center gap-3 mb-4'>
+                                                    <span className='rounded-full bg-[#E8610A]/20 p-2.5 text-[#E8610A] border border-[#E8610A]/30 shrink-0'>
+                                                        <IconComponent size={18} />
+                                                    </span>
+                                                    <h3 className='text-lg font-extrabold text-white tracking-tight font-outfit'>
+                                                        {card.title}
+                                                    </h3>
+                                                </div>
+                                                <p className='text-neutral-200 text-xs font-normal font-outfit leading-relaxed'>
+                                                    {card.desc}
+                                                </p>
+                                                <div className='mt-5 flex items-center gap-2 text-[#E8610A] font-bold text-xs uppercase tracking-wider select-none'>
+                                                    Explore Solutions <ArrowRight size={12} className='transition-transform duration-300 group-hover:translate-x-1' />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Mobile/Tablet view - swipeable horizontal carousel */}
+                <div className='block md:hidden px-6 pb-4 select-none'>
+                    {/* Header */}
+                    <div className='flex flex-col space-y-3 mb-8'>
+                        <div className='flex items-center gap-2'>
+                            <span className='w-2.5 h-2.5 bg-[#E8610A] rounded-sm'></span>
+                            <h2 className='text-xs font-extrabold uppercase tracking-widest text-[#E8610A]'>
+                                Verticals
+                            </h2>
+                        </div>
+                        <p className='text-neutral-500 text-xs font-medium leading-relaxed'>
+                            As a trusted partner for advanced battery solutions, we offer a comprehensive range of products and services.
+                        </p>
+                    </div>
+
+                    {/* Carousel Row */}
+                    <div className='flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-6'>
+                        {verticalCards.map((card, idx) => {
+                            const IconComponent = card.icon;
+                            return (
+                                <div
+                                    key={`mobile-card-${idx}`}
+                                    className='group relative rounded-2xl overflow-hidden snap-center shrink-0 w-[75vw] h-[380px] shadow-md border border-neutral-100 bg-white'
+                                >
+                                    <Image
+                                        src={card.image}
+                                        alt={card.title}
+                                        fill
+                                        className='object-cover transition-transform duration-700 ease-out'
+                                        unoptimized
+                                    />
+                                    <div className='absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent z-10 transition-opacity duration-500 group-hover:opacity-0'></div>
+                                    
+                                    {/* Default Mobile Info */}
+                                    <div className='absolute inset-x-0 bottom-0 p-5 z-20 flex flex-col justify-end transition-all duration-300 ease-in-out group-hover:translate-y-12 group-hover:opacity-0'>
+                                        <div className='flex items-center gap-3'>
+                                            <span className='rounded-full bg-[#E8610A] p-2 text-white shrink-0'>
+                                                <IconComponent size={16} />
+                                            </span>
+                                            <h3 className='text-base font-extrabold text-white font-outfit'>
+                                                {card.title}
+                                            </h3>
+                                        </div>
+                                    </div>
+
+                                    {/* Slide-Up Overlay Mobile Slip */}
+                                    <div className='absolute inset-0 bg-black/45 backdrop-blur-[2px] flex flex-col justify-end p-5 z-30 transition-transform duration-700 ease-in-out translate-y-full group-hover:translate-y-0'>
+                                        <div className='flex items-center gap-2 mb-3'>
+                                            <span className='rounded-full bg-[#E8610A]/20 p-2 text-[#E8610A] shrink-0'>
+                                                <IconComponent size={16} />
+                                            </span>
+                                            <h3 className='text-base font-extrabold text-white font-outfit'>
+                                                {card.title}
+                                            </h3>
+                                        </div>
+                                        <p className='text-neutral-200 text-[11px] font-outfit leading-relaxed'>
+                                            {card.desc}
+                                        </p>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </section>
+
+            {/* BENTO GRID (CORE ARCHITECTURE) SECTION */}
+            <section 
+                id='products' 
+                className={`py-12 md:py-24 bg-[#f5f5f5] md:transition-all md:duration-1000 md:transform ${
+                    visibleSections['products'] ? 'opacity-100 translate-y-0' : 'opacity-100 md:opacity-0 md:translate-y-12'
+                }`}
+            >
+                <div className='mx-auto max-w-7xl px-6 md:px-12'>
+                    <div className='mb-16 text-center max-w-2xl mx-auto'>
+                        <div className="inline-block mb-4 rounded-full border border-[#E8610A]/20 bg-[#E8610A]/5 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#E8610A]">
                             Core Architecture
                         </div>
-                        <h2 className='text-slate-900 mb-4 text-3xl font-extrabold md:text-5xl tracking-tight'>
+                        <h2 className='text-neutral-900 mb-4 text-3xl font-extrabold md:text-5xl tracking-tight font-outfit'>
                             Integrated Energy Ecosystem
                         </h2>
-                        <p className='text-slate-600 max-w-2xl mx-auto text-lg font-medium'>
+                        <p className='text-neutral-500 text-base font-medium leading-relaxed'>
                             Modular solutions designed to work in perfect harmony. Every Voltherm platform is built from the ground up for massive scaling.
                         </p>
                     </div>
@@ -194,165 +678,61 @@ const HomePage: React.FC = () => {
                 </div>
             </section>
 
-            {/* Sticky Scroll Technology Section - Full Screen */}
-            <section id='technology' className='w-full bg-white relative pt-24 pb-12 z-20'>
-                {/* Top divider */}
-                <div className="absolute top-0 left-20 right-20 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
-
-                <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10 mb-16'>
-                    <div className='text-center'>
-                        <div className="inline-block mb-4 rounded-full border border-purple-500/20 bg-purple-500/5 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-purple-600">
+            {/* STICKY SCROLL TECHNOLOGY SECTION */}
+            <section 
+                id='technology' 
+                className={`py-12 md:py-24 bg-[#f5f5f5] border-t border-neutral-200/40 md:transition-all md:duration-1000 md:transform ${
+                    visibleSections['technology'] ? 'opacity-100 translate-y-0' : 'opacity-100 md:opacity-0 md:translate-y-12'
+                }`}
+            >
+                <div className='mx-auto max-w-7xl px-6 md:px-12 mb-16'>
+                    <div className='text-center max-w-2xl mx-auto'>
+                        <div className="inline-block mb-4 rounded-full border border-[#E8610A]/20 bg-[#E8610A]/5 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#E8610A]">
                             Innovation Hub
                         </div>
-                        <h2 className='text-slate-900 mb-4 text-3xl font-extrabold md:text-5xl tracking-tight'>
+                        <h2 className='text-neutral-900 mb-4 text-3xl font-extrabold md:text-5xl tracking-tight font-outfit'>
                             Pioneering Cell Technology
                         </h2>
-                        <p className='text-slate-600 max-w-2xl mx-auto text-lg font-medium'>
+                        <p className='text-neutral-500 text-base font-medium leading-relaxed'>
                             Discover the cutting-edge features that set Voltherm systems apart in performance, safety, and lifespan.
                         </p>
                     </div>
                 </div>
-                
                 <StickyScrollRevealDemo />
             </section>
 
-            {/* Animated Testimonials Section */}
-            <section className='bg-slate-50 py-24 relative'>
-                {/* Top divider */}
-                <div className="absolute top-0 left-20 right-20 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
-                
-                <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
-                    <div className='mb-12 text-center'>
-                        <div className="inline-block mb-4 rounded-full border border-secondary/20 bg-secondary/5 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-secondary">
+            {/* ANIMATED TESTIMONIALS SECTION */}
+            <section 
+                id='testimonials'
+                className={`py-12 md:py-24 bg-[#f5f5f5] border-t border-neutral-200/40 md:transition-all md:duration-1000 md:transform ${
+                    visibleSections['testimonials'] ? 'opacity-100 translate-y-0' : 'opacity-100 md:opacity-0 md:translate-y-12'
+                }`}
+            >
+                <div className='mx-auto max-w-7xl px-6 md:px-12'>
+                    <div className='mb-12 text-center max-w-2xl mx-auto'>
+                        <div className="inline-block mb-4 rounded-full border border-[#E8610A]/20 bg-[#E8610A]/5 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#E8610A]">
                             Partnerships
                         </div>
-                        <h2 className='mb-4 text-3xl font-extrabold text-slate-900 md:text-5xl tracking-tight'>Trusted by Industry Leaders</h2>
-                        <p className='text-lg font-medium text-slate-600 max-w-2xl mx-auto'>See what our partners say about scaling their infrastructure with Voltherm</p>
+                        <h2 className='mb-4 text-3xl font-extrabold text-neutral-900 md:text-5xl tracking-tight font-outfit'>
+                            Trusted by Industry Leaders
+                        </h2>
+                        <p className='text-neutral-500 text-base font-medium leading-relaxed'>
+                            See what our partners say about scaling their infrastructure with Voltherm.
+                        </p>
                     </div>
                     <AnimatedTestimonialsDemo />
                 </div>
             </section>
 
-            {/* Product Carousel Section */}
-            <section id='carousel' className='w-full bg-white relative'>
-                {/* Top divider */}
-                <div className="absolute top-0 left-20 right-20 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent z-20"></div>
+            {/* PRODUCT CAROUSEL SECTION */}
+            <section 
+                id='carousel' 
+                className={`w-full bg-[#f5f5f5] border-t border-neutral-200/40 md:transition-all md:duration-1000 md:transform ${
+                    visibleSections['carousel'] ? 'opacity-100 translate-y-0' : 'opacity-100 md:opacity-0 md:translate-y-12'
+                }`}
+            >
                 <ProductCarouselDemo />
             </section>
-
-            {/* Footer */}
-            {/* <footer className='border-t border-slate-200 bg-slate-50 pt-20 pb-10'>
-                <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
-                    <div className='mb-16 grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4'>
-                        <div>
-                            <div className='mb-6 flex items-center'>
-                                <div className='mr-2 flex h-8 w-8 items-center justify-center rounded bg-slate-900 font-bold text-white'>
-                                    V
-                                </div>
-                                <span className='text-xl font-bold text-slate-900'>VOLTARA</span>
-                            </div>
-                            <p className='mb-6 text-slate-500'>
-                                Pioneering the future of energy storage with advanced thermal management and cell
-                                chemistry.
-                            </p>
-                        </div>
-
-                        <div>
-                            <h4 className='mb-6 font-bold text-slate-900'>Products</h4>
-                            <ul className='space-y-4 text-slate-500'>
-                                <li>
-                                    <a href='#' className='transition-colors hover:text-teal-500'>
-                                        Battery Modules
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href='#' className='transition-colors hover:text-teal-500'>
-                                        Thermal Systems
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href='#' className='transition-colors hover:text-teal-500'>
-                                        Energy Storage
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className='mb-6 font-bold text-slate-900'>Company</h4>
-                            <ul className='space-y-4 text-slate-500'>
-                                <li>
-                                    <a href='#' className='transition-colors hover:text-teal-500'>
-                                        About Us
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href='#' className='transition-colors hover:text-teal-500'>
-                                        Careers
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href='#' className='transition-colors hover:text-teal-500'>
-                                        Contact
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className='mb-6 font-bold text-slate-900'>Certifications</h4>
-                            <div className='flex flex-wrap gap-4'>
-                                <div className='rounded border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-400'>
-                                    ISO 9001
-                                </div>
-                                <div className='rounded border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-400'>
-                                    UL 1973
-                                </div>
-                                <div className='rounded border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-400'>
-                                    IEC 62619
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className='flex flex-col items-center justify-between border-t border-slate-200 pt-8 text-sm text-slate-400 md:flex-row'>
-                        <p>&copy; 2025 Voltherm Technologies. All rights reserved.</p>
-                        <div className='mt-6 flex flex-col items-center gap-6 md:mt-0 md:flex-row md:gap-8'>
-                            <div className='flex gap-4 items-center'>
-                                <a href='https://www.facebook.com/Voltherm/' target='_blank' rel='noopener noreferrer' className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
-                                    <Facebook size={18} className='text-slate-600 transition-colors group-hover:text-white' />
-                                </a>
-                                <a href='https://www.instagram.com/volthermtech/' target='_blank' rel='noopener noreferrer' className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
-                                    <Instagram size={18} className='text-slate-600 transition-colors group-hover:text-white' />
-                                </a>
-                                <a href='https://x.com/voltherm' target='_blank' rel='noopener noreferrer' className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
-                                    <Twitter size={18} className='text-slate-600 transition-colors group-hover:text-white' />
-                                </a>
-                                <a href='https://www.linkedin.com/company/volthermtechnologies/' target='_blank' rel='noopener noreferrer' className='group rounded-full bg-slate-100 p-2.5 transition-all hover:bg-teal-500'>
-                                    <Linkedin size={18} className='text-slate-600 transition-colors group-hover:text-white' />
-                                </a>
-                                <a href='https://www.indiamart.com/voltherm-technologies/' target='_blank' rel='noopener noreferrer' className='transition-opacity hover:opacity-80'>
-                                    <Image 
-                                        src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuoD3M7txqb9TdLTe_prXdviUPp6m4tEvmeA&s' 
-                                        alt='IndiaMART' 
-                                        width={80} 
-                                        height={30}
-                                        className='object-contain'
-                                    />
-                                </a>
-                            </div>
-                            <div className='flex space-x-6'>
-                                <a href='#' className='hover:text-slate-900'>
-                                    Privacy Policy
-                                </a>
-                                <a href='#' className='hover:text-slate-900'>
-                                    Terms of Service
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </footer> */}
         </main>
     );
 };

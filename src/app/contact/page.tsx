@@ -1,16 +1,30 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-
 import Image from 'next/image';
+import Link from 'next/link';
 
-import NavbarDemo from '@/components/demos/NavbarDemo';
 import { type ContactInfo, defaultContactInfo } from '@/lib/adminData';
 import { apiService } from '@/lib/apiService';
 import { ModelMapper } from '@/lib/modelMapper';
 
 import { toast } from 'sonner';
-import { Mail, MapPin, Phone, Send } from 'lucide-react';
+import {
+    Mail,
+    MapPin,
+    Phone,
+    Send,
+    Sparkles,
+    Menu,
+    X,
+    ArrowRight,
+    Activity,
+    Facebook,
+    Instagram,
+    Twitter,
+    Linkedin,
+    CheckCircle2
+} from 'lucide-react';
 
 export default function ContactPage() {
     const [formData, setFormData] = useState({
@@ -22,6 +36,9 @@ export default function ContactPage() {
     const [contactInfo, setContactInfo] = useState<ContactInfo>(defaultContactInfo);
     const [submitting, setSubmitting] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
         const loadContactInfo = async () => {
@@ -37,6 +54,34 @@ export default function ContactPage() {
             setContactInfo(defaultContactInfo);
         };
         loadContactInfo();
+    }, []);
+
+    // Scroll listener for navbar scroll state
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 20);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // Intersection observer for section fade-in animation
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        setVisibleSections((prev) => ({ ...prev, [entry.target.id]: true }));
+                    }
+                });
+            },
+            { threshold: 0.1 }
+        );
+
+        const sections = document.querySelectorAll('section[id]');
+        sections.forEach((section) => observer.observe(section));
+
+        return () => observer.disconnect();
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -71,361 +116,518 @@ export default function ContactPage() {
     };
 
     return (
-        <main className='min-h-screen w-full bg-slate-50 font-sans text-slate-900 overflow-hidden relative'>
-            <NavbarDemo />
+        <main className='min-h-screen w-full bg-[#f5f5f5] text-neutral-900 overflow-x-clip font-outfit antialiased'>
+            {/* Inject Page Keyframes & Animation Utilities */}
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes fadeInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                .animate-fade-in-up {
+                    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+                .scrollbar-hide::-webkit-scrollbar {
+                    display: none;
+                }
+                .scrollbar-hide {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+                .nav-link::after {
+                    content: '';
+                    position: absolute;
+                    width: 0%;
+                    height: 2px;
+                    bottom: -4px;
+                    left: 50%;
+                    background-color: #E8610A;
+                    transition: all 0.3s ease-in-out;
+                    transform: translateX(-50%);
+                }
+                .nav-link:hover::after {
+                    width: 70%;
+                }
+                .nav-link-active::after {
+                    width: 70%;
+                    background-color: #E8610A;
+                }
+            ` }} />
 
-            {/* Hero Section - Light Mode with Futuristic Glows and Grid */}
-            <section className='relative flex min-h-[50vh] flex-col items-center justify-center pt-32 pb-32 lg:pt-48 lg:pb-40'>
-                {/* Background Effects */}
-                <div className='absolute inset-0 z-0 overflow-hidden'>
-                    <div className='absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] opacity-40 pointer-events-none'>
-                        <div className='absolute inset-0 bg-gradient-to-r from-primary/20 via-purple-300/30 to-secondary/20 blur-[100px] rounded-full mix-blend-multiply'></div>
+            {/* FLOATING NAVBAR (Constant padding to prevent jiggle) */}
+            <div className='fixed top-4 md:top-6 inset-x-0 z-50 mx-auto max-w-5xl px-4 w-full select-none'>
+                <header
+                    className={`transition-all duration-300 w-full rounded-full border py-3 px-6 md:px-8 ${
+                        isScrolled 
+                            ? 'bg-white/95 backdrop-blur-md shadow-lg border-neutral-200/60' 
+                            : 'bg-white/90 backdrop-blur-sm shadow-md border-neutral-200/20'
+                    }`}
+                    style={{ animation: 'fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both' }}
+                >
+                    <div className='flex items-center justify-between w-full'>
+                        {/* Logo */}
+                        <Link href='/' className='flex items-center gap-3 select-none group pointer-events-auto'>
+                            <Image
+                                src='/images/logon.png'
+                                alt='Voltherm Logo'
+                                width={28}
+                                height={28}
+                                className='object-contain transition-transform duration-500 group-hover:scale-105'
+                                priority
+                            />
+                            <span className='font-extrabold text-lg tracking-tight text-neutral-900 font-outfit uppercase'>
+                                VOLTHERM
+                            </span>
+                        </Link>
+
+                        {/* Centered Desktop Menu */}
+                        <nav className='hidden md:flex items-center space-x-8 font-outfit pointer-events-auto'>
+                            <Link href='/' className='nav-link relative text-sm font-semibold text-neutral-600 hover:text-neutral-900 transition-colors'>
+                                Home
+                            </Link>
+                            <Link href='/aboutus' className='nav-link relative text-sm font-semibold text-neutral-600 hover:text-neutral-900 transition-colors'>
+                                About Us
+                            </Link>
+                            <Link href='/store' className='nav-link relative text-sm font-semibold text-neutral-600 hover:text-neutral-900 transition-colors'>
+                                Store
+                            </Link>
+                        </nav>
+
+                        {/* Desktop Contact CTA */}
+                        <div className='hidden md:block pointer-events-auto'>
+                            <Link
+                                href='/contact'
+                                className='group bg-[#E8610A] text-white text-xs font-bold px-6 py-2 rounded-full shadow-md transition-all duration-300 transform hover:scale-105 active:scale-95 inline-flex items-center gap-1.5'
+                            >
+                                Contact Us
+                                <ArrowRight size={12} className='transition-transform duration-300 group-hover:translate-x-0.5' />
+                            </Link>
+                        </div>
+
+                        {/* Mobile Menu Button */}
+                        <button
+                            className='md:hidden p-1.5 text-neutral-900 focus:outline-none pointer-events-auto'
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            aria-label='Toggle menu'
+                        >
+                            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                        </button>
                     </div>
-                    {/* Grid Pattern */}
-                    <div className='absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)] opacity-50 pointer-events-none'></div>
-                </div>
 
-                <div className='relative z-10 mx-auto max-w-7xl px-6 text-center'>
-                    <h1 className='mb-6 text-5xl font-extrabold md:text-6xl lg:text-7xl tracking-tight text-slate-900'>
-                        Connect With <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-600 to-secondary drop-shadow-sm">Voltherm</span>
-                    </h1>
-                    <p className='mx-auto max-w-3xl text-lg font-medium md:text-xl text-slate-600 leading-relaxed'>
-                        We're ready to discuss your next energy storage solution, from initial inquiry to deployment.
-                    </p>
+                    {/* Mobile Menu Dropdown */}
+                    {isMobileMenuOpen && (
+                        <div className='md:hidden absolute top-full left-4 right-4 mt-2 bg-white border border-neutral-100/80 px-6 py-5 flex flex-col space-y-4 rounded-3xl shadow-xl animate-fade-in-up font-outfit pointer-events-auto'>
+                            <Link
+                                href='/'
+                                className='text-sm font-semibold text-neutral-600 hover:text-neutral-900 py-1.5 border-b border-neutral-50'
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                Home
+                            </Link>
+                            <Link
+                                href='/aboutus'
+                                className='text-sm font-semibold text-neutral-600 hover:text-neutral-900 py-1.5 border-b border-neutral-50'
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                About Us
+                            </Link>
+                            <Link
+                                href='/store'
+                                className='text-sm font-semibold text-neutral-600 hover:text-neutral-900 py-1.5 border-b border-neutral-50'
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                Store
+                            </Link>
+                            <Link
+                                href='/contact'
+                                className='bg-[#E8610A] text-white text-center text-sm font-bold py-2.5 rounded-full mt-1 transition-colors duration-300'
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                Contact Us
+                            </Link>
+                        </div>
+                    )}
+                </header>
+            </div>
+
+            {/* HERO SECTION */}
+            <section id='contact-hero' className='pt-36 pb-20 px-4 md:px-8 max-w-7xl mx-auto'>
+                <div 
+                    className='relative bg-[#1a1a1a] rounded-[24px] md:rounded-[36px] overflow-hidden p-8 md:p-16 z-10 shadow-xl flex flex-col justify-between min-h-[42vh]'
+                    style={{ animation: 'fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both' }}
+                >
+                    {/* Glowing subtle gradient background */}
+                    <div className='absolute -right-40 -top-40 h-[500px] w-[500px] rounded-full bg-[#E8610A]/5 blur-[120px] pointer-events-none'></div>
+
+                    <div className='relative z-20 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full flex-1'>
+                        {/* Left Column - Text Details */}
+                        <div className='lg:col-span-7 flex flex-col space-y-6 text-left'>
+                            <div className='inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#E8610A] w-fit shadow-inner backdrop-blur-md'>
+                                <Sparkles className='h-3.5 w-3.5 animate-pulse' />
+                                Customer Solutions Hub
+                            </div>
+
+                            <h1 className='text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1] font-outfit select-none'>
+                                Connect With <span className='text-[#E8610A] drop-shadow-sm'>Voltherm</span>
+                            </h1>
+
+                            <p className='text-neutral-300 text-sm md:text-base leading-relaxed font-normal font-outfit'>
+                                We're ready to discuss your next energy storage solution, from initial inquiry to global deployment.
+                            </p>
+                        </div>
+
+                        {/* Right Column - Image Container */}
+                        <div className='lg:col-span-5 relative h-[250px] sm:h-[300px] lg:h-[350px] w-full rounded-2xl overflow-hidden select-none shadow-2xl border border-white/5 bg-neutral-900/40 p-4 flex items-center justify-center animate-fade-in-up'>
+                            <Image
+                                src='https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1200&auto=format&fit=crop'
+                                alt='Connect With Voltherm Technologies'
+                                fill
+                                className='object-cover rounded-xl opacity-90 transition-transform duration-1000'
+                                priority
+                                unoptimized
+                            />
+                            <div className='absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none'></div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            {/* Contact Cards - Floating Glass */}
-            <section className='relative z-20 -mt-24 px-6 pb-20'>
-                <div className='mx-auto max-w-7xl'>
-                    <div className='grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3'>
-                        {/* Sales & Products */}
-                        <div className='group relative overflow-hidden rounded-3xl border border-white bg-white/60 p-8 shadow-xl shadow-slate-200/50 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:bg-white hover:shadow-2xl hover:border-primary/20'>
-                            <div className='absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500'></div>
-                            <div className='relative z-10'>
-                                <div className='mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 transition-colors group-hover:bg-primary/20'>
-                                    <Mail className='h-8 w-8 text-primary' />
-                                </div>
-                                <h3 className='mb-3 text-2xl font-bold tracking-tight text-slate-900'>
-                                    Sales & Products
-                                </h3>
-                                <a
-                                    href={`mailto:${contactInfo.sales.email}`}
-                                    className='text-base font-semibold text-slate-600 transition-colors hover:text-primary break-all'>
-                                    {contactInfo.sales.email}
-                                </a>
-                            </div>
+            {/* DIRECT CONTACT CARDS */}
+            <section id='contact-direct' className='px-6 pb-20 max-w-7xl mx-auto'>
+                <div className='grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3'>
+                    {/* Sales & Products */}
+                    <div className='group relative overflow-hidden rounded-3xl border border-neutral-200 bg-white p-8 shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:border-[#E8610A]/30 flex flex-col items-center text-center'>
+                        <div className='absolute inset-0 bg-gradient-to-br from-[#E8610A]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500'></div>
+                        <div className='rounded-full bg-[#E8610A]/10 p-4 text-[#E8610A] mb-5 transition-transform duration-300 group-hover:scale-110'>
+                            <Mail size={24} />
                         </div>
+                        <h3 className='mb-2 text-xl font-extrabold tracking-tight text-neutral-900 font-outfit'>
+                            Sales & Products
+                        </h3>
+                        <a
+                            href={`mailto:${contactInfo.sales.email}`}
+                            className='text-sm font-semibold text-neutral-500 transition-colors hover:text-[#E8610A] break-all font-outfit'
+                        >
+                            {contactInfo.sales.email}
+                        </a>
+                    </div>
 
-                        {/* Business & Partners */}
-                        <div className='group relative overflow-hidden rounded-3xl border border-white bg-white/60 p-8 shadow-xl shadow-slate-200/50 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:bg-white hover:shadow-2xl hover:border-purple-500/20'>
-                            <div className='absolute inset-0 bg-gradient-to-br from-purple-500/5 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500'></div>
-                            <div className='relative z-10'>
-                                <div className='mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-500/10 transition-colors group-hover:bg-purple-500/20'>
-                                    <Mail className='h-8 w-8 text-purple-600' />
-                                </div>
-                                <h3 className='mb-3 text-2xl font-bold tracking-tight text-slate-900'>
-                                    Business & Partners
-                                </h3>
-                                <a
-                                    href={`mailto:${contactInfo.business.email}`}
-                                    className='text-base font-semibold text-slate-600 transition-colors hover:text-purple-600 break-all'>
-                                    {contactInfo.business.email}
-                                </a>
-                            </div>
+                    {/* Business & Partners */}
+                    <div className='group relative overflow-hidden rounded-3xl border border-neutral-200 bg-white p-8 shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:border-[#E8610A]/30 flex flex-col items-center text-center'>
+                        <div className='absolute inset-0 bg-gradient-to-br from-[#E8610A]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500'></div>
+                        <div className='rounded-full bg-[#E8610A]/10 p-4 text-[#E8610A] mb-5 transition-transform duration-300 group-hover:scale-110'>
+                            <Mail size={24} />
                         </div>
+                        <h3 className='mb-2 text-xl font-extrabold tracking-tight text-neutral-900 font-outfit'>
+                            Business & Partners
+                        </h3>
+                        <a
+                            href={`mailto:${contactInfo.business.email}`}
+                            className='text-sm font-semibold text-neutral-500 transition-colors hover:text-[#E8610A] break-all font-outfit'
+                        >
+                            {contactInfo.business.email}
+                        </a>
+                    </div>
 
-                        {/* Direct Contact */}
-                        <div className='group relative overflow-hidden rounded-3xl border border-white bg-white/60 p-8 shadow-xl shadow-slate-200/50 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:bg-white hover:shadow-2xl hover:border-secondary/20'>
-                            <div className='absolute inset-0 bg-gradient-to-br from-secondary/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500'></div>
-                            <div className='relative z-10'>
-                                <div className='mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary/10 transition-colors group-hover:bg-secondary/20'>
-                                    <Phone className='h-8 w-8 text-secondary' />
-                                </div>
-                                <h3 className='mb-3 text-2xl font-bold tracking-tight text-slate-900'>
-                                    Direct Contact
-                                </h3>
-                                <div className='space-y-2'>
-                                    <a
-                                        href={`tel:${contactInfo.sales.phone}`}
-                                        className='block text-base font-semibold text-slate-600 transition-colors hover:text-secondary'>
-                                        {contactInfo.sales.phone} (Sales)
-                                    </a>
-                                    <a
-                                        href={`tel:${contactInfo.support.phone}`}
-                                        className='block text-base font-semibold text-slate-600 transition-colors hover:text-secondary'>
-                                        {contactInfo.support.phone} (Support)
-                                    </a>
-                                </div>
-                            </div>
+                    {/* Direct Contact */}
+                    <div className='group relative overflow-hidden rounded-3xl border border-neutral-200 bg-white p-8 shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:border-[#E8610A]/30 flex flex-col items-center text-center'>
+                        <div className='absolute inset-0 bg-gradient-to-br from-[#E8610A]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500'></div>
+                        <div className='rounded-full bg-[#E8610A]/10 p-4 text-[#E8610A] mb-5 transition-transform duration-300 group-hover:scale-110'>
+                            <Phone size={24} />
+                        </div>
+                        <h3 className='mb-2 text-xl font-extrabold tracking-tight text-neutral-900 font-outfit'>
+                            Direct Contact
+                        </h3>
+                        <div className='space-y-1 text-center font-outfit'>
+                            <a
+                                href={`tel:${contactInfo.sales.phone}`}
+                                className='block text-sm font-semibold text-neutral-500 transition-colors hover:text-[#E8610A]'
+                            >
+                                {contactInfo.sales.phone} (Sales)
+                            </a>
+                            <a
+                                href={`tel:${contactInfo.support.phone}`}
+                                className='block text-sm font-semibold text-neutral-500 transition-colors hover:text-[#E8610A]'
+                            >
+                                {contactInfo.support.phone} (Support)
+                            </a>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Office Locations & Contact Form */}
-            <section className='relative z-20 px-6 py-12 md:py-20'>
-                <div className='mx-auto max-w-7xl'>
-                    <div className='grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16'>
-                        {/* Left Column - Office Locations */}
-                        <div className='space-y-8'>
-                            <h2 className='text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl'>
-                                Our Locations
-                            </h2>
+            {/* FORM AND MAPS SECTION */}
+            <section 
+                id='contact-form-section' 
+                className={`py-12 px-6 max-w-7xl mx-auto transition-all duration-1000 transform ${
+                    visibleSections['contact-form-section'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+                }`}
+            >
+                <div className='grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16'>
+                    {/* Left Column - Office Locations */}
+                    <div className='space-y-8'>
+                        <h2 className='text-3xl font-extrabold tracking-tight text-neutral-900 md:text-4xl font-outfit'>
+                            Our Locations
+                        </h2>
 
-                            {/* Main Office */}
-                            {contactInfo.mainAddress && (
-                                <div className='overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg transition-all hover:shadow-xl'>
-                                    <div className='bg-slate-50 border-b border-slate-100 p-6'>
-                                        <h3 className='flex items-center gap-3 text-2xl font-bold tracking-tight text-slate-900'>
-                                            <div className="p-2 bg-primary/10 rounded-xl">
-                                                <MapPin className='h-6 w-6 text-primary' />
-                                            </div>
-                                            Main Office
-                                        </h3>
-                                    </div>
-                                    <div className='p-6 md:p-8'>
-                                        <div className='mb-6 space-y-3 text-base text-slate-600'>
-                                            <p className='font-bold text-slate-900 text-lg'>
-                                                {contactInfo.mainAddress.companyName}
-                                            </p>
-                                            <p>{contactInfo.mainAddress.addressLine1}</p>
-                                            <p>{contactInfo.mainAddress.addressLine2}</p>
-                                            <p>{contactInfo.mainAddress.city}, {contactInfo.mainAddress.state} - {contactInfo.mainAddress.pincode}</p>
-                                            <p className='mt-4 font-bold text-slate-900'>
-                                                {contactInfo.mainAddress.phoneNumber}
-                                            </p>
-                                            {contactInfo.mainAddress.gst && (
-                                                <p className='text-sm mt-2'>GST: {contactInfo.mainAddress.gst}</p>
-                                            )}
+                        {/* Main Office */}
+                        {contactInfo.mainAddress && (
+                            <div className='overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-lg transition-all hover:shadow-xl hover:border-neutral-300/60'>
+                                <div className='bg-neutral-50/80 border-b border-neutral-100 p-6'>
+                                    <h3 className='flex items-center gap-3 text-xl font-extrabold tracking-tight text-neutral-900 font-outfit'>
+                                        <div className="p-2 bg-[#E8610A]/10 rounded-xl text-[#E8610A]">
+                                            <MapPin size={20} />
                                         </div>
-                                        {contactInfo.mainAddress.mapUrl && (
-                                            <div className='relative h-64 overflow-hidden rounded-2xl border border-slate-200'>
-                                                <iframe
-                                                    src={contactInfo.mainAddress.mapUrl}
-                                                    width='100%'
-                                                    height='100%'
-                                                    style={{ border: 0 }}
-                                                    allowFullScreen
-                                                    loading='lazy'
-                                                    referrerPolicy='no-referrer-when-downgrade'
-                                                    className="filter contrast-[0.9] hover:contrast-100 transition-all duration-500"
-                                                ></iframe>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Branch Offices - Dynamic */}
-                            {contactInfo.branches && contactInfo.branches.map((branch) => (
-                                <div key={branch.id} className='overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg transition-all hover:shadow-xl'>
-                                    <div className='bg-slate-50 border-b border-slate-100 p-6'>
-                                        <h3 className='flex items-center gap-3 text-2xl font-bold tracking-tight text-slate-900'>
-                                            <div className="p-2 bg-purple-500/10 rounded-xl">
-                                                <MapPin className='h-6 w-6 text-purple-600' />
-                                            </div>
-                                            {branch.name}
-                                        </h3>
-                                    </div>
-                                    <div className='p-6 md:p-8'>
-                                        <div className='mb-6 space-y-3 text-base text-slate-600'>
-                                            <p>{branch.addressLine1}</p>
-                                            <p>{branch.addressLine2}</p>
-                                            <p>{branch.city}, {branch.state} - {branch.pincode}</p>
-                                            <p className='mt-4 font-bold text-slate-900'>{branch.phone}</p>
-                                        </div>
-                                        {branch.mapUrl && (
-                                            <div className='relative h-64 overflow-hidden rounded-2xl border border-slate-200'>
-                                                <iframe
-                                                    src={branch.mapUrl}
-                                                    width='100%'
-                                                    height='100%'
-                                                    style={{ border: 0 }}
-                                                    allowFullScreen
-                                                    loading='lazy'
-                                                    referrerPolicy='no-referrer-when-downgrade'
-                                                    className="filter contrast-[0.9] hover:contrast-100 transition-all duration-500"
-                                                ></iframe>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Right Column - Inquiry Form */}
-                        <div className='h-fit lg:sticky lg:top-32'>
-                            <div className='overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/50'>
-                                <div className='bg-gradient-to-r from-primary to-purple-600 p-8 text-white relative overflow-hidden'>
-                                    <div className='absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-2xl'></div>
-                                    <h3 className='flex items-center gap-3 text-3xl font-bold tracking-tight relative z-10'>
-                                        <Send className='h-7 w-7' />
-                                        Inquiry Form
+                                        Main Office
                                     </h3>
-                                    <p className='mt-3 text-white/80 font-medium relative z-10'>
-                                        Fill out the form and our team will get back to you within 24 hours.
-                                    </p>
+                                </div>
+                                <div className='p-6 md:p-8 font-outfit'>
+                                    <div className='mb-6 space-y-2 text-sm text-neutral-500 font-medium'>
+                                        <p className='font-extrabold text-neutral-900 text-base'>
+                                            {contactInfo.mainAddress.companyName}
+                                        </p>
+                                        <p>{contactInfo.mainAddress.addressLine1}</p>
+                                        <p>{contactInfo.mainAddress.addressLine2}</p>
+                                        <p>{contactInfo.mainAddress.city}, {contactInfo.mainAddress.state} - {contactInfo.mainAddress.pincode}</p>
+                                        <p className='mt-3 font-extrabold text-neutral-900'>{contactInfo.mainAddress.phoneNumber}</p>
+                                        {contactInfo.mainAddress.gst && (
+                                            <p className='text-xs mt-2 border border-neutral-200 w-fit px-2 py-1 rounded bg-[#f5f5f5]'>GST: {contactInfo.mainAddress.gst}</p>
+                                        )}
+                                    </div>
+                                    {contactInfo.mainAddress.mapUrl && (
+                                        <div className='relative h-60 overflow-hidden rounded-2xl border border-neutral-200'>
+                                            <iframe
+                                                src={contactInfo.mainAddress.mapUrl}
+                                                width='100%'
+                                                height='100%'
+                                                style={{ border: 0 }}
+                                                allowFullScreen
+                                                loading='lazy'
+                                                referrerPolicy='no-referrer-when-downgrade'
+                                                className="filter contrast-[0.9] hover:contrast-100 transition-all duration-500"
+                                            ></iframe>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Branch Offices */}
+                        {contactInfo.branches && contactInfo.branches.map((branch) => (
+                            <div key={branch.id} className='overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-lg transition-all hover:shadow-xl hover:border-neutral-300/60'>
+                                <div className='bg-neutral-50/80 border-b border-neutral-100 p-6'>
+                                    <h3 className='flex items-center gap-3 text-xl font-extrabold tracking-tight text-neutral-900 font-outfit'>
+                                        <div className="p-2 bg-[#E8610A]/10 rounded-xl text-[#E8610A]">
+                                            <MapPin size={20} />
+                                        </div>
+                                        {branch.name}
+                                    </h3>
+                                </div>
+                                <div className='p-6 md:p-8 font-outfit'>
+                                    <div className='mb-6 space-y-2 text-sm text-neutral-500 font-medium'>
+                                        <p>{branch.addressLine1}</p>
+                                        <p>{branch.addressLine2}</p>
+                                        <p>{branch.city}, {branch.state} - {branch.pincode}</p>
+                                        <p className='mt-3 font-extrabold text-neutral-900'>{branch.phone}</p>
+                                    </div>
+                                    {branch.mapUrl && (
+                                        <div className='relative h-60 overflow-hidden rounded-2xl border border-neutral-200'>
+                                            <iframe
+                                                src={branch.mapUrl}
+                                                width='100%'
+                                                height='100%'
+                                                style={{ border: 0 }}
+                                                allowFullScreen
+                                                loading='lazy'
+                                                referrerPolicy='no-referrer-when-downgrade'
+                                                className="filter contrast-[0.9] hover:contrast-100 transition-all duration-500"
+                                            ></iframe>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Right Column - Inquiry Form */}
+                    <div className='h-fit lg:sticky lg:top-32'>
+                        <div className='overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-xl'>
+                            <div className='bg-[#1a1a1a] p-8 text-white relative overflow-hidden'>
+                                <div className='absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#E8610A]/10 blur-2xl'></div>
+                                <h3 className='flex items-center gap-3 text-2xl font-extrabold tracking-tight relative z-10 font-outfit'>
+                                    <Send className='h-6 w-6 text-[#E8610A]' />
+                                    Inquiry Form
+                                </h3>
+                                <p className='mt-2 text-neutral-400 font-medium text-sm relative z-10'>
+                                    Fill out the form and our team will get back to you within 24 hours.
+                                </p>
+                            </div>
+
+                            <form onSubmit={handleSubmit} className='space-y-5 p-8 font-outfit'>
+                                {/* Email */}
+                                <div>
+                                    <label
+                                        htmlFor='email'
+                                        className='mb-2 block text-xs font-bold text-neutral-900 uppercase tracking-wider'
+                                    >
+                                        Email Address <span className='text-[#E8610A]'>*</span>
+                                    </label>
+                                    <input
+                                        type='email'
+                                        id='email'
+                                        name='email'
+                                        required
+                                        pattern='[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$'
+                                        title='Please enter a valid email address'
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        placeholder='you@company.com'
+                                        className='w-full rounded-xl border border-neutral-200 bg-[#f5f5f5] px-4 py-3.5 text-sm text-neutral-900 transition-all outline-none placeholder:text-neutral-400 focus:border-[#E8610A] focus:bg-white focus:ring-4 focus:ring-[#E8610A]/5'
+                                    />
                                 </div>
 
-                                <form onSubmit={handleSubmit} className='space-y-6 p-8'>
-                                    {/* Email */}
-                                    <div>
-                                        <label
-                                            htmlFor='email'
-                                            className='mb-2 block text-sm font-bold text-slate-900 uppercase tracking-wide'>
-                                            Email Address <span className='text-primary'>*</span>
-                                        </label>
-                                        <input
-                                            type='email'
-                                            id='email'
-                                            name='email'
-                                            required
-                                            pattern='[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$'
-                                            title='Please enter a valid email address'
-                                            value={formData.email}
-                                            onChange={handleChange}
-                                            placeholder='you@company.com'
-                                            className='w-full rounded-xl border border-slate-300 bg-slate-50 px-5 py-4 text-slate-900 transition-all outline-none placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10'
-                                        />
-                                    </div>
+                                {/* Name */}
+                                <div>
+                                    <label
+                                        htmlFor='name'
+                                        className='mb-2 block text-xs font-bold text-neutral-900 uppercase tracking-wider'
+                                    >
+                                        Full Name <span className='text-[#E8610A]'>*</span>
+                                    </label>
+                                    <input
+                                        type='text'
+                                        id='name'
+                                        name='name'
+                                        required
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        placeholder='John Doe'
+                                        className='w-full rounded-xl border border-neutral-200 bg-[#f5f5f5] px-4 py-3.5 text-sm text-neutral-900 transition-all outline-none placeholder:text-neutral-400 focus:border-[#E8610A] focus:bg-white focus:ring-4 focus:ring-[#E8610A]/5'
+                                    />
+                                </div>
 
-                                    {/* Name */}
-                                    <div>
-                                        <label
-                                            htmlFor='name'
-                                            className='mb-2 block text-sm font-bold text-slate-900 uppercase tracking-wide'>
-                                            Full Name <span className='text-primary'>*</span>
-                                        </label>
-                                        <input
-                                            type='text'
-                                            id='name'
-                                            name='name'
-                                            required
-                                            value={formData.name}
-                                            onChange={handleChange}
-                                            placeholder='John Doe'
-                                            className='w-full rounded-xl border border-slate-300 bg-slate-50 px-5 py-4 text-slate-900 transition-all outline-none placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10'
-                                        />
-                                    </div>
+                                {/* Phone Number */}
+                                <div>
+                                    <label
+                                        htmlFor='phone'
+                                        className='mb-2 block text-xs font-bold text-neutral-900 uppercase tracking-wider'
+                                    >
+                                        Phone Number <span className='text-[#E8610A]'>*</span>
+                                    </label>
+                                    <input
+                                        type='tel'
+                                        id='phone'
+                                        name='phone'
+                                        required
+                                        pattern='[0-9]{10}'
+                                        minLength={10}
+                                        maxLength={10}
+                                        title='Please enter a valid 10-digit mobile number'
+                                        value={formData.phone}
+                                        onChange={(e) => {
+                                            const value = e.target.value.replace(/\D/g, '');
+                                            if (value.length <= 10) {
+                                                setFormData({ ...formData, phone: value });
+                                            }
+                                        }}
+                                        placeholder='9876543210'
+                                        className='w-full rounded-xl border border-neutral-200 bg-[#f5f5f5] px-4 py-3.5 text-sm text-neutral-900 transition-all outline-none placeholder:text-neutral-400 focus:border-[#E8610A] focus:bg-white focus:ring-4 focus:ring-[#E8610A]/5'
+                                    />
+                                </div>
 
-                                    {/* Phone Number */}
-                                    <div>
-                                        <label
-                                            htmlFor='phone'
-                                            className='mb-2 block text-sm font-bold text-slate-900 uppercase tracking-wide'>
-                                            Phone Number <span className='text-primary'>*</span>
-                                        </label>
-                                        <input
-                                            type='tel'
-                                            id='phone'
-                                            name='phone'
-                                            required
-                                            pattern='[0-9]{10}'
-                                            minLength={10}
-                                            maxLength={10}
-                                            title='Please enter a valid 10-digit mobile number'
-                                            value={formData.phone}
-                                            onChange={(e) => {
-                                                const value = e.target.value.replace(/\D/g, '');
-                                                if (value.length <= 10) {
-                                                    setFormData({ ...formData, phone: value });
-                                                }
-                                            }}
-                                            placeholder='9876543210'
-                                            className='w-full rounded-xl border border-slate-300 bg-slate-50 px-5 py-4 text-slate-900 transition-all outline-none placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10'
-                                        />
-                                    </div>
+                                {/* Requirements */}
+                                <div>
+                                    <label
+                                        htmlFor='requirements'
+                                        className='mb-2 block text-xs font-bold text-neutral-900 uppercase tracking-wider'
+                                    >
+                                        Project Requirements <span className='text-[#E8610A]'>*</span>
+                                    </label>
+                                    <textarea
+                                        id='requirements'
+                                        name='requirements'
+                                        required
+                                        rows={4}
+                                        value={formData.requirements}
+                                        onChange={handleChange}
+                                        placeholder='Tell us about your technical specifications and scale...'
+                                        className='w-full resize-none rounded-xl border border-neutral-200 bg-[#f5f5f5] px-4 py-3.5 text-sm text-neutral-900 transition-all outline-none placeholder:text-neutral-400 focus:border-[#E8610A] focus:bg-white focus:ring-4 focus:ring-[#E8610A]/5'
+                                    />
+                                </div>
 
-                                    {/* Requirements */}
-                                    <div>
-                                        <label
-                                            htmlFor='requirements'
-                                            className='mb-2 block text-sm font-bold text-slate-900 uppercase tracking-wide'>
-                                            Project Requirements <span className='text-primary'>*</span>
-                                        </label>
-                                        <textarea
-                                            id='requirements'
-                                            name='requirements'
-                                            required
-                                            rows={5}
-                                            value={formData.requirements}
-                                            onChange={handleChange}
-                                            placeholder='Tell us about your technical specifications and scale...'
-                                            className='w-full resize-none rounded-xl border border-slate-300 bg-slate-50 px-5 py-4 text-slate-900 transition-all outline-none placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10'
-                                        />
-                                    </div>
+                                {/* Submit Button */}
+                                <button
+                                    type='submit'
+                                    disabled={submitting || submitSuccess}
+                                    className='group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-[#E8610A] hover:bg-[#d05608] py-3.5 text-base font-bold text-white transition-all shadow-md hover:shadow-lg hover:shadow-[#E8610A]/20 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer'
+                                >
+                                    {submitting ? (
+                                        <>
+                                            <svg className='h-4 w-4 animate-spin' viewBox='0 0 24 24' fill='none'>
+                                                <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                                                <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v8z' />
+                                            </svg>
+                                            Sending...
+                                        </>
+                                    ) : submitSuccess ? (
+                                        <>
+                                            <CheckCircle2 size={16} />
+                                            Message Sent!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Send size={16} />
+                                            Send Message
+                                        </>
+                                    )}
+                                </button>
 
-                                    {/* Submit Button */}
-                                    <button
-                                        type='submit'
-                                        disabled={submitting || submitSuccess}
-                                        className='group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-primary py-4 text-lg font-bold text-white transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 disabled:opacity-70 disabled:cursor-not-allowed'>
-                                        <div className='absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-150%)] group-hover:duration-1000 group-hover:[transform:skew(-12deg)_translateX(150%)]'>
-                                            <div className='relative h-full w-8 bg-white/20' />
-                                        </div>
-                                        {submitting ? (
-                                            <>
-                                                <svg className='h-5 w-5 animate-spin' viewBox='0 0 24 24' fill='none'>
-                                                    <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
-                                                    <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v8z' />
-                                                </svg>
-                                                Sending...
-                                            </>
-                                        ) : submitSuccess ? (
-                                            <>
-                                                <svg className='h-5 w-5' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5'><path strokeLinecap='round' strokeLinejoin='round' d='M5 13l4 4L19 7'/></svg>
-                                                Message Sent!
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Send className='h-5 w-5' />
-                                                Send Message
-                                            </>
-                                        )}
-                                    </button>
-
-                                    <p className='text-center text-xs font-medium text-slate-500'>
-                                        <span className='text-primary'>*</span> Indicates required field
-                                    </p>
-                                </form>
-                            </div>
+                                <p className='text-center text-[10px] font-bold text-neutral-400 uppercase tracking-wider'>
+                                    <span className='text-[#E8610A]'>*</span> Indicates required field
+                                </p>
+                            </form>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Social Media Section */}
-            <section className='bg-white px-6 py-20 border-t border-slate-200'>
-                <div className='mx-auto max-w-7xl'>
-                    <div className='mb-12 text-center'>
-                        <h2 className='text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl'>
+            {/* SOCIAL MEDIA SECTION */}
+            <section 
+                id='contact-socials' 
+                className={`py-24 bg-[#f5f5f5] border-t border-neutral-200/40 transition-all duration-1000 transform ${
+                    visibleSections['contact-socials'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+                }`}
+            >
+                <div className='mx-auto max-w-7xl px-6'>
+                    <div className='mb-12 text-center max-w-2xl mx-auto'>
+                        <div className="inline-block mb-4 rounded-full border border-[#E8610A]/20 bg-[#E8610A]/5 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#E8610A]">
+                            Social Channels
+                        </div>
+                        <h2 className='text-3xl font-extrabold tracking-tight text-neutral-900 md:text-5xl font-outfit'>
                             Connect Across Channels
                         </h2>
-                        <p className='mt-4 text-lg text-slate-600 font-medium'>Stay updated with our latest technologies and announcements.</p>
+                        <p className='mt-3 text-neutral-500 font-medium text-base leading-relaxed'>
+                            Stay updated with our latest technologies and announcements.
+                        </p>
                     </div>
+
                     <div className='grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-5'>
                         {/* Facebook */}
                         <a
                             href='https://www.facebook.com/Voltherm/'
                             target='_blank'
                             rel='noopener noreferrer'
-                            className='group flex flex-col items-center gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-6 transition-all hover:border-[#1877F2] hover:bg-white hover:shadow-xl hover:shadow-[#1877F2]/10 hover:-translate-y-1'>
-                            <div className='flex h-16 w-16 items-center justify-center'>
-                                <svg
-                                    viewBox='0 0 24 24'
-                                    fill='none'
-                                    stroke='currentColor'
-                                    strokeWidth='1.5'
-                                    className='h-full w-full text-slate-400 transition-colors group-hover:text-[#1877F2]'>
-                                    <path
-                                        strokeLinecap='round'
-                                        strokeLinejoin='round'
-                                        d='M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z'
-                                    />
-                                </svg>
+                            className='group flex flex-col items-center gap-4 rounded-3xl border border-neutral-200 bg-white p-6 transition-all hover:border-[#1877F2] hover:shadow-xl hover:-translate-y-1'
+                        >
+                            <div className='rounded-full bg-neutral-50 p-4 transition-transform duration-300 group-hover:scale-110 text-neutral-400 group-hover:text-[#1877F2]'>
+                                <Facebook size={24} />
                             </div>
-                            <span className='text-center text-base font-bold text-slate-600 transition-colors group-hover:text-[#1877F2]'>
+                            <span className='text-center text-sm font-bold text-neutral-600 transition-colors group-hover:text-[#1877F2] font-outfit'>
                                 Facebook
                             </span>
                         </a>
@@ -435,20 +637,12 @@ export default function ContactPage() {
                             href='https://www.instagram.com/volthermtech/'
                             target='_blank'
                             rel='noopener noreferrer'
-                            className='group flex flex-col items-center gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-6 transition-all hover:border-pink-500 hover:bg-white hover:shadow-xl hover:shadow-pink-500/10 hover:-translate-y-1'>
-                            <div className='flex h-16 w-16 items-center justify-center'>
-                                <svg
-                                    viewBox='0 0 24 24'
-                                    fill='none'
-                                    stroke='currentColor'
-                                    strokeWidth='1.5'
-                                    className='h-full w-full text-slate-400 transition-colors group-hover:text-pink-500'>
-                                    <rect x='2' y='2' width='20' height='20' rx='5' ry='5' />
-                                    <path d='M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z' />
-                                    <line x1='17.5' y1='6.5' x2='17.51' y2='6.5' strokeLinecap='round' />
-                                </svg>
+                            className='group flex flex-col items-center gap-4 rounded-3xl border border-neutral-200 bg-white p-6 transition-all hover:border-pink-500 hover:shadow-xl hover:-translate-y-1'
+                        >
+                            <div className='rounded-full bg-neutral-50 p-4 transition-transform duration-300 group-hover:scale-110 text-neutral-400 group-hover:text-pink-500'>
+                                <Instagram size={24} />
                             </div>
-                            <span className='text-center text-base font-bold text-slate-600 transition-colors group-hover:text-pink-500'>
+                            <span className='text-center text-sm font-bold text-neutral-600 transition-colors group-hover:text-pink-500 font-outfit'>
                                 Instagram
                             </span>
                         </a>
@@ -458,22 +652,12 @@ export default function ContactPage() {
                             href='https://x.com/voltherm'
                             target='_blank'
                             rel='noopener noreferrer'
-                            className='group flex flex-col items-center gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-6 transition-all hover:border-slate-900 hover:bg-white hover:shadow-xl hover:shadow-slate-900/10 hover:-translate-y-1'>
-                            <div className='flex h-16 w-16 items-center justify-center'>
-                                <svg
-                                    viewBox='0 0 24 24'
-                                    fill='none'
-                                    stroke='currentColor'
-                                    strokeWidth='1.5'
-                                    className='h-full w-full text-slate-400 transition-colors group-hover:text-slate-900'>
-                                    <path
-                                        strokeLinecap='round'
-                                        strokeLinejoin='round'
-                                        d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z'
-                                    />
-                                </svg>
+                            className='group flex flex-col items-center gap-4 rounded-3xl border border-neutral-200 bg-white p-6 transition-all hover:border-neutral-900 hover:shadow-xl hover:-translate-y-1'
+                        >
+                            <div className='rounded-full bg-neutral-50 p-4 transition-transform duration-300 group-hover:scale-110 text-neutral-400 group-hover:text-neutral-900'>
+                                <Twitter size={24} />
                             </div>
-                            <span className='text-center text-base font-bold text-slate-600 transition-colors group-hover:text-slate-900'>
+                            <span className='text-center text-sm font-bold text-neutral-600 transition-colors group-hover:text-neutral-900 font-outfit'>
                                 Twitter
                             </span>
                         </a>
@@ -483,23 +667,12 @@ export default function ContactPage() {
                             href='https://www.linkedin.com/company/volthermtechnologies/'
                             target='_blank'
                             rel='noopener noreferrer'
-                            className='group flex flex-col items-center gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-6 transition-all hover:border-[#0A66C2] hover:bg-white hover:shadow-xl hover:shadow-[#0A66C2]/10 hover:-translate-y-1'>
-                            <div className='flex h-16 w-16 items-center justify-center'>
-                                <svg
-                                    viewBox='0 0 24 24'
-                                    fill='none'
-                                    stroke='currentColor'
-                                    strokeWidth='1.5'
-                                    className='h-full w-full text-slate-400 transition-colors group-hover:text-[#0A66C2]'>
-                                    <path
-                                        strokeLinecap='round'
-                                        strokeLinejoin='round'
-                                        d='M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z'
-                                    />
-                                    <circle cx='4' cy='4' r='2' />
-                                </svg>
+                            className='group flex flex-col items-center gap-4 rounded-3xl border border-neutral-200 bg-white p-6 transition-all hover:border-[#0A66C2] hover:shadow-xl hover:-translate-y-1'
+                        >
+                            <div className='rounded-full bg-neutral-50 p-4 transition-transform duration-300 group-hover:scale-110 text-neutral-400 group-hover:text-[#0A66C2]'>
+                                <Linkedin size={24} />
                             </div>
-                            <span className='text-center text-base font-bold text-slate-600 transition-colors group-hover:text-[#0A66C2]'>
+                            <span className='text-center text-sm font-bold text-neutral-600 transition-colors group-hover:text-[#0A66C2] font-outfit'>
                                 LinkedIn
                             </span>
                         </a>
@@ -509,18 +682,19 @@ export default function ContactPage() {
                             href='https://www.indiamart.com/voltherm-technologies/'
                             target='_blank'
                             rel='noopener noreferrer'
-                            className='group flex flex-col items-center gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-6 transition-all hover:border-orange-500 hover:bg-white hover:shadow-xl hover:shadow-orange-500/10 hover:-translate-y-1'>
-                            <div className='flex h-16 w-16 items-center justify-center'>
+                            className='group flex flex-col items-center justify-between gap-4 rounded-3xl border border-neutral-200 bg-white p-6 transition-all hover:border-orange-500 hover:shadow-xl hover:-translate-y-1'
+                        >
+                            <div className='flex h-14 items-center justify-center shrink-0'>
                                 <Image
                                     src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuoD3M7txqb9TdLTe_prXdviUPp6m4tEvmeA&s'
                                     alt='IndiaMART'
-                                    width={80}
-                                    height={30}
+                                    width={64}
+                                    height={24}
                                     className='object-contain opacity-50 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0'
                                     unoptimized
                                 />
                             </div>
-                            <span className='text-center text-base font-bold text-slate-600 transition-colors group-hover:text-amber-600'>
+                            <span className='text-center text-sm font-bold text-neutral-600 transition-colors group-hover:text-amber-600 font-outfit'>
                                 IndiaMART
                             </span>
                         </a>
@@ -528,29 +702,36 @@ export default function ContactPage() {
                 </div>
             </section>
 
-            {/* Footer CTA */}
-            <section className='relative bg-slate-900 px-6 py-20 overflow-hidden'>
+            {/* CALL TO ACTION */}
+            <section 
+                id='contact-cta' 
+                className={`py-20 bg-[#1a1a1a] relative overflow-hidden rounded-[32px] mx-4 md:mx-8 mb-16 shadow-xl z-10 transition-all duration-1000 transform ${
+                    visibleSections['contact-cta'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+                }`}
+            >
                 <div className='absolute inset-0 z-0 pointer-events-none'>
-                    <div className='absolute -left-40 top-0 h-96 w-96 rounded-full bg-primary/20 blur-[120px]'></div>
-                    <div className='absolute -right-40 bottom-0 h-96 w-96 rounded-full bg-purple-600/20 blur-[120px]'></div>
+                    <div className='absolute -left-40 top-0 h-96 w-96 rounded-full bg-[#E8610A]/10 blur-[120px]'></div>
+                    <div className='absolute -right-40 bottom-0 h-96 w-96 rounded-full bg-[#E8610A]/20 blur-[120px]'></div>
                 </div>
                 
-                <div className='relative z-10 mx-auto max-w-4xl text-center flex flex-col items-center'>
-                    <h2 className='mb-6 text-4xl font-extrabold tracking-tight text-white md:text-5xl'>
+                <div className='relative z-10 mx-auto max-w-4xl text-center flex flex-col items-center px-6 font-outfit'>
+                    <h2 className='mb-6 text-3xl font-extrabold tracking-tight text-white md:text-5xl'>
                         Ready to Power Your Future?
                     </h2>
-                    <p className='mb-10 text-lg font-medium text-slate-300 md:text-xl max-w-2xl'>
+                    <p className='mb-8 text-neutral-300 text-base md:text-lg max-w-2xl leading-relaxed'>
                         Contact us today to discuss your energy storage requirements and see how Voltherm can scale your infrastructure.
                     </p>
-                    <div className='flex flex-col justify-center gap-4 sm:flex-row'>
+                    <div className='flex flex-col justify-center gap-4 sm:flex-row w-full sm:w-auto'>
                         <a
                             href='tel:+917485918169'
-                            className='rounded-full bg-white px-8 py-4 text-base font-bold text-slate-900 transition-all hover:bg-slate-100 hover:scale-105 hover:shadow-xl'>
+                            className='rounded-full bg-white px-8 py-3.5 text-sm font-bold text-slate-900 transition-all hover:bg-neutral-100 hover:scale-105 hover:shadow-xl text-center'
+                        >
                             Call Now
                         </a>
                         <a
                             href='mailto:Volthermtechnologies@gmail.com'
-                            className='rounded-full bg-slate-800 border border-slate-700 px-8 py-4 text-base font-bold text-white transition-all hover:bg-slate-700 hover:scale-105 hover:shadow-xl'>
+                            className='rounded-full bg-transparent border border-white/20 hover:bg-white/5 px-8 py-3.5 text-sm font-bold text-white transition-all hover:scale-105 hover:shadow-xl text-center'
+                        >
                             Email Us
                         </a>
                     </div>
