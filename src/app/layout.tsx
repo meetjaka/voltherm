@@ -10,6 +10,8 @@ import Footer from '@/components/footer';
 import AdminIndicator from '@/components/AdminIndicator';
 import { Toaster } from '@/registry/new-york-v4/ui/sonner';
 
+import { Outfit } from 'next/font/google';
+
 const geistSans = localFont({
     src: './fonts/GeistVF.woff',
     variable: '--font-geist-sans',
@@ -19,6 +21,12 @@ const geistMono = localFont({
     src: './fonts/GeistMonoVF.woff',
     variable: '--font-geist-mono',
     weight: '100 900'
+});
+const outfit = Outfit({
+    subsets: ['latin'],
+    variable: '--font-outfit',
+    weight: ['300', '400', '500', '600', '700', '800', '900'],
+    display: 'swap'
 });
 
 export const metadata: Metadata = {
@@ -34,7 +42,7 @@ const Layout = ({ children }: Readonly<{ children: ReactNode }>) => {
         <html suppressHydrationWarning lang='en'>
             <body
                 suppressHydrationWarning
-                className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground overscroll-none antialiased`}>
+                className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} bg-background text-foreground overscroll-none antialiased`}>
                 <ThemeProvider attribute='class'>
                     {children}
                     <Footer />
