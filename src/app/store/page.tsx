@@ -686,17 +686,21 @@ export default function StorePage() {
 
                                 {/* Action Buttons */}
                                 <div className='flex gap-3 relative z-10 mt-auto w-full'>
-                                    <button
-                                        onClick={() => !isUnavailable && setSelectedProduct(product)}
-                                        disabled={isUnavailable}
-                                        className={`flex-1 rounded-xl border-2 px-4 py-2.5 text-xs font-bold transition-all cursor-pointer ${
-                                            isUnavailable
-                                                ? 'border-neutral-100 bg-neutral-50 text-neutral-300'
-                                                : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900'
-                                        }`}
-                                    >
-                                        Details
-                                    </button>
+                                    {isUnavailable ? (
+                                        <button
+                                            disabled={true}
+                                            className='flex-1 rounded-xl border-2 px-4 py-2.5 text-xs font-bold transition-all cursor-not-allowed border-neutral-100 bg-neutral-50 text-neutral-300'
+                                        >
+                                            Details
+                                        </button>
+                                    ) : (
+                                        <Link
+                                            href={`/store/product/${product.id}`}
+                                            className='flex-1 flex justify-center items-center rounded-xl border-2 px-4 py-2.5 text-xs font-bold transition-all cursor-pointer border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900'
+                                        >
+                                            Details
+                                        </Link>
+                                    )}
                                     {!isInCart(product.id) ? (
                                         <button
                                             onClick={() => !isUnavailable && handleAddToCart(product)}
@@ -734,123 +738,7 @@ export default function StorePage() {
                 )}
             </section>
 
-            {/* PRODUCT DETAILS MODAL */}
-            {selectedProduct && (
-                <div className='fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6'>
-                    <div
-                        className='absolute inset-0 bg-black/65 backdrop-blur-sm transition-opacity'
-                        onClick={() => setSelectedProduct(null)}
-                    />
-                    
-                    <div className='relative z-10 w-full max-w-4xl max-h-[85vh] overflow-y-auto bg-white rounded-3xl shadow-2xl animate-fade-in-up font-outfit'>
-                        <button
-                            onClick={() => setSelectedProduct(null)}
-                            className='absolute top-5 right-5 z-20 rounded-full bg-[#f5f5f5] p-2 transition-all hover:bg-neutral-100'
-                        >
-                            <X size={18} />
-                        </button>
-
-                        <div className='grid md:grid-cols-2 gap-8 p-8'>
-                            {/* Left Image */}
-                            <div className='rounded-2xl bg-[#f5f5f5] p-4 flex items-center justify-center border border-neutral-200/50 min-h-[350px]'>
-                                <img
-                                    src={selectedProduct.image?.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${selectedProduct.image}` : (selectedProduct.image || '/placeholder-image.jpg')}
-                                    alt={selectedProduct.title}
-                                    className='max-w-full max-h-[50vh] object-contain drop-shadow-md'
-                                />
-                            </div>
-
-                            {/* Right Details */}
-                            <div className='flex flex-col justify-between'>
-                                <div>
-                                    <h2 className='text-2xl lg:text-3xl font-extrabold tracking-tight text-neutral-900 mb-3 font-outfit'>
-                                        {selectedProduct.title}
-                                    </h2>
-                                    
-                                    <p className='text-neutral-500 text-sm leading-relaxed mb-6 font-medium font-outfit'>
-                                        {selectedProduct.description}
-                                    </p>
-
-                                    {/* Tech specs info */}
-                                    <div className='grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6 font-outfit'>
-                                        {selectedProduct.technicalSpecs && selectedProduct.technicalSpecs[0] && (
-                                            <div className='rounded-2xl border border-neutral-100 bg-[#f5f5f5]/60 p-3 text-center flex flex-col items-center justify-center'>
-                                                <div className='text-[10px] font-bold text-neutral-400 uppercase tracking-wide mb-1'>{selectedProduct.technicalSpecs[0].key}</div>
-                                                <div className='text-sm font-extrabold text-neutral-900'>{selectedProduct.technicalSpecs[0].value}</div>
-                                            </div>
-                                        )}
-                                        {selectedProduct.technicalSpecs && selectedProduct.technicalSpecs[1] && (
-                                            <div className='rounded-2xl border border-neutral-100 bg-[#f5f5f5]/60 p-3 text-center flex flex-col items-center justify-center'>
-                                                <div className='text-[10px] font-bold text-neutral-400 uppercase tracking-wide mb-1'>{selectedProduct.technicalSpecs[1].key}</div>
-                                                <div className='text-sm font-extrabold text-neutral-900'>{selectedProduct.technicalSpecs[1].value}</div>
-                                            </div>
-                                        )}
-                                        <div className='rounded-2xl border border-[#E8610A]/10 bg-[#E8610A]/5 p-3 text-center flex flex-col items-center justify-center col-span-2 sm:col-span-1'>
-                                            <div className='text-[10px] font-bold text-[#E8610A]/70 uppercase tracking-wide mb-1'>Price</div>
-                                            <div className='text-base font-extrabold text-[#E8610A]'>
-                                                {selectedProduct.price ? `₹${selectedProduct.price.toLocaleString()}` : 'N/A'}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Core Features */}
-                                    <div className='mb-6 font-outfit'>
-                                        <h3 className='text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3.5'>Key Features</h3>
-                                        <div className='flex flex-wrap gap-1.5'>
-                                            {selectedProduct.specs.map((spec, idx) => (
-                                                <span
-                                                    key={idx}
-                                                    className='rounded-lg bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-600 uppercase tracking-wide'
-                                                >
-                                                    {spec}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Actions */}
-                                <div className='space-y-3 pt-4 border-t border-neutral-100 font-outfit'>
-                                    <button 
-                                        onClick={() => handleDownloadPdf(selectedProduct)}
-                                        className='w-full flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-5 py-3 text-xs font-bold text-neutral-600 transition-all hover:border-[#E8610A]/30 hover:text-[#E8610A] cursor-pointer'
-                                    >
-                                        <Download size={14} />
-                                        Download Datasheet
-                                    </button>
-                                    
-                                    {!isInCart(selectedProduct.id) ? (
-                                        <button
-                                            onClick={() => {
-                                                handleAddToCart(selectedProduct);
-                                                setSelectedProduct(null);
-                                            }}
-                                            disabled={selectedProduct.available === false}
-                                            className={`w-full rounded-xl px-5 py-3 text-xs font-bold transition-all cursor-pointer ${
-                                                selectedProduct.available === false
-                                                    ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
-                                                    : 'bg-[#E8610A] text-white hover:bg-[#d05608]'
-                                            }`}
-                                        >
-                                            {selectedProduct.available === false ? 'Unavailable' : 'Add to Cart'}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => {
-                                                handleRemoveFromCart(selectedProduct.id);
-                                                setSelectedProduct(null);
-                                            }}
-                                            className='w-full rounded-xl border border-red-500/20 bg-red-50 px-5 py-3 text-xs font-bold text-red-600 transition-all hover:bg-red-100 cursor-pointer'
-                                        >
-                                            Remove from Cart
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* PRODUCT DETAILS MODAL REMOVED - NOW USING NEW PAGE */}
 
             {/* CART SIDEBAR PANEL */}
             {showCart && (
